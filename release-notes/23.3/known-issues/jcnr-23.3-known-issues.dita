@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b6e672da6d9e182f-4ad6723b-18a844416ef--7782" xml:lang="en-US">
+  <title>Known Limitations</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section describes issues and limitations present in Juniper Cloud-Native Router release
+      23.3.</p>
+    <section id="section_zqk_5dh_xvb">
+      <title>Known Issues and Limitations in Juniper Cloud-Native Router Release 23.3</title>
+      <ul id="ul_kdl_krr_xyb">
+        <!--23.3 known issues-->
+        <li>
+          <p><b>JCNR-4036: V4/V6 address disappears after changing prefix length by doing delete
+              then set and then commit</b>—When the prefix of an IPv4 or IPv6 address of a fabric
+            interface is changed using the cRPD CLI, if the commands to delete and set the
+            interfaces are executed one after the other and then committed on the CLI, then the
+            routes of the interface are erased from the system. However, the routes are retained,
+            and the change is successful, if the <codeph>delete</codeph> command is executed and
+            committed, and then the <codeph>set</codeph> command is executed and committed.</p>
+        </li>
+        <li>
+          <p><b>JCNR-4070: Core path not updated as per values.yaml</b>— The core path is not
+            updated as defined under the <codeph>corePattern</codeph> attribute in values.yaml. The
+              <codeph>core_pattern</codeph> value must be defined on the host before deploying JCNR.
+            Please see System Requirements for more detail.</p>
+        </li>
+        <li>
+          <p><b>JCNR-4171: Ping between IPv6 kernel pod interfaces intermittently fails</b>—Ping
+            between IPv6 kernel pod interfaces with JCNR deployed as a CNI in L3 mode fails
+            intermittently with <codeph>Destination unreachable: Address unreachable</codeph> error
+            message. It is recommended to disable ipv6 forwarding globally on the host as a
+            workaround.</p>
+        </li>
+        <li>
+          <p><b>JCNR-4248: Keepalived cores are generated when VRRP is initially configured in
+              cRPD</b>— When VRRP is initially configured in cRPD or deleted and re-configured,
+            keepalived cores are generated in the <codeph>/var/crash</codeph> directory. </p>
+        </li>
+        <li>
+          <p><b>JCNR-4950: Notification for "Config Failure, Config OK, JCNR CLI Start, JCNR CLI
+              Stop" are not triggering</b>—The following JCNR notifications are not shown when
+            triggered:</p>
+          <ul id="ul_uwk_nbs_xyb">
+            <li>
+              <p>Config Failure—is triggered if there is a failure while providing custom
+                configuration during JCNR deployment. </p>
+            </li>
+            <li>
+              <p>Config OK—is triggered while providing custom configuration during JCNR deployment. </p>
+            </li>
+            <li>
+              <p>JCNR CLI Start—is triggered when running <codeph>cli</codeph> in the cRPD shell. </p>
+            </li>
+            <li>
+              <p>JCNR CLI Stop—is triggered while exiting the CLI mode after entering
+                  <codeph>exit</codeph> in the cRPD shell. </p>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <p><b>JCNR-4956: DDP flows programmed on PF is not shown in dpdkinfo</b>—The
+              <codeph>dpdkinfo</codeph> command is used to show DDP flows programmed on the NIC.
+            This command can be used for E810 VF, XXV810, and X710 PF. For E810 PF, this support is
+            not available from DPDK. Refer the vrouter-dpdk logs to see the programmed flows. </p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

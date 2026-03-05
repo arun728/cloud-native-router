@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_5ed560f11770d39a-52461e55-1888fa26dec--7d24" xml:lang="en-US">
+  <title>L3 Routing Protocols</title>
+  <shortdesc>Read this topic to know about the L3 routing protocols that are supported by the
+    Juniper Cloud Native Router, including BGP, IS-IS, and OSPF. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <note id="note_ppv_pwn_sbc">
+      <p>Use the <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">configlet
+          resource</xref> to configure the cRPD pods.</p>
+    </note>
+    <section id="section_msy_wxq_ryb"><title>BGP</title>BGP is an exterior gateway protocol (EGP)
+      that is used to exchange routing information among routers in different autonomous systems
+      (ASs). BGP routing information includes the complete route to each destination. BGP uses the
+      routing information to maintain a database of network reachability information, which it
+      exchanges with other BGP systems. BGP uses the network reachability information to construct a
+      graph of AS connectivity, which enables BGP to remove routing loops and enforce policy
+      decisions at the AS level. The cloud-native router supports BGP version 4. Here is an example
+      to configure BGP protocol on the cloud-native
+      router:<codeblock>set protocols bgp group CNI type internal
+set protocols bgp group CNI local-address 10.0.0.1
+set protocols bgp group CNI family inet-vpn unicast
+set protocols bgp group CNI family inet6-vpn unicast
+set protocols bgp group CNI neighbor 10.0.1.1 peer-as 64512
+set protocols bgp group CNI neighbor 10.0.1.1 local-as 64512
+set routing-options route-distinguisher-id 10.0.0.1</codeblock>You can issue the <codeph>show
+        bgp summary</codeph> command on the cRPD shell to view the BGP summary information for all
+      routing instances. For example:<codeblock><b>user@host&gt; show bgp summary </b>
+Threading mode: BGP I/O
+Default eBGP mode: advertise - accept, receive - accept
+Groups: 1 Peers: 1 Down peers: 0
+Table          Tot Paths  Act Paths Suppressed    History Damp State    Pending
+bgp.l3vpn.0          
+                       2          2          0          0          0          0
+bgp.l3vpn-inet6.0    
+                       2          2          0          0          0          0
+Peer                     AS      InPkt     OutPkt    OutQ   Flaps Last Up/Dwn State|#Active/Received/Accepted/Damped...
+10.0.1.1             64512        249        211       0       0     1:32:42 Establ
+  bgp.l3vpn.0: 2/2/2/0
+  bgp.l3vpn-inet6.0: 2/2/2/0
+  jcnr-3.inet.0: 2/2/2/0
+  jcnr-3.inet6.0: 2/2/2/0</codeblock>Refer the <xref href="https://www.juniper.net/documentation/us/en/software/junos/bgp/index.html" format="html" scope="external">BGP User Guide</xref> for more information. </section>
+    <section id="section_dly_1xv_ryb">
+      <title>IS-IS</title>
+      <p>The IS-IS protocol is an interior gateway protocol (IGP) that uses link-state information
+        to make routing decisions. IS-IS is a link-state IGP that uses the shortest-path-first (SPF)
+        algorithm to determine routes. IS-IS evaluates the topology changes and determines whether
+        to perform a full SPF recalculation or a partial route calculation (PRC). IS-IS uses hello
+        packets that allow network convergence to occur quickly when network changes are detected.
+        The cloud-native router supports IS-IS. </p>
+      <p>Here is an example to configure IS-IS protocol on the cloud-native router:</p>
+      <codeblock>set security forwarding-options family iso mode packet-based
+set interfaces eno3v0 unit 0 family inet address 10.100.12.1/30
+set interfaces eno3v0 unit 0 family iso
+set interfaces lo0 unit 0 family inet address 192.168.0.1/32
+set interfaces lo0 unit 0 family iso address 49.0002.0192.0168.0001.00
+set protocols isis interface eno3v0
+set protocols isis interface lo0.0</codeblock>
+      <p>You can issue the <codeph>show isis adjacency</codeph> and <codeph>show isis
+          interface</codeph> commands to verify the protocol configuration. Refer the <xref href="https://www.juniper.net/documentation/us/en/software/junos/is-is/index.html" format="html" scope="external">IS-IS User Guide</xref> for information.</p>
+    </section>
+    <section id="section_fjd_1tc_5yb">
+      <title>OSPF</title>
+      <p>OSPF is an interior gateway protocol (IGP) that routes packets within a single autonomous
+        system (AS). OSPF uses link-state information to make routing decisions, making route
+        calculations using the shortest-path-first (SPF) algorithm (also referred to as the Dijkstra
+        algorithm). Each router running OSPF floods link-state advertisements throughout the AS or
+        area that contain information about that router’s attached interfaces and routing metrics.
+        Each router uses the information in these link-state advertisements to calculate the least
+        cost path to each network and create a routing table for the protocol. The cloud-native
+        router supports OSPF version 2 (OSPFv2) and OSPF version 3 (OSPFv3). Here is an example to
+        configure IS-IS protocol on the cloud-native router:</p>
+      <codeblock>set protocols ospf area 0.0.0.0 interface bond0
+set protocols ospf area 0.0.0.0 interface lo passive</codeblock>
+      <p>Once you bring up the pods, verify the OSPF configuration:</p>
+      <codeblock>show ospf neighbor
+Address          Interface              State           ID               Pri  Dead
+192.168.123.254  bond0                  Full            123.1.1.254      128    36</codeblock>
+      <codeblock><b>user@host&gt;</b> show route 1.1.24.24
+
+inet.0: 27 destinations, 29 routes (27 active, 0 holddown, 0 hidden)
++ = Active Route, - = Last Active, * = Both
+
+1.1.24.24/32       *[OSPF/10] 00:07:08, metric 2
+                    &gt;  to 192.168.123.254 via bond0</codeblock>
+      <p>Refer the <xref href="https://www.juniper.net/documentation/us/en/software/junos/ospf/index.html" format="html" scope="external">OSPF User Guide</xref> for more information.</p>
+    </section>
+  </conbody>
+
+  <related-links/>
+</concept>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_c0b3c49bbf8a8319--891c1fe-191b8839e55--7d41" xml:lang="en-US">
+    <!--GENERIC TOPIC MAP: Group related concept, task, example, and reference topics (that describe how to use a feature, for example.) 
+MULTI_TASK TOPIC MAP: Group a set of interrelated tasks. The user will find the main task (the multi-task) and not the individual tasks within it. You can include multi-task topic maps in a generic topic map. 
+-->
+    <!--You can nest topic maps within topic maps. However, we do not recommend doing this unless the topic map you're nesting is a multi-task topic map.-->
+    <!-- 
+- - Arrange the topics in the order in which you expect users to perform tasks or look up information.​
+- - Create a topic map that is of the right “size.” If a feature has many sub-features or a task has many sub-tasks, create topic maps for each sub-feature or sub-task and place the topic maps in a chapter. -->
+    <!--
+FOR REUSE: To include (reuse) an existing topic in a topic map, select DITA > Reuse Content and then select the topic you want to include in the topic map.
+
+ADD TOPIC THAT NEED NOT BE SHARED: Go to Content > System > DitaTemplates > Topics. Open the topic type template that you want to insert in the Topic Map. Copy all the contents of the template, and then paste it into the topic map. You can refer to the guidelines within each topic type to create your topic.
+-->
+    <title>Topology-Independent Loop-Free Alternates (TI-LFA)</title>
+    <!--TOPIC-MAP TITLE: Use search-engine optimized titles. Use title case. Use noun phrases that include keywords. For example, "Server-Based Antispam Filtering," "Secure Web Access for Remote Management."
+If you must use a verb phrase, use the imperative form of the verb (not the gerund) and keywords. For example, "Prevent Denial-of-Service Attacks," "Monitor and Troubleshoot Security Policies."-->
+    <shortdesc>The Juniper Cloud-Native Router supports Topology-Independent Loop-Free Alternates
+        (TI-LFA) with fast reroute (FRR) for SR-MPLS implementations. </shortdesc>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody><?oxy-placeholder Optional. Use the tmbody element to include any content before the first topic in the topic map. Delete the tmbody element if you are not using it."?></tmbody>
+    <concept id="id_tpz_hjf_qcc" conref="../concept/ti-lfa-overview.dita#xd_c0b3c49bbf8a8319--891c1fe-191b8839e55--7fe1">
+        <title/>
+        <conbody>
+            <p/>
+        </conbody>
+    </concept>
+    <task id="id_bgm_mkf_qcc" conref="../task/ti-lfa-config-isis.dita#xd_c0b3c49bbf8a8319--891c1fe-191b8839e55--7ef3">
+        <title/>
+    </task>
+</topic-map>

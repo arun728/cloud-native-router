@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b0836fd7d6536646-294b527a-181238eba6d--7e8e" xml:lang="en-US">
+  <title>New Features</title>
+  <prolog>
+    <author>probbins</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>This section describes the new features in the Juniper Cloud-Native Router 22.2 release.</p>
+    <section id="section_e2m_bqb_wrb">
+      <title>New Features in Juniper Cloud-Native Router Release 22.2</title>
+      <ul id="ul_f2m_bqb_wrb">
+        <li>
+          <p><b>Juniper Cloud-Native Router Controller (cRPD or JCNR-Controller)</b>–The
+            JCNR-controller is based on our tried-and-tested containerized routing protocol daemon,
+            cRPD. We use cRPD in the cloud-native router to provide the control plane functions and
+            interface with the JCNR-vRouter component. See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router/cloud-native-router-user/cloud-native-router-user/topics/concept/jncr-understanding-crpd.html" format="html" scope="external">Juniper Cloud Native Router Controller</xref>.</p>
+        </li>
+        <li>
+          <p><b>JCNR-vRouter</b>–JCNR-vRouter is a dataplane development kit (DPDK)-based forwarding
+            plane. JCNR-vRouter is able to provide high-speed L2 forwarding using DPDK and enforce
+            L2 access control lists (ACLs). See JCNR-vRouter.</p>
+          <!--<p>The DPDK-based forwarding plane allows you to send and receive packets to or from a VIRTIO-enabled net device (vhost) on a container.</p>-->
+          <p>JCNR-vrouter uses a component known as the vRouter-agent to receive communication from
+            the cRPD.
+            <!--The JCNR-vRouter-agent translates control plane messages regarding routes, next-hops, etc and sends programming commands directly to the JCNR-vRouter.--></p>
+          <p>See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router22.2/cloud-native-router-user/cloud-native-router-user/topics/concept/jcnr-understanding-vrouter.html" format="html" scope="external">JCNR-vRouter</xref>.</p>
+        </li>
+        <li>
+          <p><b>JCNR-CNI</b>–Juniper Cloud-Native Router uses the container network interface
+            application, JCNR-CNI to provide container network and Kubernetes Pod interfaces.
+            <!--This interface is specific to the JCNR platform and provides a number of benefits:<ul id="ul_pzy_cbd_wrb"><li>Assign IP addresses to the veth interfaces automatically</li><li>Request that JCNR-vRouter monitor its end of the connection between itself and the container</li><li>Notify the POD to start using the JCNR-vRouter memory-mapped interface</li></ul>-->
+            See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router/cloud-native-router-user/cloud-native-router-user/topics/concept/jcnr-understanding-jcnr-cni.html" format="html" scope="external">JCNR-CNI</xref>.</p>
+        </li>
+        <li>
+          <p><b>Software Licensing</b>–Juniper Cloud-Native Router release 22.2 introduces the
+            Juniper agile  software license model. In the 22.2 Release, we do not enforce license
+            compliance, we only report out-of-compliance status.
+            <!--See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router/cloud-native-router-user/cloud-native-router-user/topics/concept/jcnr-licensing.html" format="html" scope="external">Licensing</xref> in the Juniper Cloud-Native Router User Guide.-->See
+              <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router22.2/cloud-native-router-user/cloud-native-router-user/topics/topic-map/jcnr-user-guide-tm.html#xd_b0836fd7d6536646-294b527a-181238eba6d--7ce4" format="html" scope="external">Juniper Cloud-Native Router LIcensing</xref></p>
+        </li>
+        <li>
+          <p><b>Configuration by Helm Chart</b>–Juniper Cloud-Native Router supports deployment-time
+            configuration with the use of Helm charts.</p>
+          <p>See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router22.2/cloud-native-router-deployment/cloud-native-router-deployment-guide/topics/topic-map/jcnr-install-jcnr.html" format="html" scope="external">Juniper Cloud-Native Router Deployment Guide</xref></p>
+        </li>
+        <li>
+          <p><b>NETCONF</b>–You can configure the Juniper Cloud-Native Router control plane using
+            the NETCONF protocol.
+            <!--See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router/cloud-native-router-user/cloud-native-router-user/topics/concept/jcnr-netconf.html" format="html" scope="external">NETCONF Protocol in Juniper Cloud-Native Router</xref> in the Juniper Cloud-Native Router User Guide.--></p>
+        </li>
+        <li>
+          <p><b>Networking Features</b></p>
+          <ul id="ul_crj_1lx_f5b">
+            <li>
+              <p><b>L2 Mode DPDK Forwarding Plane</b>–Juniper Cloud-Native Router supports L2 mode
+                in the DPDK forwarding plane for fabric and workload interfaces</p>
+            </li>
+            <li>
+              <p><b>Ethernet Packet Switching</b>–Juniper Cloud-Native Router operated in L2 mode
+                activates ethernet switching capabilities in the forwarding plane.</p>
+            </li>
+            <li>
+              <p><b>MAC Address Handling</b>–Juniper Cloud-Native Router Release 22.2 operated in L2
+                mode allows the forwarding plane to handle MAC addresses without involving the
+                control plane (MAC learning and aging)</p>
+            </li>
+            <li>
+              <p><b>Bridge Domain Support</b>–Juniper Cloud-Native Router supports bridge
+                domains</p>
+            </li>
+            <li>
+              <p><b>VLAN Tagging</b>–Juniper Cloud-Native Router supports VLAN tagging on logical
+                interfaces</p>
+            </li>
+            <li>
+              <p><b>Trunk Port Support</b>–Juniper Cloud-Native Router operated in L2 mode allows
+                for the creation of trunk ports which allow multiple VLANs to transit the port.</p>
+            </li>
+          </ul>
+        </li>
+        <li><p><b>Support for Multiple Interface Types</b>–Juniper Cloud-Native Router operated in
+            L2 mode allows fabric and pod interfaces of the following types:</p><ul id="ul_jky_4dd_wtb">
+            <li>Kernel mode access interfaces that are used to bypass the DPDK forwarding plane in
+              favor of the kernel-based forwarding plane</li>
+            <li>Virtio trunk interfaces that can pass traffic from multiple VLANs</li>
+            <li>Multiple Virtio sub interfaces that can each pass VLAN-tagged traffic </li>
+          </ul><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router22.2/cloud-native-router-user/cloud-native-router-user/topics/topic-map/jcnr-user-guide-tm.html#xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7e50" format="html" scope="external">Juniper Cloud-Native Router Interface Types</xref>.</li>
+        <li>
+          <p><b>Fabric Interface Functions Support</b>–Juniper Cloud-Native Router fabric interfaces
+            can be based of Virtual Functions or Physical Functions of a NIC</p>
+        </li>
+        <li>
+          <p><b>IP Address Allocation for Application Pods</b>–Juniper Cloud-Native Router Release
+            22.2 supports allocation of IP addresses for Kubernetes application pods by the
+            JCNR-CNI.</p>
+          <p>See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router22.2/cloud-native-router-user/cloud-native-router-user/topics/concept/jcnr-understanding-jcnr-cni.html" format="html" scope="external">JCNR-CNI</xref>.</p>
+        </li>
+        <li>
+          <p><b>L2 Access Control Lists (ACL)</b>–Juniper Cloud-Native Router Release 22.2 running
+            in L2 mode supports the creation and enforcement of L2 access control lists (ACL) based
+            on MAC address or ethertypes</p>
+          <p>See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router22.2/cloud-native-router-user/cloud-native-router-user/topics/topic-map/jcnr-user-guide-tm.html#xd_b0836fd7d6536646-294b527a-181238eba6d--7cf4" format="html" scope="external">L2 ACL</xref></p>
+        </li>
+        <li><b>Traffic Rate Limiting</b>–Juniper Cloud-Native Router Release 22.2 allows for the
+          rate limiting of L2 broadcast and multicast traffic</li>
+        <li>
+          <p><b>NIC Support</b>–Juniper Cloud-Native Router Release 22.2 supports special features
+            such as VLAN offload and Dynamic Device Personalization (DDP) on the following NICs:</p>
+          <ul id="ul_xln_svc_wtb">
+            <li>Intel 810</li>
+          </ul>
+          <p>See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router22.2/cloud-native-router-deployment/cloud-native-router-deployment-guide/topics/concept/system-resource-requirements.html" format="html" scope="external">System Resource Requirements</xref></p>
+        </li>
+        <li>
+          <p><b>Event Notification Support</b>–Juniper Cloud-Native Router uses syslog-ng to convert
+            event logs from various Pods and containers into JSON-encoded notifications.</p>
+          <p>See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router22.2/cloud-native-router-user/cloud-native-router-user/topics/topic-map/jcnr-user-guide-tm.html#xd_b0836fd7d6536646-294b527a-181238eba6d--7ce3" format="html" scope="external">Logging and Notifications</xref>.</p>
+        </li>
+        <li>
+          <p><b>Automatic Generation of Bridge Domains and JCNR-Controller Configuration</b>–Juniper
+            Cloud-Native Router automatically generates bridge domain and JCNR-Controller
+            configuration during deployment through the use of Helm charts.<xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router22.2/cloud-native-router-deployment/cloud-native-router-deployment-guide/index.html" format="html" scope="external">Juniper Cloud-Native Router Deployment
+            Guide</xref>.</p>
+        </li>
+        <li>
+          <p><b>Kubernetes (K8s) Liveness Probes for JCNR-Controller and JCNR-vRouter</b>–Juniper
+            Cloud-Native Router supports Kubernetes liveness probes for JCNR-Controller and
+            JCNR-vRouter containers.</p>
+          <p>See <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router22.2/cloud-native-router-user/cloud-native-router-user/topics/topic-map/jcnr-user-guide-tm.html#xd_b0836fd7d6536646-294b527a-181238eba6d--7ce3" format="html" scope="external">Logging and Notifications</xref>.</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_ec1c370de76c1e7b--3983fc05-1907da16537--7fcd" xml:lang="en-US">
+    <title>Customize <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Configuration </title>
+    <shortdesc>Read this topic to understand how to customize <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>configuration using a Configlet
+        custom resource.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody><?oxy-placeholder content="Use the tmbody element to include any content before the first topic in the topic map. Delete the tmbody element if you are not using it."?></tmbody>
+    <related-links><?oxy-placeholder content="Use the related-links element to include any topic-map level related links. Delete the related-links element if you are not using it."?></related-links>
+    <concept id="concept_ilc_krd_qjb">
+        <title>Configlet Custom Resource</title>
+        <conbody>
+            <p>Starting with Juniper Cloud-Native Router (JCNR) Release 24.2, we support customizing
+                <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>configuration using a configlet custom resource. You can generate the configlet
+                either by rendering a predefined template of supported Junos configuration or using
+                raw configuration. The generated configuration is validated and deployed on the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>controller (cRPD) as one or more <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cli/topics/topic-map/configuration-groups-usage.html" scope="external">Junos configuration groups</xref>.</p>
+            <note id="note_b3y_dfh_sbc">
+                <p>We do not recommend configuring <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>controller (cRPD) directly through the CLI.
+                    You must perform all configuration using the configlet custom resource. The
+                    configuration performed directly through the cRPD CLI does not persist through
+                    node reboots or pod crashes.</p>
+            </note>
+        </conbody>
+    </concept>
+    <concept id="concept_e5n_p1l_ybc">
+        <title>Configuration Examples</title>
+        <conbody>
+            <p>You create a configlet custom resource of the kind <codeph>Configlet</codeph> in the
+                    <codeph>jcnr</codeph> namespace. You provide raw configuration as Junos
+                    <codeph>set</codeph> commands. </p>
+            <p>Use <codeph>crpdSelector</codeph> to control where the configlet applies. The
+                generated configuration is deployed to cRPD pods on nodes matching the specified
+                label only. If <codeph>crpdSelector</codeph> is not defined, the configuration is
+                applied to all cRPD pods in the cluster. </p>
+            <p>Here's an example of a configlet yaml:</p>
+            <codeblock id="codeblock_ivl_qsm_sbc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample             <b># &lt;-- Configlet resource name</b>
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces lo0 unit 0 family inet address 10.10.10.1/32
+  crpdSelector:
+    matchLabels:
+      node: worker                    <b># &lt;-- Node label to select the cRPD pods</b></codeblock>
+            <p>You can also use a templatized configlet yaml that contains keys or variables. The
+                values for variables are provided by a configletDataValue custom resource,
+                referenced by <codeph>configletDataValueRef</codeph> . </p>
+            <p>Here's an example of a templatized configlet yaml:</p>
+            <codeblock id="codeblock_tbj_3xm_sbc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample-with-template      <b># &lt;-- Configlet resource name</b>
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces lo0 unit 0 family inet address {{ .Ip }}
+  crpdSelector:
+    matchLabels:
+      node: worker                           <b># &lt;-- Node label to select the cRPD pods</b>
+  configletDataValueRef:
+    name: "configletdatavalue-sample"        <b># &lt;-- Configlet Data Value resource name</b></codeblock>
+            <p>To render configuration using the template, you must provide key:value pairs in the
+                ConfigletDataValue custom resource:</p>
+            <codeblock id="codeblock_ubj_3xm_sbc">apiVersion: configplane.juniper.net/v1
+kind: ConfigletDataValue
+metadata:
+  name: configletdatavalue-sample
+  namespace: jcnr
+spec:
+  data: {
+	"Ip": "127.0.0.1"           <b># &lt;-- Key:Value pair</b>
+  }</codeblock>
+            <p>The generated configuration is validated and applied to all or selected cRPD pods as
+                a <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cli/topics/topic-map/configuration-groups-usage.html" scope="external">Junos Configuration Group</xref>. </p>
+            <p>The configlet resource can be used to apply configuration either when <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is deployed
+                or once the cRPD pods are up and running.</p>
+        </conbody>
+    </concept>
+    <task id="task_e15_krd_qjb">
+        <title>Applying Raw Configuration </title>
+        <taskbody>
+            <context id="context_fcs_v1l_ybc"/>
+            <steps>
+                <step>
+                    <cmd>Create raw configuration configlet yaml. The example below configures a
+                        loopback interface in cRPD.</cmd>
+                    <info>
+                        <codeblock id="codeblock_qbt_5sl_5bc"><b>cat configlet-sample.yaml</b></codeblock>
+                        <codeblock id="codeblock_htp_tzm_sbc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces lo0 unit 0 family inet address 10.10.10.1/32
+  crpdSelector:
+    matchLabels:
+      node: worker</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Apply the configuration using the <codeph>kubectl apply</codeph>
+                        command.</cmd>
+                    <info>
+                        <codeblock id="codeblock_fvx_vsl_5bc"><b>kubectl apply -f configlet-sample.yaml</b></codeblock>
+                        <codeblock id="codeblock_ucf_42n_sbc">configlet.configplane.juniper.net/configlet-sample created</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Check on the configlet. When a configlet resource is deployed, it creates
+                        additional node configlet custom resources, one for each node matched by the
+                            <codeph>crpdSelector</codeph>.</cmd>
+                    <info>
+                        <codeblock id="codeblock_ngy_hbm_vbc"><b>kubectl get nodeconfiglets -n jcnr</b></codeblock>
+                        <codeblock id="codeblock_ogy_hbm_vbc">NAME                              AGE
+configlet-sample-node1            10m</codeblock>
+                        <p>If the configuration defined in the configlet yaml is invalid or fails to
+                            deploy, you can view the error message using <codeph>kubectl
+                                describe</codeph> for the node configlet custom resource. </p>
+                        <p>For example:</p>
+                        <codeblock id="codeblock_pgy_hbm_vbc"><b>kubectl describe nodeconfiglet configlet-sample-node1 -n jcnr</b></codeblock>
+                        <p>The following output has been trimmed for brevity:</p>
+                        <codeblock id="codeblock_qgy_hbm_vbc">Name:         configlet-sample-node1
+Namespace:    jcnr
+Labels:       core.juniper.net/nodeName=node1
+Annotations:  &lt;none&gt;
+API Version:  configplane.juniper.net/v1
+Kind:         NodeConfiglet
+Metadata:
+  Creation Timestamp:  2024-06-13T16:51:23Z
+ ...
+Spec:
+  Clis:
+    set interfaces lo0 unit 0 address 10.10.10.1/32
+  Group Name:  configlet-sample
+  Node Name:   node1
+Status:
+  Message:  load-configuration failed: syntax error
+  Status:   False
+Events:     &lt;none&gt;</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Optionally, verify the configuration on the <xref keyref="cloud-native-router-user.accessing-crpd-cli"/> shell in CLI
+                        mode. Note that the configuration is applied as a configuration group named
+                        after the configlet resource.</cmd>
+                    <info>
+                        <codeblock id="codeblock_icn_xsl_5bc"><b>show configuration groups configlet-sample </b></codeblock>
+                        <codeblock id="codeblock_fxn_5zm_sbc">interfaces {
+    lo0 {
+        unit 0 {
+            family inet {
+                address 10.10.10.1/32;
+            }
+        }
+    }
+}</codeblock>
+                        <note id="note_ynm_whh_sbc">
+                            <p>The configuration generated using configlets is applied to cRPD as
+                                configuration groups. We therefore recommend that you not use
+                                configuration groups when specifying your configlet.</p>
+                        </note>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_wvt_tbl_ybc">
+        <title>Applying Templatized Configuration</title>
+        <taskbody>
+            <context id="context_vgb_vbl_ybc"/>
+            <steps id="steps_fkg_vbl_ybc">
+                <step>
+                    <cmd>Create the templatized configlet yaml and the configlet data value yaml for
+                        key:value pairs.</cmd>
+                    <info>
+                        <codeblock id="codeblock_j4w_vrl_5bc"><b>cat configlet-sample-template.yaml</b></codeblock>
+                        <codeblock id="codeblock_svd_pfn_sbc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample-template
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces lo0 unit 0 family inet address {{ .Ip }}
+  crpdSelector:
+    matchLabels:
+      node: master
+  configletDataValueRef:
+    name: "configletdatavalue-sample"</codeblock>
+                        <codeblock id="codeblock_mpv_wrl_5bc"><b>cat configletdatavalue-sample.yaml</b></codeblock>
+                        <codeblock id="codeblock_tgw_pfn_sbc">apiVersion: configplane.juniper.net/v1
+kind: ConfigletDataValue
+metadata:
+  name: configletdatavalue-sample
+  namespace: jcnr
+spec:
+  data: {
+	"Ip": "127.0.0.1"
+  }</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Apply the configuration using the <codeph>kubectl apply</codeph> command,
+                        starting with the config data value yaml.</cmd>
+                    <info>
+                        <codeblock id="codeblock_ut5_xrl_5bc"><b>kubectl apply -f configletdatavalue-sample.yaml</b></codeblock>
+                        <codeblock id="codeblock_vsl_tfn_sbc">configletdatavalue.configplane.juniper.net/configletdatavalue-sample created</codeblock>
+                        <codeblock id="codeblock_yql_yrl_5bc"><b>kubectl apply -f configlet-sample-template.yaml </b></codeblock>
+                        <codeblock id="codeblock_ghj_xfn_sbc">configlet.configplane.juniper.net/configlet-sample-template created</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Check on the configlet. When a configlet resource is deployed, it creates
+                        additional node configlet custom resources, one for each node matched by the
+                            <codeph>crpdSelector</codeph>. </cmd>
+                    <info>
+                        <codeblock id="codeblock_bxj_zbm_vbc"><b>kubectl get nodeconfiglets -n jcnr</b></codeblock>
+                        <codeblock id="codeblock_cxj_zbm_vbc">NAME                                       AGE
+configlet-sample-template-node1            10m</codeblock>
+                        <p>If the configuration defined in the configlet yaml is invalid or fails to
+                            deploy, you can view the error message using <codeph>kubectl
+                                describe</codeph> for the node configlet custom resource. </p>
+                        <p>For example:</p>
+                        <codeblock id="codeblock_dxj_zbm_vbc"><b>kubectl describe nodeconfiglet configlet-sample-template-node1 -n jcnr</b></codeblock>
+                        <p>The following output has been trimmed for brevity:</p>
+                        <codeblock id="codeblock_exj_zbm_vbc">Name:         configlet-sample-template-node1
+Namespace:    jcnr
+Labels:       core.juniper.net/nodeName=node1
+Annotations:  &lt;none&gt;
+API Version:  configplane.juniper.net/v1
+Kind:         NodeConfiglet
+Metadata:
+  Creation Timestamp:  2024-06-13T16:51:23Z
+ ...
+Spec:
+  Clis:
+    set interfaces lo0 unit 0 address 10.10.10.1/32
+  Group Name:  configlet-sample-template
+  Node Name:   node1
+Status:
+  Message:  load-configuration failed: syntax error
+  Status:   False
+Events:     &lt;none&gt;</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Optionally, verify the configuration on the <xref keyref="cloud-native-router-user.accessing-crpd-cli"/> shell in CLI
+                        mode. Note that the configuration is applied as a configuration group named
+                        after the configlet resource.</cmd>
+                    <info>
+                        <codeblock id="codeblock_ujg_zrl_5bc"><b>show configuration groups configlet-sample-template </b></codeblock>
+                        <codeblock id="codeblock_vnp_1gn_sbc">interfaces {
+    lo0 {
+        unit 0 {
+            family inet {
+                address 127.0.0.1/32;
+            }
+        }
+    }
+}</codeblock>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_lph_lcl_ybc">
+        <title>Modifying the Configlet </title>
+        <taskbody>
+            <context id="context_okf_mcl_ybc"/>
+            <steps id="steps_agl_mcl_ybc">
+                <step>
+                    <cmd>To modify a configlet resource:</cmd>
+                    <substeps id="substeps_zjr_ghl_ybc">
+                        <substep>
+                            <cmd>Modify the configlet resource yaml file.</cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Apply the modified file.</cmd>
+                            <info>For
+                                example:<codeblock id="codeblock_fsf_jhl_ybc"><b>kubectl apply -f configlet-sample.yaml </b>
+configlet.configplane.juniper.net/configlet-sample configured</codeblock></info>
+                        </substep>
+                    </substeps>
+                    <info>
+                        <p>Changes to the existing configlet resource are reconciled by replacing
+                            the configuration group on cRPD. </p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>To delete a configlet resource:</cmd>
+                    <info>
+                        <codeblock id="codeblock_m45_gsl_5bc"><b>kubectl delete configlet configlet-sample -n jcnr</b>
+configlet.configplane.juniper.net "configlet-sample" deleted</codeblock>
+                        <p>When you delete the configlet resource, the configuration group is
+                            automatically deleted.</p>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_wmc_qcl_ybc">
+        <title>Troubleshooting</title>
+        <taskbody>
+            <context id="context_t4c_rcl_ybc"/>
+            <steps>
+                <step>
+                    <cmd>If you run into problems, check the <codeph>contrail-k8s-deployer</codeph>
+                        log.</cmd>
+                    <info>For
+                        example:<codeblock id="codeblock_xs2_hdm_vbc">kubectl logs contrail-k8s-deployer-8ff895cc5-cbfwm -n contrail-deploy</codeblock></info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

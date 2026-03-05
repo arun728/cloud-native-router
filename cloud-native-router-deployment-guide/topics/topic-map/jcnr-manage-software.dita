@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_da7522b27c2b99ae--5c732b58-1902b1638cb--7ff1" xml:lang="en-US">
+    <title>Manage Cloud-Native Router Software</title>
+    <shortdesc>This topic provides information on the available upgrade, downgrade and uninstall
+        options for JCNR.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody><?oxy-placeholder content="Use the tmbody element to include any content before the first topic in the topic map. Delete the tmbody element if you are not using it."?></tmbody>
+    <related-links><?oxy-placeholder content="Use the related-links element to include any topic-map level related links. Delete the related-links element if you are not using it."?></related-links>
+    <task id="task_e15_krd_qjb">
+        <title>Upgrade from Cloud-Native Router Release 23.4 and Earlier</title>
+        <taskbody>
+            <context id="context_smz_srx_tbc">
+                <p>Upgrading to this release from Cloud-Native Router release 23.4 and earlier is
+                    not supported. You must uninstall your existing Cloud-Native Router release
+                    before you can install this Cloud-Native Router release. We show you how to do
+                    this below.</p>
+                <note id="note_p4q_3dm_51c">
+                    <p>Starting with Cloud-Native Router release 23.2, the Cloud-Native Router
+                        license format has changed. Request a new license key from the JAL portal if
+                        your existing Cloud-Native Router release is earlier than release 23.2.</p>
+                </note>
+            </context>
+            <steps id="steps_dcf_4hx_tbc">
+                <step>
+                    <cmd>Save your current configuration.</cmd>
+                    <substeps id="substeps_x3f_zlx_tbc">
+                        <substep>
+                            <cmd>Save the Cloud-Native Router Helm chart
+                                    <filepath>values.yaml</filepath> customizations that you
+                                made.</cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Access the cRPD pods and save the Junos cRPD CLI configuration. </cmd>
+                            <info>To see the set of commands used to create the current
+                                configuration,<codeblock id="codeblock_kwt_cjx_tbc">show configuration | display set</codeblock></info>
+                            <info>To save the configuration, use the Junos CLI <codeph>save</codeph>
+                                command.</info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Uninstall JCNR.</cmd>
+                    <info>See <xref format="dita" href="#task_ldn_5px_tbc"/> but don't delete the
+                            <codeph>jcnr</codeph> namespace or the
+                        <codeph>jcnr-secrets</codeph>.</info>
+                </step>
+                <step>
+                    <cmd>Download the
+                            <filepath><varname>&lt;sw_package&gt;</varname>.tar.gz</filepath>
+                        tarball to the directory of your choice. See <xref href="../ref/jcnr-sw-download-packages.dita"/> for the
+                        available package options.</cmd>
+                </step>
+                <step>
+                    <cmd>Expand the downloaded package.</cmd>
+                    <info>
+                        <codeblock id="codeblock_z1z_lmx_tbc">tar xzvf <varname>&lt;sw_package&gt;</varname>.tar.gz</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change directory to the main installation directory.</cmd>
+                    <info>If you're installing Cloud-Native Router only,
+                        then:<codeblock id="codeblock_eq4_cfj_1bc">cd Juniper_Cloud_Native_Router_<varname>&lt;release&gt;</varname></codeblock>This
+                        directory contains the Helm chart for Cloud-Native Router only.</info>
+                    <info> If you're installing Cloud-Native Router and cSRX at the same time, then:
+                        <codeblock id="codeblock_ut5_l2j_1bc">cd Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname></codeblock>This
+                        directory contains the combination Helm chart for both Cloud-Native Router
+                        and cSRX.</info>
+                    <info>
+                        <note id="note_abz_lmx_tbc">
+                            <p>All remaining steps in the installation assume that your current
+                                working directory is now either
+                                        <filepath>Juniper_Cloud_Native_Router_<varname>&lt;release&gt;</varname></filepath>
+                                or
+                                        <filepath>Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname>.</filepath></p>
+                        </note>
+                    </info>
+                </step>
+                <step>
+                    <cmd>View the contents in the current directory.</cmd>
+                    <info>
+                        <codeblock id="codeblock_bbz_lmx_tbc">ls
+helmchart  images  README.md  secrets</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change to the <filepath>helmchart</filepath> directory and expand the Helm
+                        chart.</cmd>
+                    <info><codeblock id="codeblock_pjq_21q_sbc">cd helmchart</codeblock><codeblock id="codeblock_c2t_mfq_sbc">ls
+jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_cpv_n1q_sbc">tar -xzvf jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_ukc_1bq_sbc">ls
+jcnr   jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock>The Helm chart is
+                        located in the <filepath>jcnr</filepath> directory.</info>
+                </step>
+                <step>
+                    <cmd>Modify the Helm chart <codeph>helmchart/jcnr/values.yaml</codeph> file to
+                        match the Helm chart configuration you saved earlier.</cmd>
+                </step>
+                <step>
+                    <cmd>Install the Cloud-Native Router Helm chart. </cmd>
+                    <info>Navigate to the <codeph>helmchart/jcnr</codeph> directory and run the
+                        following
+                        command:<codeblock id="codeblock_q2l_jpx_tbc">helm install jcnr .</codeblock></info>
+                    <info>
+                        <codeblock id="codeblock_r2l_jpx_tbc">NAME: jcnr
+LAST DEPLOYED: xxxxxxx
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None</codeblock>
+                    </info>
+                </step>
+                <step id="ds-v-jcnr-cni">
+                    <cmd>Check that the Cloud-Native Router Helm chart is being installed.</cmd>
+                    <info>
+                        <codeblock id="codeblock_s2l_jpx_tbc">helm ls</codeblock>
+                        <p>Sample output:</p>
+                        <codeblock id="codeblock_t2l_jpx_tbc">
+NAME	NAMESPACE	REVISION      UPDATED	STATUS  	CHART            APP VERSION
+jcnr	default  	1             xxxxxxx	deployed	jcnr-xxxxxxx     xxxxxxx</codeblock>
+                        <p>If the new version of Cloud-Native Router fails to install, troubleshoot
+                            the installation as you normally do. Look at the Cloud-Native Router
+                            deployer logs and see <xref href="jcnr-troubleshoot-deployment.dita"/>.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Reconfigure cRPD with the saved Junos CLI commands.</cmd>
+                    <info>Access the cRPD CLI and use the Junos CLI <codeph>load</codeph> command to
+                        load the previously saved configuration.</info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_vqv_g2h_scc">
+        <title>Upgrade from Cloud-Native Router Release 24.2 and Later</title>
+        <taskbody>
+            <context id="context_lnd_k2h_scc"/>
+            <steps>
+                <step>
+                    <cmd>Download the
+                            <filepath><varname>&lt;sw_package&gt;</varname>.tar.gz</filepath>
+                        tarball to the directory of your choice. See <xref href="../ref/jcnr-sw-download-packages.dita"/> for the
+                        available package options.</cmd>
+                </step>
+                <step>
+                    <cmd>Expand the downloaded package.</cmd>
+                    <info>
+                        <codeblock id="codeblock_zrd_kfh_scc">tar xzvf <varname>&lt;sw_package&gt;</varname>.tar.gz</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change directory to the main installation directory.</cmd>
+                    <info>If you're installing Cloud-Native Router only,
+                        then:<codeblock id="codeblock_asd_kfh_scc">cd Juniper_Cloud_Native_Router_<varname>&lt;release&gt;</varname></codeblock>This
+                        directory contains the Helm chart for Cloud-Native Router only.</info>
+                    <info> If you're installing Cloud-Native Router and cSRX at the same time, then:
+                        <codeblock id="codeblock_bsd_kfh_scc">cd Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname></codeblock>This
+                        directory contains the combination Helm chart for both Cloud-Native Router
+                        and cSRX.</info>
+                    <info>
+                        <note id="note_csd_kfh_scc">
+                            <p>All remaining steps in the installation assume that your current
+                                working directory is now either
+                                        <filepath>Juniper_Cloud_Native_Router_<varname>&lt;release&gt;</varname></filepath>
+                                or
+                                        <filepath>Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname>.</filepath></p>
+                        </note>
+                    </info>
+                </step>
+                <step>
+                    <cmd>View the contents in the current directory.</cmd>
+                    <info>
+                        <codeblock id="codeblock_dsd_kfh_scc">ls
+helmchart  images  README.md  secrets</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change to the <filepath>helmchart</filepath> directory and expand the Helm
+                        chart.</cmd>
+                    <info><codeblock id="codeblock_esd_kfh_scc">cd helmchart</codeblock><codeblock id="codeblock_fsd_kfh_scc">ls
+jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_gsd_kfh_scc">tar -xzvf jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_hsd_kfh_scc">ls
+jcnr   jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock>The Helm chart is
+                        located in the <filepath>jcnr</filepath> directory.</info>
+                </step>
+                <step>
+                    <cmd>Modify the Helm chart <codeph>helmchart/jcnr/values.yaml</codeph> file to
+                        match the Helm chart configuration in your current installation.</cmd>
+                </step>
+                <step>
+                    <cmd>Upgrade JCNR.</cmd>
+                    <info>Navigate to the <codeph>helmchart/jcnr</codeph> directory and run the
+                        following
+                        command:<codeblock id="codeblock_ksj_vgh_scc">helm upgrade jcnr .</codeblock><codeblock id="codeblock_dsk_j2h_scc">Release "jcnr" has been upgraded. Happy Helming!
+NAME: jcnr
+LAST DEPLOYED: xxxxxxx
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None</codeblock></info>
+                </step>
+                <step>
+                    <cmd>Check that the Cloud-Native Router Helm chart is being installed.</cmd>
+                    <info>
+                        <codeblock id="codeblock_esk_j2h_scc">helm ls</codeblock>
+                        <p>Sample output:</p>
+                        <codeblock id="codeblock_fsk_j2h_scc">
+NAME    NAMESPACE       REVISION        UPDATED         STATUS          CHART           APP VERSION
+jcnr    default         2               xxxxxxx         deployed        jcnr-xxxxxxx    xxxxxxx  </codeblock>
+                        <p>If the new version of Cloud-Native Router fails to install, troubleshoot
+                            the installation as you normally do. Look at the Cloud-Native Router
+                            deployer logs and see <xref href="jcnr-troubleshoot-deployment.dita"/>.</p>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_zpc_qpx_tbc">
+        <title>Downgrade/Rollback JCNR</title>
+        <taskbody>
+            <context id="context_wzv_qpx_tbc">
+                <p>To downgrade or roll back from the current version to an older or previous
+                    version, uninstall the current version and install the older or previous
+                    version.</p>
+            </context>
+        </taskbody>
+    </task>
+    <task id="task_ldn_5px_tbc">
+        <title>Uninstall JCNR</title>
+        <taskbody>
+            <context id="context_vkh_xpx_tbc">
+                <p>Uninstalling Cloud-Native Router restores interfaces to their original state by
+                    unbinding from DPDK and binding back to the original driver. It also deletes
+                    contents of Cloud-Native Router directories, deletes cRPD created interfaces and
+                    removes any Kubernetes objects created for JCNR. (See the
+                        <codeph>restoreInterfaces</codeph> attribute in the Helm chart.)</p>
+                <note id="note_yfm_xpx_tbc">
+                    <p>Uninstalling Cloud-Native Router using Helm does not delete the
+                            <codeph>jcnr</codeph> namespace or the <codeph>jcnr-secrets</codeph>.
+                        Delete these manually if needed.</p>
+                </note>
+            </context>
+            <steps id="steps_avj_ypx_tbc">
+                <step>
+                    <cmd>Uninstall JCNR.</cmd>
+                    <info>
+                        <codeblock id="codeblock_bmx_zpx_tbc">helm uninstall jcnr</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Wait for all Cloud-Native Router resources to be fully deleted before
+                        attempting reinstallation.</cmd>
+                    <info>Premature re-installation can lead to installation issues and may require
+                        manual steps for recovery. If this occurs, use one or more of the following
+                        commands to clean up the
+                        uninstallation:<codeblock id="codeblock_zfm_xpx_tbc">helm uninstall jcnr <codeph>--</codeph>no<codeph>-</codeph>hooks​
+kubectl delete &lt;ds/name&gt;​
+kubectl delete &lt;job/jobname&gt;​
+kubectl delete ns jcnrops​</codeblock></info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_73c1001ccde8abf9-1ccac70-18dea8feb50--7e64" xml:lang="en-US">
+  <title>New and Updated Features</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section describes the new features in the Juniper Cloud-Native Router (JCNR) 24.1
+      release.</p>
+    <section>
+      <title>New Features in Juniper Cloud-Native Router Release 24.1</title>
+      <ul>
+        <li>
+          <p><b>Layer3-Layer4 Access Control Lists (Firewall Filters)</b>—Starting with Juniper
+            Cloud-Native Router Release 24.1, we support stateless firewall filters. Firewall
+            filters provide a means of protecting the cloud-native router from excessive traffic
+            transiting the router to a network destination or destined for the Routing Engine. A
+            stateless firewall filter, also known as an access control list (ACL), does not
+            statefully inspect traffic. Instead, it evaluates packet contents statically and does
+            not keep track of the state of network connections. JCNR supports the IPv4 and IPv6
+            standard firewall filters with specific match conditions and actions.</p>
+        </li>
+        <li>
+          <p><b>SRv6 Micro-SIDs Support</b>: JCNR supports SRv6 micro-SIDs. SRv6 is a segment
+            routing paradigm applied to an IPv6 underlay with a new IPv6 extension header called
+            Segment Routing Header (SRH). If a packet is required to be guided via multiple nodes,
+            the SRv6-SIDs need to be stacked up using the SRH. This presents additional bandwidth
+            and processing overhead. Thus, micro-SIDs are envisaged where multiple SRV6-addresses
+            can be compressed into a single IPv6-address, greatly reducing bandwidth overhead and
+            requirement of SRH for up to 6 typical SRv6-SIDs. JCNR supports specific features for
+            SRv6 micro-SIDs, including support for flex-algorithm.</p>
+        </li>
+        <li>
+          <p><b>SR-MPLS Flex-Algo Support</b>: JCNR now supports flexible-algorithm (flex-algo) for
+            SR-MPLS implementations.</p>
+        </li>
+        <li>
+          <p><b>JCNR Telemetry via gNMI</b>: JCNR now supports telemetry data via gNMI derived both
+            from vRouter and cRPD. The gNMI protocol defines the <codeph>Subscribe</codeph> RPC for
+            subscribing to telemetry data. The telemetry collector uses this RPC to request updates
+            from the network device for state and configuration data. </p>
+        </li>
+        <li>
+          <p><b>JCNR eBPF XDP Datapath</b>: The JCNR vRouter forwarding plane supports the extended
+            Berkley Packet Filter (eBPF) eXpress Data Path (XDP) datapath for high-speed packet
+            processing as a Juniper Networks technology preview feature. A Linux kernel technology,
+            eBPF executes user-defined programs inside a sandbox virtual machine. It enables
+            low-level networking programs to execute with optimal performance. The XDP framework
+            enables high-speed packet processing for the eBPF programs. JCNR supports XDP in native
+            (driver) mode on Baremetal servers for specific drivers only.</p>
+        </li>
+        <li>
+          <p><b>Manage vRouter Performance with Kubernetes CPU Manager</b>: JCNR now provides the
+            ability to manage the CPU allocation for the vRouter agent and vRouter DPDK pods using
+            Kubernetes CPU manager. </p>
+        </li>
+        <li><b>Full Support for Azure deployment </b>—JCNR now fully supports deployment on
+          Microsoft Azure Cloud Platform.</li>
+        <li>
+          <p><b>Mellanox NICs</b>: JCNR supports the Mellanox ConnectX-6 and ConnectX-7 NICs as a
+            Juniper Networks technology preview (Tech Preview) feature.</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

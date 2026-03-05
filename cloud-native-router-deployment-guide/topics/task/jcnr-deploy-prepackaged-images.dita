@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE task PUBLIC "-//Juniper//DTD DITA 1.3 General Task//EN" "/SysSchema/dita13/dtd/subsection/dtd/generalTask.dtd">
+<task xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_7a746bc164c8b840--3e89a8b5-18fbd4ac7d3--7eea" xml:lang="en-US">
+ <title>Deploy Prepackaged Images</title>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <taskbody>
+    <context id="context_s4j_xzc_dbc">Use this procedure to import Cloud-Native Router images to the
+      container runtime from the downloaded Cloud-Native Router software packages.<p>Your cluster
+        can pull Cloud-Native Router images from the <codeph>enterprise-hub.juniper.net</codeph>
+        repository or your cluster can use the Cloud-Native Router images that are included in the
+        downloaded Cloud-Native Router software packages.</p><p>This latter option is useful if your
+        cluster doesn't have access to the Internet or if you want to set up your own
+        repository.</p><p>Setting up your own repository is beyond the scope of this document, but
+        your cluster can still use the included images if you manually import them to the container
+        runtime on each cluster node where you want to run the downloaded software. Simply use the
+        respective container runtime commands. We show you how to do this in the procedure
+        below.</p>
+    </context>
+    <steps id="steps_hst_ldd_dbc">
+      <step>
+        <cmd>Locate the gzipped images tar file in the downloaded software package. </cmd>
+        <info>
+          <ul id="ul_its_bkz_ydc">
+            <li>
+              <p>For regular Cloud-Native Router images, the gzipped images tar file is
+                    <filepath>Juniper_Cloud_Native_Router_<varname>&lt;release&gt;</varname>/images/jcnr-images.tar.gz</filepath>.</p>
+            </li>
+            <li>
+              <p>For Cloud-Native Router Service Module images, the gzipped images tar file is
+                    <filepath>Juniper_Cloud_Native_Router_Service_Module_<varname>&lt;release&gt;</varname>/images/jcnr-images.tar.gz</filepath>.</p>
+            </li>
+            <li>
+              <p>For Cloud-Native Router Validation Factory images, the gzipped images tar file is
+                    <filepath>JCNR_Validation_Factory_<varname>&lt;release&gt;</varname>/images/jcnr-valfac-images.tar.gz</filepath>.</p>
+            </li>
+          </ul>
+        </info>
+      </step>
+      <step>
+        <cmd>Gunzip the images tar file.</cmd>
+        <info><codeblock id="codeblock_hrm_rkz_ydc">gunzip jcnr-images.tar.gz</codeblock>or
+          <codeblock id="codeblock_lxc_tkz_ydc">gunzip jcnr-valfac-images.tar.gz</codeblock></info>
+      </step>
+      <step>
+        <cmd>Copy the gunzipped images tar file to every node where you're installing the downloaded
+          software.</cmd>
+      </step>
+      <step id="step_kkg_gwb_4bc">
+        <cmd>SSH to one of the nodes and go to the directory where you copied the gunzipped images
+          tar file.</cmd>
+      </step>
+      <step>
+        <cmd>Import the images to the container runtime.</cmd>
+        <info>For regular Cloud-Native Router images:<ul id="ul_o2w_1qc_fdc">
+            <li>
+              <p>containerd: <codeph>sudo ctr -n k8s.io images import jcnr-images.tar</codeph></p>
+            </li>
+            <li>
+              <p>docker: <codeph>sudo docker load -i jcnr-images.tar</codeph></p>
+            </li>
+          </ul></info>
+        <info>For Cloud-Native Router Service Module images:<ul id="ul_rfj_ymz_ydc">
+            <li>
+              <p>podman: <codeph>sudo podman load -i jcnr-images.tar</codeph></p>
+            </li>
+          </ul></info>
+        <info>For Cloud-Native Router Validation Factory images:<ul id="ul_sf1_dlz_ydc">
+            <li>
+              <p>containerd: <codeph>sudo ctr -n k8s.io images import
+                  jcnr-valfac-images.tar</codeph></p>
+            </li>
+            <li>
+              <p>docker: <codeph>sudo docker load -i jcnr-valfac-images.tar</codeph></p>
+            </li>
+          </ul></info>
+      </step>
+      <step id="step_eyn_gwb_4bc">
+        <cmd>Check that the images have been imported.</cmd>
+        <info>
+          <ul id="ul_dy1_hqc_fdc">
+            <li>
+              <p>containerd: <codeph>ctr -n k8s.io images ls</codeph></p>
+            </li>
+            <li>
+              <p>docker: <codeph>docker images</codeph></p>
+            </li>
+            <li>
+              <p>podman: <codeph>podman images</codeph></p>
+            </li>
+          </ul>
+        </info>
+      </step>
+      <step>
+        <cmd>Repeat steps <xref format="dita" href="#xd_7a746bc164c8b840--3e89a8b5-18fbd4ac7d3--7eea/step_kkg_gwb_4bc"/> to <xref href="#xd_7a746bc164c8b840--3e89a8b5-18fbd4ac7d3--7eea/step_eyn_gwb_4bc"/> on each node
+          where you're installing the downloaded software.</cmd>
+      </step>
+    </steps>
+    <result id="result_mzl_jxb_4bc">When you install Cloud-Native Router later on, the cluster first
+      searches locally for the required images before reaching out to
+        <codeph>enterprise-hub.juniper.net</codeph>. Since you manually imported the images locally
+      on each node, the cluster finds the images locally and does not need to download them from an
+      external source.</result>
+  </taskbody>
+</task>

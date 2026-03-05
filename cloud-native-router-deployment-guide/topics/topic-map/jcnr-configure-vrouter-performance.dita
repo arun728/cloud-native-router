@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_27a7ba04b8c81368--469b23e6-18e4d047d14--7f0d" xml:lang="en-US">
+    <title>Allocate CPUs to the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Forwarding Plane</title>
+    <shortdesc>Learn how to allocate CPU cores using static CPU allocation or using the Kubernetes
+        CPU Manager.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody>
+        <p>The <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation Helm chart and the vRouter CRD provide you with a number of
+            controls to allocate CPU cores to the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter. You can specify the requested number
+            of cores, the core limit, and the cores to be assigned, either through static CPU
+            allocation or through the Kubernetes CPU Manager.</p>
+    </tmbody>
+    <task id="task_e15_krd_qjb">
+        <title>Allocate CPUs Using the Kubernetes CPU Manager</title>
+        <taskbody>
+            <context id="context_hlk_scg_51c">Use this procedure to allocate CPU cores to vRouter
+                DPDK pods using the Kubernetes CPU Manager. <p>This is the recommended approach if
+                    your cluster is running the Kubernetes CPU Manager.</p></context>
+            <steps id="steps_ilk_scg_51c">
+                <!--<step><cmd>Enable the Kubernetes CPU Manager and specify the CPUs you want to reserve.</cmd><info/><substeps id="substeps_opx_wpf_51c"><substep><cmd>Locate the <filepath>/var/lib/kubelet/config.yaml</filepath> file.</cmd></substep><substep><cmd>Add the following to the file to enable CPU Manager.</cmd><info><codeblock id="codeblock_tgr_zpf_51c">cpuManagerPolicy: static</codeblock></info></substep><substep><cmd>Add the following to the file to reserve specified CPUs.</cmd><info><codeblock id="codeblock_zhs_qqf_51c">reservedSystemCPUs: <varname>&lt;cores></varname></codeblock>where <varname>&lt;cores></varname> is the set of cores to reserve (for example, <codeph>reservedSystemCPUs: 0-1,5-7</codeph>).</info></substep></substeps></step>-->
+                <!--<cmd>Specify the resource limits and requests for the <codeph>contrail-vrouter-kernel-init-dpdk</codeph> and the <codeph>contrail_vrouter_agent_dpdk</codeph> containers.</cmd><substeps id="substeps_jlk_scg_51c"><substep><cmd>Locate the <filepath>helmchart/jcnr/charts/jcnr-vrouter/values.yaml</filepath> file in your installation directory.</cmd></substep><substep><cmd>Edit that file to specify the resource limits and requests for both the <codeph>contrail-vrouter-kernel-init-dpdk</codeph> and the <codeph>contrail_vrouter_agent_dpdk</codeph> containers.</cmd><info><codeblock id="codeblock_bnx_hmf_51c">  resources:
+    limits:
+      cpu: <varname>&lt;number_of_cpus&gt;</varname>
+      memory: <varname>&lt;memory&gt;</varname>
+    requests:
+      cpu: <varname>&lt;number_of_cpus&gt;</varname>
+      memory: <varname>&lt;memory&gt;</varname></codeblock>To guarantee that each container gets what it's asking for, set the same <codeph>cpu</codeph> value in both the <codeph>limits</codeph> and <codeph>requests</codeph> sections, and set the same <codeph>memory</codeph> value in both the <codeph>limits</codeph> and <codeph>requests</codeph> sections for each container.</info></substep></substeps>-->
+                <step>
+                    <cmd>Configure the Helm chart to specify the number of guaranteed vRouter CPUs
+                        that you want for the vRouter pods.</cmd>
+                    <info>In the main <filepath>values.yaml</filepath> file:</info>
+                    <substeps id="substeps_sjr_jyf_51c">
+                        <substep>
+                            <cmd>Disable the static CPU allocation method of assigning CPU cores by
+                                commenting out the following lines:</cmd>
+                            <info>
+                                <codeblock id="codeblock_fys_kyf_51c">
+#cpu_core_mask: "2,3,22,23"
+#dpdkCtrlThreadMask: "2,3"
+#serviceCoreMask: "2,3"</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Configure the vRouter DPDK pods to use the guaranteed CPUs reserved
+                                by the Kubernetes CPU Manager.</cmd>
+                            <info>For example, to reserve 5 CPU
+                                cores:<codeblock id="codeblock_vwq_xyf_51c">guaranteedVrouterCpus: 5</codeblock>This
+                                value must be smaller or equal to the number of CPU cores reserved
+                                by the Kubernetes CPU Manager.
+                                <!--greater or equal to the number of CPU cores configured for the <codeph>contrail-vrouter-kernel-init-dpdk</codeph> and the <codeph>contrail_vrouter_agent_dpdk</codeph> containers in <filepath>helmchart/charts/jcnr/jcnr-vrouter/values.yaml</filepath>, and--></info>
+                            <info>The minimum recommended number is one more than the desired number
+                                of forwarding cores.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Specify the number of CPU cores to use for vRouter DPDK
+                                service/control threads.</cmd>
+                            <info>For example, to reserve 1 core for vRouter DPDK service/control
+                                threads:<codeblock id="codeblock_ay3_cfg_x1c">numServiceCtrlThreadCPU: 1</codeblock>This
+                                leaves the remaining cores (four, in this example) for
+                                forwarding.</info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Proceed with your <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation.</cmd>
+                </step>
+                <step>
+                    <cmd>After <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is installed, check to make sure the vRouter DPDK pods has a QoS
+                        Class of Guaranteed.</cmd>
+                    <info><codeblock id="codeblock_pk3_krh_51c">kubectl get pod -n contrail contrail-vrouter-masters-vrdpdk-<varname>&lt;xxxx&gt;</varname> -o yaml | grep -i qosclass</codeblock>The
+                        output should look like
+                        this:<codeblock id="codeblock_rcx_qrh_51c">qosClass: Guaranteed</codeblock></info>
+                </step>
+                <step>
+                    <cmd>To find out which CPUs are allocated to the vRouter DPDK container:</cmd>
+                    <info><codeblock id="codeblock_t3s_5rh_51c">kubectl exec -n contrail contrail-vrouter-masters-vrdpdk-<varname>&lt;xxxx&gt;</varname> -c contrail-vrouter-agent-dpdk -- cat /sys/fs/cgroup/cpuset/cpuset.cpus</codeblock>The
+                        output should list the cores assigned to the container.</info>
+                </step>
+                <step>
+                    <cmd>To view the CPU assignment from the Kubernetes CPU Manager:</cmd>
+                    <substeps id="substeps_rjf_v1g_51c">
+                        <substep>
+                            <cmd>SSH into a node where <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is running.</cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Look at the Kubernetes CPU Manager state.</cmd>
+                            <info>For
+                                    example:<codeblock id="codeblock_f1y_cbg_51c"> cat /var/lib/kubelet/cpu_manager_state | jq
+{
+  "policyName": "static",
+  "defaultCpuSet": "0-1,7-11",
+  "entries": {
+    "915d338f-c013-4984-a53c-51db78476dbf": {
+      "contrail-vrouter-agent-dpdk": "2-6",
+      "contrail-vrouter-kernel-init-dpdk": "2"
+    }
+  },
+  "checksum": 3199431349
+}
+</codeblock><note id="note_ncm_hbg_51c">
+                                    <p>You'll need to install <codeph>jq</codeph> (<codeph>dnf
+                                            install -y jq</codeph>) in order to see formatted
+                                        output.</p>
+                                </note></info>
+                        </substep>
+                    </substeps>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_zds_vcg_51c">
+        <title>Allocate CPUs Using Static CPU Allocation</title>
+        <taskbody>
+            <context id="context_pvf_2dg_51c">Use this procedure to allocate CPU cores to vRouter
+                DPDK pods using static CPU allocation.<p>We recommend you use this method only when
+                    your cluster is not running the Kubernetes CPU Manager.</p></context>
+            <steps id="steps_xg4_ddg_51c">
+                <!--<cmd>Specify the resource limits and requests for the <codeph>contrail-vrouter-kernel-init-dpdk</codeph> and the <codeph>contrail_vrouter_agent_dpdk</codeph> containers.</cmd><substeps id="substeps_fh5_ddg_51c"><substep><cmd>Locate the <filepath>helmchart/jcnr/charts/jcnr-vrouter/values.yaml</filepath> file in your installation directory.</cmd></substep><substep><cmd>Edit that file to specify the resource limits and requests for both the <codeph>contrail-vrouter-kernel-init-dpdk</codeph> and the <codeph>contrail_vrouter_agent_dpdk</codeph> containers.</cmd><info><codeblock id="codeblock_gh5_ddg_51c">  resources:
+    limits:
+      cpu: <varname>&lt;number_of_cpus&gt;</varname>
+      memory: <varname>&lt;memory&gt;</varname>
+    requests:
+      cpu: <varname>&lt;number_of_cpus&gt;</varname>
+      memory: <varname>&lt;memory&gt;</varname></codeblock>To guarantee that each container gets what it's asking for, set the same <codeph>cpu</codeph> value in both the <codeph>limits</codeph> and <codeph>requests</codeph> sections, and set the same <codeph>memory</codeph> value in both the <codeph>limits</codeph> and <codeph>requests</codeph> sections for each container.</info></substep></substeps>-->
+                <step>
+                    <cmd>Configure the Helm chart to specify the cores that you want the vRouter
+                        DPDK to use. Specify the CPU cores to use for static CPU allocation. You can
+                        also specify the CPU core(s) to allocate to vRouter DPDK control threads
+                        using <codeph>dpdkCtrlThreadMask</codeph> and the CPU core(s) to allocate to
+                        vRouter DPDK service threads using the
+                        <codeph>serviceCoreMask</codeph>.</cmd>
+                    <info>For example, to specify cores 2, 3, 22, and 23:
+                        <codeblock id="codeblock_ih5_ddg_51c">jcnr-vrouter:
+  # do not configure cpu_core_mask if you wish to use Kubernetes CPU manager static policy (pod with Guaranteed QoS) for vRouter DPDK 
+  # cpu_core_mask is the vRouter forward core mask i.e. if specified, vRouter will be run using the mentioned cores 
+  cpu_core_mask: "2,3,22,23"
+
+  # configure guaranteedVrouterCpus if you wish to use CPU manager static policy (pod with Guaranteed QoS) for vRouter DPDK
+  # or can be used to assign cpu using cpu pooler in single pod deployment
+  #guaranteedVrouterCpus: 4
+
+  # configurable parameter for dpdk control threads
+  #dpdkCtrlThreadMask: "2,3"
+
+  # configurable parameter for service core mask
+  #serviceCoreMask: "2,3"</codeblock></info>
+                </step>
+                <step>
+                    <cmd>Proceed with your <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation.</cmd>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_g5h_szk_khc">
+        <title>Allocate CPUs Using Nokia CPU Pooler</title>
+        <taskbody>
+            <context>
+                <note id="note_j24_yzk_khc">Nokia CPU Pooler is supported only for Cloud-Native
+                    Router single-pod installation.</note>
+            </context>
+            <context>
+                <p>The Nokia CPU Pooler is a Kubernetes device plugin designed to manage CPU
+                    resources more effectively by organizing them into distinct pools. It exposes
+                    CPU cores as consumable devices to the scheduler and physically isolates CPU
+                    resources for containers based on their performance needs. </p>
+                <p>It supports three types of CPU pools: </p>
+                <ul id="ol_d5t_d1l_khc">
+                    <li>
+                        <p>Exclusive Pool: Allocates dedicated CPU cores to latency-sensitive
+                            containers.</p>
+                    </li>
+                    <li>
+                        <p>Shared Pool: Allocates fractional CPUs (millicores) to containers that
+                            can tolerate some sharing. </p>
+                    </li>
+                    <li>
+                        <p>Default Pool: The standard Kubernetes CPU allocation used when no
+                            specific pool is requested. </p>
+                    </li>
+                </ul>
+                <p>Use this procedue to allocate CPU cores to vRouter DPDK using Nokia CPU
+                    Pooler:</p>
+            </context>
+            <steps>
+                <step>
+                    <cmd>Ensure Nokia CPU pooler is set up on the node where the Cloud-Native Router
+                        needs to be installed.</cmd>
+                </step>
+                <step>
+                    <cmd>Update the Cloud-Native Router helm chart with the
+                            <codeph>guaranteedVrouterCpus</codeph> flag. Comment the
+                            <codeph>cpu_core_mask</codeph> flag to disable the default setting.
+                        Ensure <codeph>dpdkCtrlThreadMask</codeph> and
+                            <codeph>serviceCoreMask</codeph> is disabled as well.</cmd>
+                    <info>
+                        <codeblock id="codeblock_zh5_4fl_khc">jcnr-vrouter:
+  # do not configure cpu_core_mask if you wish to use Kubernetes CPU manager static policy (pod with Guaranteed QoS) for vRouter DPDK 
+  # cpu_core_mask is the vRouter forward core mask i.e. if specified, vRouter will be run using the mentioned cores 
+  # cpu_core_mask: "2,3,22,23"
+
+  # configure guaranteedVrouterCpus if you wish to use CPU manager static policy (pod with Guaranteed QoS) for vRouter DPDK
+  guaranteedVrouterCpus: 4
+
+  # configurable parameter for dpdk control threads
+  #dpdkCtrlThreadMask: "4"
+
+  # configurable parameter for service core mask
+  #serviceCoreMask: "4"</codeblock>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7abe" xml:lang="en-US">
+  <title>Juniper Technology Previews (Tech Previews)</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Tech Previews enable you to test functionality and provide feedback during the development
+      process of innovations that are not final production features. The goal of a Tech Preview is
+      for the feature to gain wider exposure and potential full support in a future release.
+      Customers are encouraged to provide feedback and functionality suggestions for a Technology
+      Preview feature before it becomes fully supported.</p>
+    <p>Tech Previews may not be functionally complete, may have functional alterations in future
+      releases, or may get dropped under changing markets or unexpected conditions, at Juniper’s
+      sole discretion. Juniper recommends that you use Tech Preview features in non-production
+      environments only.</p>
+    <p>Juniper considers feedback to add and improve future iterations of the general availability
+      of the innovations. Your feedback does not assert any intellectual property claim, and Juniper
+      may implement your feedback without violating your or any other party's rights.</p>
+    <p>These features are "as is" and voluntary use. Juniper Support will attempt to resolve any
+      issues that customers experience when using these features and create bug reports on behalf of
+      support cases. However, Juniper may not provide comprehensive support services to Tech Preview
+      features. Certain features may have reduced or modified security, accessibility, availability,
+      and reliability standards relative to General Availability software. Tech Preview features are
+      not eligible for P1/P2 JTAC cases, and should not be subject to existing SLAs or service
+      agreements.</p>
+    <p>For additional details, please contact <xref href="https://support.juniper.net/support/" format="html" scope="external">Juniper Support</xref> or your local account team.</p>
+  </conbody>
+</concept>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6565543725123c80--2b77568f-1872d670036--7d14" xml:lang="en-US">
+  <title>Resolved Issues</title>
+  <prolog>
+    <author>dgv</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section provides information about issues that we resolved between releases 22.4 and
+      22.4.1.</p>
+    <section id="section_jjb_c2h_xvb">
+      <title>Resolved Issues in Juniper Cloud-Native Router Release 22.4.1</title>
+      <ul id="ul_f41_rqj_zwb">
+        <li>
+          <p><b>JCNR-3416: CRPD logs are getting generated in /var/log/ and there is no option
+              provided in the JCNR helm charts to change the default log path</b>—cRPD logs were
+            being generated in the <filepath>/var/log/</filepath> folder and there was no option
+            provided in the Juniper Cloud-Native Router helm charts to change the default log path.
+            This issue is now resolved. A new <filepath>log_path</filepath> key is provided in both
+              <filepath>values.yaml</filepath> and <filepath>values_L3.yaml</filepath> files.</p>
+        </li>
+        <li>
+          <p><b>JCNR-3436: corefiles not saved on /var/crash on host</b>—The core files were not
+            being saved in the <filepath>/var/crash</filepath> folder by default. This issue is now
+            resolved. A new <filepath>coreFilePath</filepath> key is provided in both
+              <filepath>values.yaml</filepath> and <filepath>values_L3.yaml</filepath> files.</p>
+        </li>
+        <li>
+          <p><b>JCNR-3162: Inconsistencies observed with pods using JCNR kernel interfaces after the
+              node (server) was rebooted</b>—After the node (server) was rebooted, if the pods using
+            JCNR kernel interfaces attempted to transition to the Running state while the cRPD
+            container was initializing, those pods were found to land in an error state. This issue
+            is now resolved.</p>
+        </li>
+        <li>
+          <p><b>JCNR-3269: JCNR Interface is created without Vlan-ID in vrouter-master POD</b>—While
+            testing pod deletion, it was found that the JCNR interface was created without proper
+            VLAN ID, resulting in packets being dropped at the interface level. This issue is now
+            resolved.</p>
+        </li>
+        <li>
+          <p><b>JCNR-3373: JCNR is dropping multicast packets (DHCPv6 solicit request) coming from
+              the radio unit</b>—During reboot testing, it was observed that Juniper Cloud-Native
+            Router was dropping DHCPv6 solicit requests coming from the radio unit. This issue is
+            now resolved.</p>
+        </li>
+        <li>
+          <p><b>JCNR-3420: post restarting docker services, DU pods are not able to reach the
+              gateway</b>—After the docker restart it was noticed that all the pods restart and
+            recover. However, after recovery, the <filepath>GW</filepath> was not reachable from
+            inside the <filepath>odu</filepath> pods. This issue is now resolved.</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

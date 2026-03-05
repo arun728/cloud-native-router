@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7c98" xml:lang="en-US">
+  <title>Manage <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Software</title>
+  <abstract>
+    <shortdesc>This topic provides high-level information about the available upgrade, downgrade and
+      uninstall options for JCNR.</shortdesc>
+  </abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+
+    <section id="section_psv_b13_mxb">
+      <title>Upgrading JCNR</title>
+      <p>You can upgrade from a previous <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>release to the latest using the following steps:</p>
+      <note id="note_p4q_3dm_51c">
+        <p>Starting with <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Release 23.2, the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>license format has changed. Request a new
+          license key from the JAL portal before deploying or upgrading from a pre-23.2 release to
+          this release.</p>
+      </note>
+      <ol>
+        <li>
+          <p>Download the tarball,
+                <filepath>Juniper_Cloud_Native_Router_<varname>release_number</varname>.tgz</filepath>,
+            to the directory of your choice. You must perform the file transfer in binary mode when
+            transferring the file to your server, so that the compressed tar file expands
+            properly.</p>
+        </li>
+        <li>
+          <p>Expand the file
+              <filepath>Juniper_Cloud_Native_Router_<varname>release-number</varname>.tgz</filepath>.</p>
+          <codeblock>tar xzvf Juniper_Cloud_Native_Router_<varname>release-number</varname>.tgz</codeblock>
+        </li>
+        <li>
+          <p>Change directory to Juniper_Cloud_Native_Router_<varname>release-number</varname>.</p>
+          <codeblock>cd Juniper_Cloud_Native_Router_<varname>release-number</varname></codeblock>
+          <note>All remaining steps in the upgrade assume that your current working directory is now
+                <filepath>Juniper_Cloud_Native_Router_<varname>release-number</varname></filepath>.</note>
+        </li>
+        <li><p>Change to the <filepath>helmchart</filepath> directory and expand the Helm
+          chart.</p><codeblock id="codeblock_pjq_21q_sbc">cd helmchart</codeblock><codeblock id="codeblock_c2t_mfq_sbc">ls
+jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_cpv_n1q_sbc">tar -xzvf jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_ukc_1bq_sbc">ls
+jcnr   jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock></li>
+        <li>
+          <p>Customize the helm chart for your deployment using the
+              <codeph>helmchart/jcnr/values.yaml</codeph> file to match the helm chart configuration
+            in your current installation.</p>
+        </li>
+        <li>
+          <p>Deploy the Juniper Cloud-Native Router using the helm chart. Navigate to the
+              <filepath>helmchart/jcnr</filepath> directory and run the following command:</p>
+          <codeblock>helm upgrade jcnr .
+Release "jcnr" has been upgraded. Happy Helming!
+NAME: jcnr
+LAST DEPLOYED: Thu Sep 21 03:58:28 2023
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None</codeblock>
+        </li>
+        <li>
+          <p>Confirm Juniper Cloud-Native Router deployment.</p>
+          <codeblock>helm ls</codeblock>
+          <codeblock>NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
+jcnr    default         2               2023-09-21 03:58:28.024244633 -0400 EDT deployed        jcnr-<varname>&lt;version&gt;</varname>     <varname>&lt;version&gt;</varname>  </codeblock>
+        </li>
+      </ol>
+    </section>
+    <section id="section_jyy_gmg_hxb">
+      <title>Downgrading JCNR</title>
+      <p>Currently, there is no procedure for downgrading to an older version. To change from a
+        current version to an older version, you must uninstall the current version and install an
+        older version.</p>
+    </section>
+    <section id="section_utg_kmg_hxb"><title>Uninstalling JCNR</title><p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>can be uninstalled by
+        using the following command:</p><codeblock>helm uninstall jcnr</codeblock><p>Uninstalling
+        <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>restores interfaces to their original state by unbinding from DPDK and binding back to
+        the original driver. It also delete contents of <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>directories, deletes cRPD created
+        interfaces and removes any Kubernetes objects created for JCNR.</p><note>
+        <p>The <filepath>jcnr</filepath> namespace is not deleted as a part of the helm
+          uninstallation and must be deleted manually.</p>
+      </note>After the triggering of helm uninstall command, please wait for all Kubernetes
+      resources to be fully deleted before attempting a re-installation. Premature re-installation
+      can lead to installation stalls and may require manual steps for recovery. ​The recovery steps
+      are provided
+      below:<codeblock>helm uninstall jcnr <codeph>--</codeph>no<codeph>-</codeph>hooks​
+kubectl delete &lt;ds/name&gt;​
+kubectl delete &lt;job/jobname&gt;​
+kubectl delete ns jcnrops​</codeblock></section>
+  </conbody>
+</concept>

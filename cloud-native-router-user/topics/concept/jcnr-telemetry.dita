@@ -1,0 +1,1093 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7ceb" xml:lang="en-US">
+  <title>Telemetry Capabilities </title>
+  <abstract>
+    <shortdesc>Read this topic to learn about the telemetry data available from Juniper Cloud-Native
+      Router.</shortdesc>
+  </abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+
+    <section id="section_jr4_s3x_41c"><title>Cloud-Native Router Telemetry</title>Juniper
+      Cloud-Native Router comes with telemetry capabilities that enable you to see performance
+      metrics and telemetry data. Telemetry data is derived separately from the vRouter, cRPD and
+      cSRX (if using <xref href="jcnr-and-security-services.dita">IPSec
+        security using service chaining</xref>). The container
+        <filepath>telemetry-exporter</filepath> provides you this visibility via either a
+      Prometheus-based API or gRPC Network Management Interface (gNMI). Telemetry exporter is
+      enabled for both vRouter and cRPD by default. You can use the following snippet in
+        <codeph>values.yaml</codeph> to configure
+        telemetry:<codeblock id="codeblock_tjq_gsn_sbc">#telemetry:
+  #  disable: false
+  #  metricsPort: 8072
+  #  logLevel: info         #Possible options: warn, warning, info, debug, trace, or verbose
+  #  gnmi:
+  #    enable: true
+  #vrouter:
+  #  telemetry:
+  #    metricsPort: 8070
+  #    logLevel: info       #Possible options: warn, warning, info, debug, trace, or verbose
+  #    gnmi:
+  #      enable: true</codeblock><p>Telemetry export is disabled for cSRX by default. You
+        can enable it in the cSRX helm chart during
+        installation:</p><codeblock id="codeblock_csf_frj_rdc">telemetry: 
+   enable: true</codeblock><p>You must also provide the cSRX root password in base64 format
+        to the service-chain-instance secret created before the helm installation. Please review the
+          <xref keyref="cloud-native-router-deployment-guide.jcnr-deploy-csrx-task_zly_rd3_1bc"/>
+        for more details.</p></section>
+    <section id="section_kr4_s3x_41c">
+      <title>Telemetry via Prometheus-based API</title>
+      <p>Prometheus is an open-source systems monitoring and alerting toolkit. You can use
+        Prometheus to retrieve telemetry data from the cloud-native router host servers and view
+        that data in the HTTP format. A sample of Prometheus configuration looks like this:</p>
+      <codeblock id="codeblock_sr4_s3x_41c">- job_name: "prometheus-JCNR-1a2b3c"
+
+# metrics_path defaults to '/metrics'
+# scheme defaults to 'http'.
+
+static_configs:
+- targets: ["&lt;host-server-IP&gt;:8070"]</codeblock>
+      <p>For vRouter, the telemetry exporter periodically queries the Introspect on the
+        vRouter-agent for statistics and reports metrics information in response to the Prometheus
+        scrape requests. You can directly view the telemetry data by using the following URL:
+            <filepath>http://<varname>host server IP address</varname>:8070</filepath>.</p>
+      <p> The cRPD telemetry exporter periodically queries the the cRPD pod over NETCONF for
+        statistics and reports metrics information in response to the Prometheus scrape requests.
+        You can directly view the telemetry data by using the following URL:
+            <filepath>http://<varname>host server IP address</varname>:8072</filepath>. </p>
+      <p>The cSRX telemetry exporter periodically queries the the cSRX pod over NETCONF for
+        statistics and reports metrics information in response to the Prometheus scrape requests.
+        You can directly view the telemetry data by using the following URL:
+            <filepath>http://<varname>host server IP address</varname>:8073</filepath>. </p>
+      <note id="note_obv_vvp_w1c">
+        <p>If the ports <codeph>8072</codeph> or <codeph>8073</codeph> is unavailable you can choose
+          an alternate port to collect telemetry data in the respective helm charts.</p>
+      </note>
+      <p>The tables below shows the sample telemetry outputs for vRouter and cRPD when using
+        Prometheus-based API.</p>
+      <note id="note_lr4_s3x_41c">
+        <p>We've grouped the output shown in the following table. The cloud-native router does not
+          group or sort the output on live systems.</p>
+      </note>
+      <table id="table_mr4_s3x_41c">
+        <title>Sample vRouter Telemetry Data (Prometheus-based API)</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="3.85*"/>
+          <thead>
+            <row>
+              <entry>Group</entry>
+              <entry>Sample Output</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>Memory usage per vRouter</entry>
+              <entry align="left">
+                <codeblock id="codeblock_nr4_s3x_41c">
+# TYPE virtual_router_system_memory_cached_bytes gauge
+# HELP virtual_router_system_memory_cached_bytes Virtual router system memory cached 
+virtual_router_system_memory_cached_bytes{vrouter_name="jcnr.example.com"} 2635970448
+
+# TYPE virtual_router_system_memory_buffers gauge
+# HELP virtual_router_system_memory_buffers Virtual router system memory buffer 
+virtual_router_system_memory_buffers{vrouter_name="jcnr.example.com"} 32689
+
+# TYPE virtual_router_system_memory_bytes gauge
+# HELP virtual_router_system_memory_bytes Virtual router total system memory 
+virtual_router_system_memory_bytes{vrouter_name="jcnr.example.com"} 2635970448
+
+# TYPE virtual_router_system_memory_free_bytes gauge
+# HELP virtual_router_system_memory_free_bytes Virtual router system memory free 
+virtual_router_system_memory_free_bytes{vrouter_name="jcnr.example.com"} 2635969296
+
+# TYPE virtual_router_system_memory_used_bytes gauge
+# HELP virtual_router_system_memory_used_bytes Virtual router system memory used 
+virtual_router_system_memory_used_bytes{vrouter_name="jcnr.example.com"} 32689
+
+# TYPE virtual_router_virtual_memory_kilobytes gauge
+# HELP virtual_router_virtual_memory_kilobytes Virtual router virtual memory 
+virtual_router_virtual_memory_kilobytes{vrouter_name="jcnr.example.com"} 0
+
+# TYPE virtual_router_resident_memory_kilobytes gauge
+# HELP virtual_router_resident_memory_kilobytes Virtual router resident memory 
+virtual_router_resident_memory_kilobytes{vrouter_name="jcnr.example.com"} 32689
+
+# TYPE virtual_router_peak_virtual_memory_bytes gauge
+# HELP virtual_router_peak_virtual_memory_bytes Virtual router peak virtual memory 
+virtual_router_peak_virtual_memory_bytes{vrouter_name="jcnr.example.com"} 2894328001
+</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry> Packet count per interface</entry>
+              <entry>
+                <codeblock id="codeblock_or4_s3x_41c">
+# TYPE virtual_router_phys_if_input_packets_total counter
+# HELP virtual_router_phys_if_input_packets_total Total packets received by physical interface
+virtual_router_phys_if_input_packets_total{vrouter_name="jcnr.example.com",interface_name="bond0"} 1483
+
+# TYPE virtual_router_phys_if_output_packets_total counter
+# HELP virtual_router_phys_if_output_packets_total Total packets sent by physical interface
+virtual_router_phys_if_output_packets_total{vrouter_name="jcnr.example.com",interface_name="bond0"} 32969
+virtual_router_phys_if_output_packets_total{vrouter_name="jcnr.example.com",interface_name="bond0"} 1585402623
+virtual_router_phys_if_output_packets_total{interface_name="bond0",vrouter_name="jcnr.example.com"} 1585403344
+
+# TYPE virtual_router_phys_if_input_bytes_total counter
+# HELP virtual_router_phys_if_input_bytes_total Total bytes received by physical interface
+virtual_router_phys_if_input_bytes_total{interface_name="bond0",vrouter_name="jcnr.example.com"} 125558
+virtual_router_phys_if_input_bytes_total{vrouter_name="jcnr.example.com",interface_name="bond0"} 228300499320
+virtual_router_phys_if_input_packets_total{interface_name="bond0",vrouter_name="jcnr.example.com"} 1585421179
+
+# TYPE virtual_router_phys_if_output_bytes_total counter
+# HELP virtual_router_phys_if_output_bytes_total Total bytes sent by physical interface
+virtual_router_phys_if_output_bytes_total{vrouter_name="jcnr.example.com",interface_name="bond0"} 4597076
+virtual_router_phys_if_output_bytes_total{interface_name="bond0",vrouter_name="jcnr.example.com"} 228297889634
+
+# TYPE virtual_router_phys_if_input_errors_total counter
+# HELP virtual_router_phys_if_input_errors_total Total input errors on the physical interface (vRouter software errors)
+virtual_router_phys_if_input_errors_total{vrouter_name="node1", interface_name="enp3s0"} 10
+
+# TYPE virtual_router_phys_if_output_errors_total counter
+# HELP virtual_router_phys_if_output_errors_total Total output errors on the physical interface (vRouter software errors)
+virtual_router_phys_if_output_errors_total{vrouter_name="node1", interface_name="enp3s0"} 0
+
+# TYPE virtual_router_phys_if_input_port_errors_total counter
+# HELP virtual_router_phys_if_input_port_errors_total Total output errors on the physical interface (DPDK driver errors)
+virtual_router_phys_if_input_port_errors_total{vrouter_name="node1", interface_name="enp3s0"} 22
+
+# TYPE virtual_router_phys_if_output_port_errors_total counter
+# HELP virtual_router_phys_if_output_port_errors_total Total input errors on the physical interface (DPDK driver errors)
+virtual_router_phys_if_output_port_errors_total{vrouter_name="node1", interface_name="enp3s0"} 3
+
+# TYPE virtual_router_phys_if_input_device_errors_total counter
+# HELP virtual_router_phys_if_input_device_errors_total Total input errors on the physical interface (Physical device rx/tx queue errors)
+virtual_router_phys_if_input_device_errors_total{vrouter_name="node1", interface_name="enp3s0"} 52
+
+# TYPE virtual_router_phys_if_output_device_errors_total counter
+# HELP virtual_router_phys_if_output_device_errors_total Total input errors on the physical interface (Physical device rx/tx queue errors)
+virtual_router_phys_if_output_device_errors_total{vrouter_name="node1", interface_name="enp3s0"} 1
+
+# TYPE virtual_router_phys_if_discards_total counter
+# HELP virtual_router_phys_if_discards_total Total input discarded packets on the physical interface
+virtual_router_phys_if_discards_total{vrouter_name="node1", interface_name="enp3s0"} 2
+
+# TYPE virtual_router_phys_if_drops_total counter
+# HELP virtual_router_phys_if_drops_total Total dropped packets on the physical interface
+virtual_router_phys_if_drops_total{vrouter_name="node1", interface_name="enp3s0"} 0
+</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry> CPU usage per vRouter</entry>
+              <entry>
+                <codeblock id="codeblock_pr4_s3x_41c">
+# TYPE virtual_router_cpu_1min_load_avg gauge
+# HELP virtual_router_cpu_1min_load_avg Virtual router CPU 1 minute load average
+virtual_router_cpu_1min_load_avg{vrouter_name="jcnr.example.com"} 0.11625
+# TYPE virtual_router_cpu_5min_load_avg gauge
+# HELP virtual_router_cpu_5min_load_avg Virtual router CPU 5 minute load average
+virtual_router_cpu_5min_load_avg{vrouter_name="jcnr.example.com"} 0.109687
+# TYPE virtual_router_cpu_15min_load_avg gauge
+# HELP virtual_router_cpu_15min_load_avg Virtual router CPU 15 minute load average
+virtual_router_cpu_15min_load_avg{vrouter_name="jcnr.example.com"} 0.110156</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry> Drop packet count per vRouter</entry>
+              <entry>
+                <codeblock id="codeblock_qr4_s3x_41c">
+# TYPE virtual_router_dropped_packets_total counter
+# HELP virtual_router_dropped_packets_total Total packets dropped
+virtual_router_dropped_packets_total{vrouter_name="jcnr.example.com"} 35850
+</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>Packet count per interface per VLAN</entry>
+              <entry>
+                <codeblock id="codeblock_rr4_s3x_41c">
+# TYPE virtual_router_interface_vlan_multicast_input_packets_total counter
+# HELP virtual_router_interface_vlan_multicast_input_packets_total Total number of multicast packets received on interface VLAN
+virtual_router_interface_vlan_multicast_input_packets_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_broadcast_output_packets_total counter
+# HELP virtual_router_interface_vlan_broadcast_output_packets_total Total number of broadcast packets sent on interface VLAN
+virtual_router_interface_vlan_broadcast_output_packets_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_broadcast_input_packets_total counter
+# HELP virtual_router_interface_vlan_broadcast_input_packets_total Total number of broadcast packets received on interface VLAN
+virtual_router_interface_vlan_broadcast_input_packets_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_multicast_output_packets_total counter
+# HELP virtual_router_interface_vlan_multicast_output_packets_total Total number of multicast packets sent on interface VLAN
+virtual_router_interface_vlan_multicast_output_packets_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_unicast_input_packets_total counter
+# HELP virtual_router_interface_vlan_unicast_input_packets_total Total number of unicast packets received on interface VLAN
+virtual_router_interface_vlan_unicast_input_packets_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_flooded_output_bytes_total counter
+# HELP virtual_router_interface_vlan_flooded_output_bytes_total Total number of output bytes flooded to interface VLAN
+virtual_router_interface_vlan_flooded_output_bytes_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_multicast_output_bytes_total counter
+# HELP virtual_router_interface_vlan_multicast_output_bytes_total Total number of multicast bytes sent on interface VLAN
+virtual_router_interface_vlan_multicast_output_bytes_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_unicast_output_packets_total counter
+# HELP virtual_router_interface_vlan_unicast_output_packets_total Total number of unicast packets sent on interface VLAN
+virtual_router_interface_vlan_unicast_output_packets_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_broadcast_input_bytes_total counter
+# HELP virtual_router_interface_vlan_broadcast_input_bytes_total Total number of broadcast bytes received on interface VLAN
+virtual_router_interface_vlan_broadcast_input_bytes_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_multicast_input_bytes_total counter
+# HELP virtual_router_interface_vlan_multicast_input_bytes_total Total number of multicast bytes received on interface VLAN
+virtual_router_interface_vlan_multicast_input_bytes_total{vlan_id="100",interface_id="1"} 0
+# TYPE virtual_router_interface_vlan_unicast_input_bytes_total counter
+# HELP virtual_router_interface_vlan_unicast_input_bytes_total Total number of unicast bytes received on interface VLAN
+virtual_router_interface_vlan_unicast_input_bytes_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_flooded_output_packets_total counter
+# HELP virtual_router_interface_vlan_flooded_output_packets_total Total number of output packets flooded to interface VLAN
+virtual_router_interface_vlan_flooded_output_packets_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_broadcast_output_bytes_total counter
+# HELP virtual_router_interface_vlan_broadcast_output_bytes_total Total number of broadcast bytes sent on interface VLAN
+virtual_router_interface_vlan_broadcast_output_bytes_total{interface_id="1",vlan_id="100"} 0
+# TYPE virtual_router_interface_vlan_unicast_output_bytes_total counter
+# HELP virtual_router_interface_vlan_unicast_output_bytes_total Total number of unicast bytes sent on interface VLAN
+virtual_router_interface_vlan_unicast_output_bytes_total{interface_id="1",vlan_id="100"} 0
+...</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>L3/L4 Access List (Firewall Filter) Counters</entry>
+              <entry>
+                <codeblock id="codeblock_p5x_pbk_rcc"># TYPE virtual_router_acl_counter_packets_total counter
+# HELP virtual_router_acl_counter_packets_total Total packets of named counters defined in firewall configuration
+virtual_router_acl_counter_packets_total{family="inet", filter="icmpFilter", counter="c1"} 8
+
+# TYPE virtual_router_acl_counter_bytes_total counter
+# HELP virtual_router_acl_counter_bytes_total Total value in bytes of named counters defined in firewall configuration
+virtual_router_acl_counter_bytes_total{family="inet", filter="icmpFilter", counter="c1"} 11808</codeblock>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <table colsep="1" frame="all" id="table_y3f_5fq_rzb" rowsep="1">
+        <title>Sample cRPD Telemetry Data (Prometheus-based API)</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="3.76*"/>
+          <thead>
+            <row>
+              <entry>Group</entry>
+              <entry>Sample Output</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>BGP summary</p>
+              </entry>
+              <entry>
+                <codeblock id="codeblock_wsk_znw_5zb"># TYPE crpd_bgp_rib_table_received_prefixes_total counter
+# HELP crpd_bgp_rib_table_received_prefixes_total Total number of BGP RIB table prefixes received
+crpd_bgp_rib_table_received_prefixes_total{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_external_prefixes gauge
+# HELP crpd_bgp_rib_table_external_prefixes Number of BGP RIB table external prefixes
+crpd_bgp_rib_table_external_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_active_external_prefixes gauge
+# HELP crpd_bgp_rib_table_active_external_prefixes Number of BGP RIB table active external prefixes
+crpd_bgp_rib_table_active_external_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_suppressed_internal_prefixes gauge
+# HELP crpd_bgp_rib_table_suppressed_internal_prefixes Number of BGP RIB table internal prefixes currently inactive, because of damping or other reasons
+crpd_bgp_rib_table_suppressed_internal_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_prefixes gauge
+# HELP crpd_bgp_rib_table_prefixes Number of BGP RIB table prefixes
+crpd_bgp_rib_table_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_active_prefixes gauge
+# HELP crpd_bgp_rib_table_active_prefixes Number of BGP RIB table active prefixes
+crpd_bgp_rib_table_active_prefixes{table="bgp.l3vpn.0",node="example.juniper.net"} 0
+# TYPE crpd_bgp_rib_table_history_prefixes gauge
+# HELP crpd_bgp_rib_table_history_prefixes Number of BGP RIB table withdrawn prefixes stored locally to keep track of damping history
+crpd_bgp_rib_table_history_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_suppressed_external_prefixes gauge
+# HELP crpd_bgp_rib_table_suppressed_external_prefixes Number of BGP RIB table external prefixes currently inactive, because of damping or other reasons
+crpd_bgp_rib_table_suppressed_external_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_active_internal_prefixes gauge
+# HELP crpd_bgp_rib_table_active_internal_prefixes Number of BGP RIB table active internal prefixes
+crpd_bgp_rib_table_active_internal_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_pending_prefixes gauge
+# HELP crpd_bgp_rib_table_pending_prefixes Number of BGP RIB table prefixes in process by BGP import policy
+crpd_bgp_rib_table_pending_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_accepted_prefixes_total counter
+# HELP crpd_bgp_rib_table_accepted_prefixes_total Total number of BGP RIB table prefixes accepted
+crpd_bgp_rib_table_accepted_prefixes_total{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_damped_prefixes gauge
+# HELP crpd_bgp_rib_table_damped_prefixes Number of BGP RIB table prefixes with a figure of merit greater than zero, but still active because the value has not reached the threshold at which suppression occurs
+crpd_bgp_rib_table_damped_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_accepted_external_prefixes_total counter
+# HELP crpd_bgp_rib_table_accepted_external_prefixes_total Total number of BGP RIB table external prefixes accepted
+crpd_bgp_rib_table_accepted_external_prefixes_total{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_internal_prefixes gauge
+# HELP crpd_bgp_rib_table_internal_prefixes Number of BGP RIB table internal prefixes
+crpd_bgp_rib_table_internal_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_suppressed_prefixes gauge
+# HELP crpd_bgp_rib_table_suppressed_prefixes Number of BGP RIB table prefixes currently inactive, because of damping or other reasons
+crpd_bgp_rib_table_suppressed_prefixes{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_rib_table_accepted_internal_prefixes_total counter
+# HELP crpd_bgp_rib_table_accepted_internal_prefixes_total Total number of BGP RIB table internal prefixes accepted
+crpd_bgp_rib_table_accepted_internal_prefixes_total{node="example.juniper.net",table="bgp.l3vpn.0"} 0
+crpd_bgp_rib_table_external_prefixes{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_active_external_prefixes{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_suppressed_internal_prefixes{table="bgp.l3vpn-inet6.0",node="example.juniper.net"} 0
+crpd_bgp_rib_table_received_prefixes_total{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_active_prefixes{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_history_prefixes{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_suppressed_external_prefixes{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_active_internal_prefixes{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_pending_prefixes{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_prefixes{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_damped_prefixes{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_accepted_external_prefixes_total{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_internal_prefixes{table="bgp.l3vpn-inet6.0",node="example.juniper.net"} 0
+crpd_bgp_rib_table_accepted_prefixes_total{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_accepted_internal_prefixes_total{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_suppressed_prefixes{node="example.juniper.net",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_rib_table_received_prefixes_total{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_external_prefixes{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_active_external_prefixes{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_suppressed_internal_prefixes{table="bgp.evpn.0",node="example.juniper.net"} 0
+crpd_bgp_rib_table_prefixes{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_active_prefixes{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_history_prefixes{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_suppressed_external_prefixes{table="bgp.evpn.0",node="example.juniper.net"} 0
+crpd_bgp_rib_table_active_internal_prefixes{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_pending_prefixes{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_accepted_prefixes_total{table="bgp.evpn.0",node="example.juniper.net"} 0
+crpd_bgp_rib_table_damped_prefixes{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_accepted_external_prefixes_total{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_internal_prefixes{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_suppressed_prefixes{node="example.juniper.net",table="bgp.evpn.0"} 0
+crpd_bgp_rib_table_accepted_internal_prefixes_total{node="example.juniper.net",table="bgp.evpn.0"} 0
+# TYPE crpd_bgp_peer_input_messages_total counter
+# HELP crpd_bgp_peer_input_messages_total Total number of messages received from BGP peer
+crpd_bgp_peer_input_messages_total{peer_address="11.11.11.11",peer_as="64512",node="example.juniper.net"} 5
+# TYPE crpd_bgp_peer_output_messages_total counter
+# HELP crpd_bgp_peer_output_messages_total Total number of messages sent to BGP peer
+crpd_bgp_peer_output_messages_total{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512"} 4
+# TYPE crpd_bgp_peer_route_queue_count gauge
+# HELP crpd_bgp_peer_route_queue_count Current number of messages that are queued to be sent to BGP peer
+crpd_bgp_peer_route_queue_count{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512"} 0
+# TYPE crpd_bgp_peer_state gauge
+# HELP crpd_bgp_peer_state BGP peer state (1=Established, 2=Idle, 3=Connect, 4=Active, 5=OpenSent, 6=OpenConfirm)
+crpd_bgp_peer_state{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512"} 1
+# TYPE crpd_bgp_peer_flaps_total counter
+# HELP crpd_bgp_peer_flaps_total Total number of times the BGP peer session has gone down and then come back up
+crpd_bgp_peer_flaps_total{peer_address="11.11.11.11",peer_as="64512",node="example.juniper.net"} 1
+# TYPE crpd_bgp_peer_rib_table_accepted_prefixes_total counter
+# HELP crpd_bgp_peer_rib_table_accepted_prefixes_total Total number of BGP RIB table active prefixes accepted from BGP peer
+crpd_bgp_peer_rib_table_accepted_prefixes_total{peer_as="64512",table="bgp.l3vpn.0",node="example.juniper.net",peer_address="11.11.11.11"} 0
+# TYPE crpd_bgp_peer_rib_table_suppressed_prefixes gauge
+# HELP crpd_bgp_peer_rib_table_suppressed_prefixes Number of BGP RIB table prefixes received from BGP peer currently inactive, because of damping or other reasons
+crpd_bgp_peer_rib_table_suppressed_prefixes{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512",table="bgp.l3vpn.0"} 0
+# TYPE crpd_bgp_peer_rib_table_active_prefixes gauge
+# HELP crpd_bgp_peer_rib_table_active_prefixes Number of BGP RIB table active prefixes received from BGP peer
+crpd_bgp_peer_rib_table_active_prefixes{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512",table="bgp.l3vpn.0"} 0
+crpd_bgp_peer_rib_table_active_prefixes{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_peer_rib_table_accepted_prefixes_total{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_peer_rib_table_suppressed_prefixes{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512",table="bgp.l3vpn-inet6.0"} 0
+crpd_bgp_peer_rib_table_active_prefixes{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512",table="bgp.evpn.0"} 0
+crpd_bgp_peer_rib_table_accepted_prefixes_total{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512",table="bgp.evpn.0"} 0
+crpd_bgp_peer_rib_table_suppressed_prefixes{node="example.juniper.net",peer_address="11.11.11.11",peer_as="64512",table="bgp.evpn.0"} 0
+</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Route table summary</p>
+              </entry>
+              <entry>
+                <codeblock id="codeblock_l1b_j4w_5zb"># TYPE crpd_route_table_destinations gauge
+# HELP crpd_route_table_destinations Number of destinations for which there are routes in the routing table
+crpd_route_table_destinations{node="example.juniper.net",table="inet.0"} 13
+# TYPE crpd_route_table_routes gauge
+# HELP crpd_route_table_routes Number of routes in the routing table
+crpd_route_table_routes{node="example.juniper.net",table="inet.0"} 15
+# TYPE crpd_route_table_active_routes gauge
+# HELP crpd_route_table_active_routes Number of active routes in the routing table
+crpd_route_table_active_routes{node="example.juniper.net",table="inet.0"} 13
+# TYPE crpd_route_table_holddown_routes gauge
+# HELP crpd_route_table_holddown_routes Number of routes in the routing table that are in the hold-down state before being declared inactive
+crpd_route_table_holddown_routes{node="example.juniper.net",table="inet.0"} 0
+# TYPE crpd_route_table_hidden_routes gauge
+# HELP crpd_route_table_hidden_routes Number of routes in the routing table that are not used, because of routing policy
+crpd_route_table_hidden_routes{node="example.juniper.net",table="inet.0"} 0
+crpd_route_table_routes{node="example.juniper.net",table="inet.3"} 1
+crpd_route_table_active_routes{node="example.juniper.net",table="inet.3"} 1
+crpd_route_table_holddown_routes{node="example.juniper.net",table="inet.3"} 0
+crpd_route_table_hidden_routes{node="example.juniper.net",table="inet.3"} 0
+crpd_route_table_destinations{node="example.juniper.net",table="inet.3"} 1
+crpd_route_table_holddown_routes{node="example.juniper.net",table="mpls.0"} 0
+crpd_route_table_hidden_routes{node="example.juniper.net",table="mpls.0"} 0
+crpd_route_table_destinations{node="example.juniper.net",table="mpls.0"} 4
+crpd_route_table_routes{node="example.juniper.net",table="mpls.0"} 4
+crpd_route_table_active_routes{node="example.juniper.net",table="mpls.0"} 4
+crpd_route_table_active_routes{node="example.juniper.net",table="inet6.0"} 34
+crpd_route_table_holddown_routes{node="example.juniper.net",table="inet6.0"} 0
+crpd_route_table_hidden_routes{node="example.juniper.net",table="inet6.0"} 0
+crpd_route_table_destinations{node="example.juniper.net",table="inet6.0"} 34
+crpd_route_table_routes{table="inet6.0",node="example.juniper.net"} 38
+crpd_route_table_destinations{node="example.juniper.net",table="inet6.3"} 1
+crpd_route_table_routes{node="example.juniper.net",table="inet6.3"} 1
+crpd_route_table_active_routes{node="example.juniper.net",table="inet6.3"} 1
+crpd_route_table_holddown_routes{node="example.juniper.net",table="inet6.3"} 0
+crpd_route_table_hidden_routes{node="example.juniper.net",table="inet6.3"} 0
+# TYPE crpd_route_table_protocol_routes gauge
+# HELP crpd_route_table_protocol_routes Number of routes in the routing table learned from the protocol
+crpd_route_table_protocol_routes{protocol="Direct",node="example.juniper.net",table="inet.0"} 6
+# TYPE crpd_route_table_protocol_active_routes gauge
+# HELP crpd_route_table_protocol_active_routes Number of active routes in the routing table learned from the protocol
+crpd_route_table_protocol_active_routes{protocol="Direct",node="example.juniper.net",table="inet.0"} 6
+crpd_route_table_protocol_active_routes{node="example.juniper.net",table="inet.0",protocol="Local"} 3
+crpd_route_table_protocol_routes{node="example.juniper.net",table="inet.0",protocol="Local"} 5
+crpd_route_table_protocol_routes{node="example.juniper.net",table="inet.0",protocol="OSPF"} 4
+crpd_route_table_protocol_active_routes{node="example.juniper.net",table="inet.0",protocol="OSPF"} 4
+crpd_route_table_protocol_routes{node="example.juniper.net",table="inet.3",protocol="Tunnel"} 1
+crpd_route_table_protocol_active_routes{node="example.juniper.net",table="inet.3",protocol="Tunnel"} 1
+crpd_route_table_protocol_routes{node="example.juniper.net",table="mpls.0",protocol="MPLS"} 4
+crpd_route_table_protocol_active_routes{node="example.juniper.net",table="mpls.0",protocol="MPLS"} 4
+crpd_route_table_protocol_routes{node="example.juniper.net",table="inet6.0",protocol="Direct"} 8
+crpd_route_table_protocol_active_routes{node="example.juniper.net",table="inet6.0",protocol="Direct"} 4
+crpd_route_table_protocol_routes{table="inet6.0",protocol="Local",node="example.juniper.net"} 29
+crpd_route_table_protocol_active_routes{node="example.juniper.net",table="inet6.0",protocol="Local"} 29
+crpd_route_table_protocol_routes{node="example.juniper.net",table="inet6.0",protocol="INET6"} 1
+crpd_route_table_protocol_active_routes{node="example.juniper.net",table="inet6.0",protocol="INET6"} 1
+crpd_route_table_protocol_routes{node="example.juniper.net",table="inet6.3",protocol="Tunnel"} 1
+crpd_route_table_protocol_active_routes{node="example.juniper.net",table="inet6.3",protocol="Tunnel"} 1
+</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>OSPF summary</p>
+              </entry>
+              <entry>
+                <codeblock id="codeblock_erc_d4w_5zb"># TYPE crpd_ospf_packets_sent_total counter
+# HELP crpd_ospf_packets_sent_total Total number of OSPF packets sent
+crpd_ospf_packets_sent_total{node="example.juniper.net",packet_type="Hello"} 26
+# TYPE crpd_ospf_packets_received_total counter
+# HELP crpd_ospf_packets_received_total Total number of OSPF packets received
+crpd_ospf_packets_received_total{node="example.juniper.net",packet_type="Hello"} 4
+crpd_ospf_packets_sent_total{node="example.juniper.net",packet_type="DbD"} 3
+crpd_ospf_packets_received_total{node="example.juniper.net",packet_type="DbD"} 4
+crpd_ospf_packets_sent_total{node="example.juniper.net",packet_type="LSReq"} 1
+crpd_ospf_packets_received_total{node="example.juniper.net",packet_type="LSReq"} 1
+crpd_ospf_packets_sent_total{node="example.juniper.net",packet_type="LSUpdate"} 2
+crpd_ospf_packets_received_total{node="example.juniper.net",packet_type="LSUpdate"} 3
+crpd_ospf_packets_sent_total{node="example.juniper.net",packet_type="LSAck"} 3
+crpd_ospf_packets_received_total{node="example.juniper.net",packet_type="LSAck"} 2
+# TYPE crpd_ospf_dbd_packets_retransmitted_total counter
+# HELP crpd_ospf_dbd_packets_retransmitted_total Total number of OSPF database descriptor packets retransmitted
+crpd_ospf_dbd_packets_retransmitted_total{node="example.juniper.net"} 1
+# TYPE crpd_ospf_lsa_packets_retransmitted_total counter
+# HELP crpd_ospf_lsa_packets_retransmitted_total Total number of OSPF link-state advertisement packets retransmitted
+crpd_ospf_lsa_packets_retransmitted_total{node="example.juniper.net"} 0
+# TYPE crpd_ospf_lsa_packets_flooded_total counter
+# HELP crpd_ospf_lsa_packets_flooded_total Total number of OSPF link-state advertisement packets flooded
+crpd_ospf_lsa_packets_flooded_total{node="example.juniper.net"} 1
+# TYPE crpd_ospf_flood_queue_depth gauge
+# HELP crpd_ospf_flood_queue_depth Number of entries in the extended queue
+crpd_ospf_flood_queue_depth{node="example.juniper.net"} 0
+# TYPE crpd_ospf_error_total counter
+# HELP crpd_ospf_error_total Total number of OSPF receive errors
+crpd_ospf_error_total{error_type="no-error",node="example.juniper.net"} 0
+# TYPE crpd_ospf_neighbor_state gauge
+# HELP crpd_ospf_neighbor_state OSPF neighbor state (0=Down, 1=Full, 2=Attempt, 3=Exchange, 4=ExStart, 5=Init, 6=Loading, 7=2Way)
+crpd_ospf_neighbor_state{neighbor_address="113.113.113.3",interface_name="enp6s0",node="example.juniper.net"} 1
+</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>MPLS statistics</p>
+              </entry>
+              <entry>
+                <codeblock id="codeblock_mkh_f4w_5zb"># TYPE crpd_mpls_ingress_lsp_sessions_down gauge
+# HELP crpd_mpls_ingress_lsp_sessions_down Number of MPLS ingress LSP sessions
+crpd_mpls_ingress_lsp_sessions_down{node="example.juniper.net"} 0
+# TYPE crpd_mpls_ingress_lsp_sessions gauge
+# HELP crpd_mpls_ingress_lsp_sessions Number of MPLS ingress LSP sessions
+crpd_mpls_ingress_lsp_sessions{node="example.juniper.net"} 0
+# TYPE crpd_mpls_lsp_make_before_breaks_total counter
+# HELP crpd_mpls_lsp_make_before_breaks_total Total number of LSP make before break procedures performed
+crpd_mpls_lsp_make_before_breaks_total{node="example.juniper.net"} 0
+# TYPE crpd_mpls_lsp_bandwidth_increases_total counter
+# HELP crpd_mpls_lsp_bandwidth_increases_total Total number of LSP bandwidth increases performed
+crpd_mpls_lsp_bandwidth_increases_total{node="example.juniper.net"} 0
+# TYPE crpd_mpls_lsp_bandwidth_decreases_total counter
+# HELP crpd_mpls_lsp_bandwidth_decreases_total Total number of bandwidth decreases performed
+crpd_mpls_lsp_bandwidth_decreases_total{node="example.juniper.net"} 0
+# TYPE crpd_mpls_lsp_update_cspf_failures_total counter
+# HELP crpd_mpls_lsp_update_cspf_failures_total Total number of in-place LSP auto-bandwidth resizing failures at the CSPF path computation stage
+crpd_mpls_lsp_update_cspf_failures_total{node="example.juniper.net"} 0
+# TYPE crpd_mpls_lsp_update_signaling_errors_total counter
+# HELP crpd_mpls_lsp_update_signaling_errors_total Total number of in-place LSP auto-bandwidth resizing failures when RSVP signaling error is received
+crpd_mpls_lsp_update_signaling_errors_total{node="example.juniper.net"} 0
+# TYPE crpd_mpls_lsp_update_signaling_timeouts_total counter
+# HELP crpd_mpls_lsp_update_signaling_timeouts_total Total number of in-place LSP auto-bandwidth resizing failures when RSVP signaling takes too long to complete
+crpd_mpls_lsp_update_signaling_timeouts_total{node="example.juniper.net"} 0
+# TYPE crpd_mpls_label_space_total_labels gauge
+# HELP crpd_mpls_label_space_total_labels The total label space available
+crpd_mpls_label_space_total_labels{label_space="LSI",node="example.juniper.net"} 999984
+# TYPE crpd_mpls_label_space_free_labels gauge
+# HELP crpd_mpls_label_space_free_labels The number of freely available labels
+crpd_mpls_label_space_free_labels{node="example.juniper.net",label_space="LSI"} 999984
+crpd_mpls_label_space_total_labels{node="example.juniper.net",label_space="Block"} 999984
+crpd_mpls_label_space_free_labels{node="example.juniper.net",label_space="Block"} 999984
+crpd_mpls_label_space_total_labels{node="example.juniper.net",label_space="Dynamic"} 999984
+crpd_mpls_label_space_free_labels{node="example.juniper.net",label_space="Dynamic"} 999984
+crpd_mpls_label_space_total_labels{node="example.juniper.net",label_space="Static"} 48576
+crpd_mpls_label_space_free_labels{node="example.juniper.net",label_space="Static"} 48576
+</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>LLDP Statistics</p>
+              </entry>
+              <entry>
+                <p>Global Statistics:</p>
+                <codeblock id="codeblock_r3f_lrr_kdc"># TYPE crpd_lldp_remote_db_table_inserts_total counter
+# HELP crpd_lldp_remote_db_table_inserts_total Number of insertions made in the remote database table
+crpd_lldp_remote_db_table_inserts_total 192
+# TYPE crpd_lldp_remote_db_table_deletes_total counter 
+# HELP crpd_lldp_remote_db_table_deletes_total Number of deletions made in the remote database table
+crpd_lldp_remote_db_table_deletes_total 0
+# TYPE crpd_lldp_remote_db_table_drops_total counter
+# HELP crpd_lldp_remote_db_table_drops_total Number of LLDP frames dropped from the remote database table because of errors
+crpd_lldp_remote_db_table_drops_total 0
+# TYPE crpd_lldp_remote_db_table_ageouts_total counter
+# HELP crpd_lldp_remote_db_table_ageouts_total Number of remote database table entries that have aged out of the table
+crpd_lldp_remote_db_table_ageouts_total 0</codeblock>
+                <p>Interface Statistics</p>
+                <codeblock id="codeblock_dfc_hsr_kdc"># TYPE crpd_lldp_interface_receive_packets_total counter
+# HELP crpd_lldp_interface_receive_packets_total Number of LLDP frames received on this interface
+crpd_lldp_interface_receive_packets_total{interface="enp1s0"} 1566
+# TYPE crpd_lldp_interface_receive_unknown_tlvs_total counter
+# HELP crpd_lldp_interface_receive_unknown_tlvs_total Number of LLDP frames with unsupported content received on this interface
+crpd_lldp_interface_receive_unknown_tlvs_total{interface="enp1s0"} 0
+# TYPE crpd_lldp_interface_receive_errors_total counter
+# HELP crpd_lldp_interface_receive_errors_total Number of LLDP frames with errors received on this interface
+crpd_lldp_interface_receive_errors_total{interface="enp1s0"} 0
+# TYPE crpd_lldp_interface_receive_tlv_discards_total counter
+# HELP crpd_lldp_interface_receive_tlv_discards_total Number of LLDP frames received and then discarded on this interface
+crpd_lldp_interface_receive_tlv_discards_total{interface="enp1s0"} 0
+# TYPE crpd_lldp_interface_transmit_packets_total counter
+# HELP crpd_lldp_interface_transmit_packets_total Number of LLDP frames sent on this interface
+crpd_lldp_interface_transmit_packets_total{interface="enp1s0"} 3046
+# TYPE crpd_lldp_interface_transmit_errors_total counter
+# HELP crpd_lldp_interface_transmit_errors_total Number of LLDP frames that were untransmitted on this interface
+crpd_lldp_interface_transmit_errors_total{interface="enp1s0"} 1</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>Layer 2 Circuit Counters</entry>
+              <entry>
+                <codeblock id="codeblock_qtz_klh_s2c"># TYPE crpd_l2_circuit_connection_info  guage
+# HELP crpd_l2_circuit_connection_info  Details about layer 2 circuit
+crpd_l2_circuit_connection_info{neighbor_address="10.10.10.3", interface="ens1f3v0.144", vcid="144", control_word="yes", inbound_label="16", outbound_label="16"} 1
+
+# TYPE crpd_l2_circuit_connection_status   guage
+# HELP crpd_l2_circuit_connection_status   Layer 2 circuit connection status
+crpd_l2_circuit_connection_status{neighbor_address="10.10.10.3", interface="ens1f3v0.144"} 1
+
+Possible status values include:
+
+<b>Description                        Numeric Value</b>
+Down                                0
+Operational                         1
+Virtual circuit Down                2
+Interface h/w not present           3
+Call admission control failure      4
+TDM incompatible bitrate            5
+TDM misconfiguration                6
+Standby Connection                  7
+Static Pseudowire                   8
+Remote site standby                 9
+Hot-standby Connection              10
+Encapsulation invalid               11
+MTU mismatch                        12
+Encapsulation mismatch              13
+Control-word mismatch               14
+VLAN id mismatch                    15
+No outgoing label                   16
+Intf encaps not CCC/TCC             17
+Backup Connection                   18
+Rcvd cell-bundle size bad           19
+Local site signaled down            20
+Remote site signaled down           21
+Unknown                             22
+
+# TYPE crpd_l2_circuit_connection_up_transitions_total  counter
+# HELP crpd_l2_circuit_connection_up_transitions_total   Number of times the virtual circuit came up
+crpd_l2_circuit_connection_up_transitions_total{neighbor_address="10.10.10.3", interface="ens1f3v0.144"} 2</codeblock>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <table frame="all" id="table_w1x_gtj_rdc">
+        <title>Sample cSRX Telemetry Data (Prometheus-based API)</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="3.76*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Group</p>
+              </entry>
+              <entry>
+                <p>Sample Output</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>Global IPSec Statistics</p>
+              </entry>
+              <entry>
+                <codeblock id="codeblock_kxz_ntj_rdc"># TYPE csrx_ipsec_esp_encrypted_packets_total counter
+# HELP Total number of packets encrypted by the local system across the IPsec tunnel
+csrx_ipsec_esp_encrypted_packets_total 7627
+# TYPE csrx_ipsec_esp_encrypted_bytes_total counter
+# HELP Total number of bytes encrypted by the local system across the IPsec tunnel
+csrx_ipsec_esp_encrypted_bytes_total 872655
+# TYPE csrx_ipsec_esp_decrypted_packets_total counter
+# HELP Total number of packets decrypted by the local system across the IPsec tunnel
+csrx_ipsec_esp_decrypted_packets_total 4329
+# TYPE csrx_ipsec_esp_decrypted_bytes_total counter
+# HELP Total number of bytes decrypted by the local system across the IPsec tunnel
+csrx_ipsec_esp_decrypted_bytes_total 293764
+# TYPE csrx_ipsec_ah_input_packets_total counter
+# HELP Total number of packets received by the local system across the IPsec tunnel
+csrx_ipsec_ah_input_packets_total 10
+# TYPE csrx_ipsec_ah_input_bytes_total counter
+# HELP Total number of bytes received by the local system across the IPsec tunnel
+csrx_ipsec_ah_input_bytes_total 8726
+# TYPE csrx_ipsec_ah_output_packets_total counter
+# HELP Total number of packets transmitted by the local system across the IPsec tunnel
+csrx_ipsec_ah_output_packets_total 9
+# TYPE csrx_ipsec_ah_output_bytes_total counter
+# HELP Total number of bytes transmitted by the local system across the IPsec tunnel
+csrx_ipsec_ah_output_bytes_total 6323
+# TYPE csrx_ipsec_ah_auth_failures_total counter
+# HELP Total number of authentication header (AH) failures. An AH failure occurs when there is a mismatch of the authentication header in a packet transmitted across an IPsec tunnel
+csrx_ipsec_ah_auth_failures_total 0
+# TYPE csrx_ipsec_bad_headers_total counter
+# HELP Total number of invalid headers detected
+csrx_ipsec_bad_headers_total 0
+# TYPE csrx_ipsec_bad_trailers_total counter
+# HELP Total number of invalid trailers detected
+csrx_ipsec_bad_trailers_total 0
+# TYPE csrx_ipsec_discard_errors_total counter
+# HELP Total number of discarded packets detected
+csrx_ipsec_discard_errors_total 0
+# TYPE csrx_ipsec_esp_decryption_failures_total counter
+# HELP total number of ESP decryption errors
+csrx_ipsec_esp_decryption_failures_total 0
+# TYPE csrx_ipsec_esp_auth_failures_total counter
+# HELP Total number of Encapsulation Security Payload (ESP) failures. An ESP failure occurs when there is an authentication mismatch in ESP packets
+csrx_ipsec_esp_auth_failures_total 0
+# TYPE csrx_ipsec_exceeds_tunnel_mtu_total counter
+# HELP Total number of times the maximum size of transmit packet exceeds the configured tunnel MTU for IPsec tunnels
+csrx_ipsec_exceeds_tunnel_mtu_total 0
+# TYPE csrx_ipsec_invalid_spi_errors_total counter
+# HELP Total number of invalid SPIs packets detected
+csrx_ipsec_invalid_spi_errors_total 0
+# TYPE csrx_ipsec_replay_errors_total counter
+# HELP Total number of replay errors. A replay error is generated when a duplicate packet is received within the replay window
+csrx_ipsec_replay_errors_total 0
+# TYPE csrx_ipsec_ts_check_fail_errors_total counter
+# HELP Total number of TS check fail detected
+csrx_ipsec_ts_check_fail_errors_total 0</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>IKE Gateway Statistics</entry>
+              <entry>
+                <codeblock id="codeblock_qnc_4vj_rdc"># TYPE csrx_ike_gateway_active_peers gauge
+# HELP Number of successful IKE negotiations with the remote peers
+csrx_ike_gateway_active_peers{gateway="gw-1-1-1-1"} 1
+# TYPE csrx_ike_gateway_in_progress_peer_negotiations gauge
+# HELP Number of in progress IKE negotiations with the remote peers
+csrx_ike_gateway_in_progress_peer_negotiations{gateway="gw-1-1-1-1"} 0
+# TYPE csrx_ike_gateway_failed_peer_negotiations_total counter
+# HELP Number of failed IKE negotiations with the remote peers
+csrx_ike_gateway_failed_peer_negotiations_total{gateway="gw-1-1-1-1"} 0
+# TYPE csrx_ike_gateway_blocked_peer_negotiations_total counter
+# HELP Number of blocked IKE negotiations with the remote peers
+csrx_ike_gateway_blocked_peer_negotiations_total{gateway="gw-1-1-1-1"} 0
+# TYPE csrx_ike_gateway_backoff_peer_negotiations_total counter
+# HELP Number of backed off IKE negotiations with the remote peers
+csrx_ike_gateway_backoff_peer_negotiations_total{gateway="gw-1-1-1-1"} 0</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>IKE Peer Statistics</p>
+              </entry>
+              <entry>
+                <codeblock># TYPE csrx_ike_peer_ike_sa_negotiated gauge
+# HELP Total number of negotiated security associations
+csrx_ike_peer_ike_sa_negotiated{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_ipsec_active_tunnels gauge
+# HELP Total number of active IPsec tunnels
+csrx_ike_peer_ipsec_active_tunnels{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_sa_init_requests_sent_total counter
+# HELP Total number of security association initiation requests sent to the remote address 
+csrx_ike_peer_sa_init_requests_sent_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_sa_init_requests_received_total counter
+# HELP Total number of security association initiation requests received from the remote address 
+csrx_ike_peer_sa_init_requests_received_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_sa_init_responses_received_total counter
+# HELP Total number of security association responses received from the remote address
+csrx_ike_peer_sa_init_responses_received_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_sa_init_responses_sent_total counter
+# HELP Total number of security association responses sent to the remote address
+csrx_ike_peer_sa_init_responses_sent_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_auth_requests_sent_total counter
+# HELP Total number of authentication requests sent to the remote address
+csrx_ike_peer_auth_requests_sent_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_auth_requests_received_total counter
+# HELP Total number of authentication requests received from the remote address
+csrx_ike_peer_auth_requests_received_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_auth_responses_received_total counter
+# HELP Total number of authentication responses received from the remote address
+csrx_ike_peer_auth_responses_received_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_auth_responses_sent_total counter
+# HELP Total number of authentication responses sent to the remote address
+csrx_ike_peer_auth_responses_sent_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_ike_sa_rekey_requests_sent_total counter
+# HELP Total number of IKE rekey requests sent to the remote address
+csrx_ike_peer_ike_sa_rekey_requests_sent_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_ike_sa_rekey_requests_received_total counter
+# HELP Total number of IKE rekey requests received from the remote address
+csrx_ike_peer_ike_sa_rekey_requests_received_total{local_address="1.1.1.1",remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_ike_sa_rekey_responses_received_total counter
+# HELP Total number of IKE rekey responses received from the remote address
+csrx_ike_peer_ike_sa_rekey_responses_received_total{local_address="1.1.1.1",remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_ike_sa_rekey_responses_sent_total counter
+# HELP Total number of IKE rekey responses sent to the remote address
+csrx_ike_peer_ike_sa_rekey_responses_sent_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_ipsec_sa_rekey_requests_sent_total counter
+# HELP Total number of IPSEC rekey requests sent to the remote address
+csrx_ike_peer_ipsec_sa_rekey_requests_sent_total{local_address="1.1.1.1", remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_ipsec_sa_rekey_requests_received_total counter
+# HELP Total number of IPSEC rekey requests received from the remote address
+csrx_ike_peer_ipsec_sa_rekey_requests_received_total{local_address="1.1.1.1",remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_ipsec_sa_rekey_responses_received_total counter
+# HELP Total number of IPSEC rekey responses received from the remote address
+csrx_ike_peer_ipsec_sa_rekey_responses_received_total{local_address="1.1.1.1",remote_address="2.2.2.2", routing_instance="default"} 1
+# TYPE csrx_ike_peer_ipsec_sa_rekey_responses_sent_total counter
+# HELP Total number of IPSEC rekey responses sent to the remote address
+csrx_ike_peer_ipsec_sa_rekey_responses_sent_total{local_address="1.1.1.1",remote_address="2.2.2.2", routing_instance="default"} 1</codeblock>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_bmk_g4x_41c">
+      <title>Telemetry via gNMI</title>
+      <p>The gNMI protocol defines the <codeph>Subscribe</codeph> RPC for subscribing to telemetry
+        data. The telemetry collector uses this RPC to request updates from the network device for
+        state and configuration data. Review <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/interfaces-telemetry/topics/concept/subscribe-rpc.html" scope="external">Subscribing to Telemetry Data using gNMI</xref> for more
+        detail. </p>
+      <p>You can enable support by enabling the gNMI configuration for cRPD and vRouter in the
+          <codeph>values.yaml</codeph> helm chart. Please review the Customize the Helm Chart topic
+        for your platform for more details. You can also enable gNMI by passing the following
+        arguments to the helm install command while installing JCNR:</p>
+      <codeblock id="codeblock_myj_scs_5bc">--set telemetry.gnmi.enable=true
+--set vrouter.telemetry.gnmi.enable=true</codeblock>
+      <p>To enable gNMI configuration for cSRX, configure the <codeph>values.yaml</codeph> helm
+        chart. Please review the Customize the Helm Chart topic for your platform for more details.
+        You can also enable gNMI by passing the following arguments to the helm install command
+        while installing JCNR:</p>
+      <codeblock id="codeblock_oxn_ydn_xdc">--set telemetry.gnmi.enable=true</codeblock>
+      <note id="note_gnx_y4f_v1c">
+        <ol>
+          <li><p>External clients can connect to the grpc port 50053 when telemetry.gnmi.enable is
+              set to true in the helmchart.</p></li>
+          <li><p>gNMI subscription works with only authenticated requests from external clients, for
+              example:</p><codeblock id="codeblock_yvk_qpf_v1c">gnmic -a 10.1.1.1:50053 -u root -p my-root-password --insecure sub --stream-mode sample -i 10s --path "/junos/system/state/network/in-pkts"</codeblock></li>
+          <li><p><codeph>SAMPLE</codeph> and <codeph>TARGET_DEFINED</codeph> subscription modes are
+              supported in the current release.</p></li>
+          <li><p>Targeting of specific instances in a <codeph>SubscribeMessage</codeph> using key
+              values in paths is not supported in the current release, for example, subscribing to
+              monitoring the metrics of a specific interface using a path such as
+                <codeph>/interfaces/interface[name=”enp3s0”]/state/counters</codeph></p></li>
+          <li><p>The gNMI debug logs are available at
+            <codeph>/var/log/jcnr/na-grpcd</codeph>.</p></li>
+        </ol>
+      </note>
+      <p>The following table lists the supported sensors for telemetry metrics:</p>
+      <table frame="all" id="table_ssc_zrx_41c">
+        <title>Supported Sensors for Telemetry Metrics (cRPD)</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="2.45*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Sensor Type</p>
+              </entry>
+              <entry>
+                <p>Sensor Paths</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>Interface Sensors</p>
+              </entry>
+              <entry><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/config/description</codeph><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/ethernet/mac-address </codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/admin-status </codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/oper-status </codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/in-octets</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/in-pkts</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/out-octets</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/out-pkts</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/in-errors</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/out-errors</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/in-port-errors</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/out-port-errors</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/in-device-errors</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/out-device-errors</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/drops</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/discards</codeph></p></entry>
+            </row>
+            <row>
+              <entry>L3/L4 Access List (Firewall Filter) Counters</entry>
+              <entry><codeph>/junos/firewall_stats[family="<varname>family</varname>",
+                    name="<varname>filter_name</varname>"]/state/counter_stats[name="<varname>counter_name</varname>"]/packets</codeph><p><codeph>/junos/firewall_stats[family="<varname>family</varname>",
+                      name="<varname>filter_name</varname>"]/state/counter_stats[name="<varname>counter_name</varname>"]/bytes</codeph></p></entry>
+            </row>
+            <row>
+              <entry>
+                <p>ARP Sensors</p>
+              </entry>
+              <entry>
+                <p><codeph>/arp-information/ipv4/neighbors/neighbor[ip="<varname>ip_address</varname>"]/state/link-layer-address
+                  </codeph></p>
+                <p><codeph>/arp-information/ipv4/neighbors/neighbor[ip="<varname>ip_address</varname>"]/state/interface-name
+                  </codeph></p>
+                <p><codeph>/arp-information/ipv4/neighbors/neighbor[ip="<varname>ip_address</varname>"]/state/origin</codeph></p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>MAC Learning Sensors</p>
+              </entry>
+              <entry>
+                <p><codeph>/network-instances/network-instance/fdb/mac-table/entry[vlan=<varname>vlan_id</varname>,
+                      mac-address="<varname>mac_address</varname>"]/state/entry-type </codeph></p>
+                <p><codeph>/network-instances/network-instance/fdb/mac-table/entry[vlan=<varname>vlan_id</varname>,
+                      mac-address="<varname>mac_address</varname>"]/mac-address </codeph></p>
+                <p><codeph>/network-instances/network-instance/fdb/mac-table/entry[vlan=<varname>vlan_id</varname>,
+                      mac-address="<varname>mac_address</varname>"]/interface/interface-ref/state/interface</codeph></p>
+                <p><codeph>/network-instances/network-instance/fdb/mac-table/entry[vlan=<varname>vlan_id</varname>,
+                      mac-address="<varname>mac_address</varname>"]/vlan </codeph></p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>TWAMP Sensors</p>
+              </entry>
+              <entry>
+                <p><codeph>/junos/twamp/client/probe-test-results[owner=<varname>"owner_name"</varname>,
+                      test-name="<varname>test_name</varname>"]/probe-test-generic-results[results-scope=<varname>enum</varname>]/probe-test-generic-measurements[probe-measurement-type=<varname>enum</varname>]/avg-delay</codeph></p>
+                <p><codeph>/junos/twamp/client/probe-test-results[owner=<varname>"owner_name"</varname>,
+                      test-name="<varname>test_name</varname>"]/probe-test-generic-results[results-scope=<varname>enum</varname>]/probe-test-generic-measurements[probe-measurement-type=<varname>enum</varname>]/jitter-delay</codeph></p>
+                <p><codeph>/junos/twamp/client/probe-test-results[owner=<varname>"owner_name"</varname>,
+                      test-name="<varname>test_name</varname>"]/probe-test-generic-results[results-scope=<varname>enum</varname>]/probe-test-generic-measurements[probe-measurement-type=<varname>enum</varname>]/max-delay</codeph></p>
+                <p><codeph>/junos/twamp/client/probe-test-results[owner=<varname>"owner_name"</varname>,
+                      test-name="<varname>test_name</varname>"]/probe-test-generic-results[results-scope=<varname>enum</varname>]/probe-test-generic-measurements[probe-measurement-type=<varname>enum</varname>]/min-delay</codeph></p>
+                <p><codeph>/junos/twamp/client/probe-test-results[owner=<varname>"owner_name"</varname>,
+                      test-name="<varname>test_name</varname>"]/probe-test-generic-results[results-scope=<varname>enum</varname>]/probe-test-generic-measurements[probe-measurement-type=<varname>enum</varname>]/samples</codeph></p>
+                <p><codeph>/junos/twamp/client/probe-test-results[owner=<varname>"owner_name"</varname>,
+                      test-name="<varname>test_name</varname>"]/probe-test-generic-results[results-scope=<varname>enum</varname>]/probe-test-generic-measurements[probe-measurement-type=<varname>enum</varname>]/stddev-delay</codeph></p>
+                <p><codeph>/junos/twamp/client/probe-test-results[owner=<varname>"owner_name"</varname>,
+                      test-name="<varname>test_name</varname>"]/probe-test-generic-results[results-scope=<varname>enum</varname>]/probe-test-generic-measurements[probe-measurement-type=<varname>enum</varname>]/sum-delay</codeph></p>
+                <note id="note_ex1_bdg_sbc">
+                  <p>results-scope <varname>enum</varname> can be one of the following:
+                      [<codeph>CURRENT_TEST|LAST_TEST|MOVING_AVERAGE_TEST|ALL_TESTS</codeph>]</p>
+                  <p>probe-measurement-type <varname>enum</varname> can be one of the following:</p>
+                  <p> [<codeph>ROUND_TRIP_TIME | EGRESS_DELAY | INGRESS_DELAY | POSITIVE_RTT_JITTER
+                      | NEGATIVE_RTT_JITTER | POSITIVE_EGRESS_JITTER | NEGATIVE_EGRESS_JITTER |
+                      POSITIVE_INGRESS_JITTER | NEGATIVE_INGRESS_JITTER</codeph>]</p>
+                </note>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Routing Sensors</p>
+              </entry>
+              <entry>
+                <p><codeph>/junos/routing/route-tables/route-table[name="<varname>routing_table_name</varname>"]/routes/route[prefix="<varname>prefix</varname>"]/entries/entry[protocol="<varname>protocol</varname>",next-hop="<varname>ip_addr</varname>",interface="<varname>interface_name</varname>"]/interface</codeph></p>
+                <p><codeph>/junos/routing/route-tables/route-table[name="<varname>routing_table_name</varname>"]/routes/route[prefix="<varname>prefix</varname>"]/entries/entry[protocol="<varname>protocol</varname>",next-hop="<varname>ip_addr</varname>",interface="<varname>interface_name</varname>"]/next-hop</codeph></p>
+                <p><codeph>/junos/routing/route-tables/route-table[name="<varname>routing_table_name</varname>"]/routes/route[prefix="<varname>prefix</varname>"]/entries/entry[protocol="<varname>protocol</varname>",next-hop="<varname>ip_addr</varname>",interface="<varname>interface_name</varname>"]/protocol</codeph></p>
+                <p><codeph>/junos/routing/route-tables/route-table[name="<varname>routing_table_name</varname>"]/routes/route[prefix="<varname>prefix</varname>"]/entries/entry[protocol="<varname>protocol</varname>",next-hop="<varname>ip_addr</varname>",interface="<varname>interface_name</varname>"]/state/age
+                  </codeph></p>
+                <p><codeph>/junos/routing/route-tables/route-table[name="<varname>routing_table_name</varname>"]/route[prefix="<varname>prefix</varname>]/entries/entry[protocol="<varname>protocol</varname>",next-hop="<varname>ip_addr</varname>",interface="<varname>interface_name</varname>"]/state/active</codeph></p>
+                <p>For Layer 2 circuit only:</p>
+                <p><codeph>/junos/routing/route-tables/route-table[name="<varname>routing_table_name</varname>"]/route[prefix="<varname>prefix</varname>]/entries/entry[protocol="<varname>protocol</varname>",next-hop="<varname>ip_addr</varname>",interface="<varname>interface_name</varname>"]/next-hop-mpls-label</codeph>
+                </p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>LLDP Sensors</p>
+              </entry>
+              <entry><codeph>/lldp</codeph><p><codeph>/lldp/state</codeph></p><codeph>/lldp/state/enabled</codeph><p><codeph>/lldp/state/hello-timer</codeph></p><codeph>/lldp/state/system-name</codeph><p><codeph>/lldp/state/system-description</codeph></p><codeph>/lldp/state/chassis-id</codeph><p><codeph>/lldp/state/chassis-id-type</codeph></p><codeph>/lldp/state/loc-port-id-type</codeph><p><codeph>/lldp/state/counters</codeph></p><codeph>/lldp/state/counters/frame-in</codeph><p><codeph>/lldp/state/counters/frame-out</codeph></p><codeph>/lldp/state/counters/frame-error-in</codeph><p><codeph>/lldp/state/counters/frame-discard</codeph></p><codeph>/lldp/state/counters/tlv-discard</codeph><p><codeph>/lldp/state/counters/tlv-unknown</codeph></p><codeph>/lldp/state/counters/last-clear</codeph><p><codeph>/lldp/state/counters/tlv-accepted</codeph></p><codeph>/lldp/state/counters/entries-aged-out</codeph><p><codeph>/lldp/state/suppress-tlv-advertisement</codeph></p><p><codeph>/lldp/interfaces</codeph></p><codeph>/lldp/interfaces/interface</codeph><p><codeph>/lldp/interfaces/interface/name</codeph></p><codeph>/lldp/interfaces/interface/state</codeph><p><codeph>/lldp/interfaces/interface/state/name</codeph></p><codeph>/lldp/interfaces/interface/state/enabled</codeph><p><codeph>/lldp/interfaces/interface/state/counters</codeph></p><codeph>/lldp/interfaces/interface/state/counters/frame-in</codeph><p><codeph>/lldp/interfaces/interface/state/counters/frame-out</codeph></p><codeph>/lldp/interfaces/interface/state/counters/frame-error-in</codeph><p><codeph>/lldp/interfaces/interface/state/counters/frame-discard</codeph></p><codeph>/lldp/interfaces/interface/state/counters/tlv-discard</codeph><p><codeph>/lldp/interfaces/interface/state/counters/tlv-unknown</codeph></p><codeph>/lldp/interfaces/interface/state/counters/last-clear</codeph><p><codeph>/lldp/interfaces/interface/state/counters/frame-error-out</codeph></p><codeph>/lldp/interfaces/interface/state/loc-port-id</codeph><p><codeph>/lldp/interfaces/interface/state/loc-port-description</codeph></p><codeph>/lldp/interfaces/interface/neighbors</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/id</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/system-name</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/system-description</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/chassis-id</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/chassis-id-type</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/id</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/age</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/last-update</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/port-id</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/port-id-type</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/port-description</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/management-address</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/state/management-address-type</codeph></p><codeph>lldp/interfaces/interface/neighbors/neighbor/custom-tlvs</codeph><p><codeph>lldp/interfaces/interface/neighbors/neighbor/custom-tlvs/tlv</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/custom-tlvs/tlv/type</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/custom-tlvs/tlv/oui</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/custom-tlvs/tlv/oui-subtype</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/custom-tlvs/tlv/state</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/custom-tlvs/tlv/state/type</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/custom-tlvs/tlv/state/oui</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/custom-tlvs/tlv/state/oui-subtype</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/custom-tlvs/tlv/state/value</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/capabilities</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/capabilities/capability</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/capabilities/capability/name</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/capabilities/capability/state</codeph></p><codeph>/lldp/interfaces/interface/neighbors/neighbor/capabilities/capability/state/name</codeph><p><codeph>/lldp/interfaces/interface/neighbors/neighbor/capabilities/capability/state/enabled</codeph></p></entry>
+            </row>
+            <row>
+              <entry>Layer 2 Circuit Sensors</entry>
+              <entry><codeph>/junos/l2-circuit-connections/l2-circuit-connection[neighbor-address="<i><varname>ip</varname></i>",
+                      local-interface="<i><varname>name</varname></i>"]/state/status</codeph><p><codeph>/junos/l2-circuit-connections/l2-circuit-connection[neighbor-address="<i><varname>ip</varname></i>",
+                        local-interface="<i><varname>name</varname></i>"]/state/vcid</codeph></p><p><codeph>/junos/l2-circuit-connections/l2-circuit-connection[neighbor-address="<i><varname>ip</varname></i>",
+                        local-interface="<i><varname>name</varname></i>"]/state/inbound-label</codeph></p><p><codeph>/junos/l2-circuit-connections/l2-circuit-connection[neighbor-address="<i><varname>ip</varname></i>",
+                        local-interface="<i><varname>name</varname></i>"]/state/outbound-label</codeph></p><p><codeph>/junos/l2-circuit-connections/l2-circuit-connection[neighbor-address="<i><varname>ip</varname></i>",
+                        local-interface="<i><varname>name</varname></i>"]/state/up-transitions</codeph></p></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <p>To view additional supported sensors for cRPD please review—<xref format="html" href="https://apps.juniper.net/ydm-explorer/select-platform?software=Junos%20OS&amp;release=23.4R1&amp;moduleId=All&amp;platform=10330003" scope="external">Telemetry Information on cRPD</xref>. </p>
+      <table frame="all" id="table_fgw_2fn_xdc">
+        <title>Supported Sensors for Telemetry Metrics (vRouter)</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="2.45*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Sensor Type</p>
+              </entry>
+              <entry>
+                <p>Sensor Paths</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>Interface Sensors</p>
+              </entry>
+              <entry>
+                <p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/in-octets</codeph></p>
+                <p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/in-pkts</codeph></p>
+                <p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/out-octets</codeph></p>
+                <p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/state/counters/out-pkts</codeph></p>
+              </entry>
+            </row>
+            <row>
+              <entry>Interface VLAN Sensors</entry>
+              <entry><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters</codeph>/<codeph>in-broadcast-octets</codeph><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/in-broadcast-pkts</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/out-broadcast-octets</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/out-broadcast-pkts</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/out-flooded-octets</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/out-flooded-pkts</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/in-multicast-octets</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/in-multicast-pkts</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/out-multicast-octets</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/out-multicast-pkts</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/in-unicast-octets</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/in-unicast-pkts</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/out-unicast-octets</codeph></p><p><codeph>/interfaces/interface[name="<varname>interface_name</varname>"]/subinterfaces/subinterface[index=<varname>vlanID</varname>]/vlan/state/counters/out-unicast-pkts</codeph></p><note id="note_hgw_2fn_xdc">
+                  <p>Interface VLAN sensors are not supported for L3 VLAN Sub-Interfaces. </p>
+                </note></entry>
+            </row>
+            <row>
+              <entry>
+                <p>Global vRouter Sensors</p>
+              </entry>
+              <entry>
+                <p><codeph>/junos/system/state/network/in-octets</codeph></p>
+                <p><codeph>/junos/system/state/network/in-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/out-octets</codeph></p>
+                <p><codeph>/junos/system/state/network/out-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flows</codeph></p>
+                <p><codeph>/junos/system/state/network/active-flows</codeph></p>
+                <p><codeph>/junos/system/state/network/aged-flows</codeph></p>
+                <p><codeph>/junos/system/state/network/hold-flows</codeph></p>
+                <p><codeph>/junos/system/state/network/drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/checksum-err-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flow-no-memory-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/clone-fail-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/discard-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/drop-new-flow-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/drop-pkts-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/duplicated-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flow-action-drop-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flow-action-invalid-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flow-evict-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flow-invalid-protocol-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flow-nat-no-rflow-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flow-no-memory-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flow-queue-limit-exceeded-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flow-table-full-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/flow-unusable-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/frag-err-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/fragment-queue-fail-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/head-alloc-fail-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/icmp-error-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/interface-drop-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/interface-rx-discard-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/interface-tx-discard-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/invalid-arp-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/invalid-if-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/invalid-label-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/invalid-mcast-source-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/invalid-nh-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/invalid-packet-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/invalid-protocol-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/invalid-source-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/invalid-vnid-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/l2-no-route-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/mcast-clone-fail-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/mcast-df-bit-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/misc-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/no-fmd-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/no-frag-entry-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/no-memory-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/nowhere-to-go-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/pcow-fail-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/pull-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/push-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/rewrite-fail-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/trap-no-if-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/trap-original-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/ttl-exceeded-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/vlan-fwd-enq-drop-pkts</codeph></p>
+                <p><codeph>/junos/system/state/network/vlan-fwd-tx-drop-pkts</codeph></p>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <table frame="all" id="table_hhx_h2n_xdc">
+        <title>Supported Sensors for Telemetry Metrics (cSRX)</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="2.45*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Sensor Type</p>
+              </entry>
+              <entry>
+                <p>Sensor Paths</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>IPSec Sensors</entry>
+              <entry><codeph>/junos/security/ipsec/counters/esp-encrypted-packets</codeph><p><codeph>/junos/security/ipsec/counters/esp-encrypted-bytes</codeph></p><p><codeph>/junos/security/ipsec/counters/esp-decrypted-packets</codeph></p><p><codeph>/junos/security/ipsec/counters/esp-decrypted-bytes</codeph></p><p><codeph>/junos/security/ipsec/counters/ah-input-packets</codeph></p><p><codeph>/junos/security/ipsec/counters/ah-input-bytes</codeph></p><p><codeph>/junos/security/ipsec/counters/ah-output-packets</codeph></p><p><codeph>/junos/security/ipsec/counters/ah-output-bytes</codeph></p><p><codeph>/junos/security/ipsec/counters/ah-output-bytes</codeph></p><p><codeph>/junos/security/ipsec/counters/ah-auth-failures</codeph></p><p><codeph>/junos/security/ipsec/counters/bad-headers</codeph></p><p><codeph>/junos/security/ipsec/counters/bad-trailers</codeph></p><p><codeph>/junos/security/ipsec/counters/discard-errors</codeph></p><p><codeph>/junos/security/ipsec/counters/esp-auth-failures</codeph></p><p><codeph>/junos/security/ipsec/counters/esp-decryption-failures</codeph></p><p><codeph>/junos/security/ipsec/counters/exceeds-tunnel-mtu</codeph></p><p><codeph>/junos/security/ipsec/counters/invalid-spi-errors</codeph></p><p><codeph>/junos/security/ipsec/counters/replay-errors</codeph></p><p><codeph>/junos/security/ipsec/counters/ts-check-fail-errors</codeph></p><p><codeph>/junos/security/ike-gateways/ike-gateway[name="<varname>gateway_name</varname>"]/counters/active-peers</codeph></p><p><codeph>/junos/security/ike-gateways/ike-gateway[name="<varname>gateway_name</varname>"]/counters/in-progress-peer-negotiations</codeph></p><p><codeph>/junos/security/ike-gateways/ike-gateway[name="<varname>gateway_name</varname>"]/counters/failed-peer-negotiations</codeph></p><p><codeph>/junos/security/ike-gateways/ike-gateway[name="<varname>gateway_name</varname>"]/counters/blocked-peer-negotiations</codeph></p><p><codeph>/junos/security/ike-gateways/ike-gateway[name="<varname>gateway_name</varname>"]/counters/backoff-peer-negotiations</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/active-peers</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/in-progress-peer-negotiations</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/failed-peer-negotiations</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/blocked-peer-negotiations</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/backoff-peer-negotiations</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/ipsec-active-tunnels</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/ike-sa-negotiated</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/sa-init-requests-sent</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/sa-init-responses-received</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/sa-init-responses-sent</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/auth-requests-received</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/auth-requests-sent</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/auth-responses-received</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/auth-responses-sent</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/ike-sa-rekey-requests-received</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/ike-sa-rekey-requests-sent</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/ike-sa-rekey-responses-received</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/ike-sa-rekey-responses-sent</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/ipsec-sa-rekey-requests-received</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/ipsec-sa-rekey-requests-sent</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/ipsec-sa-rekey-responses-received</codeph></p><p><codeph>/junos/security/ike-peers/ike-peer[local-address="<varname>local_address</varname>",remote-address="<varname>remote_address</varname>",routing-instance="<varname>routing_instance_name</varname>"]/counters/ipsec-sa-rekey-responses-sent</codeph></p></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_tp1_vck_rcc">
+      <title>Troubleshooting</title>
+      <p>You can view the cRPD telemetry logs under <codeph>/var/log/jcnr/na-grpcd</codeph> on your
+        Cloud-Native Router server. You can view the Vrouter telemetry logs using the
+          <codeph>kubectl -n contrail logs -c contrail-vrouter-telemetry-exporter
+            <varname>vRouter_pod_name</varname></codeph> command. You can view the cSRX telemetry
+        logs using the <codeph>kubectl –n jcnr logs –c csrx-telemetry-exporter
+            <varname>csrx_pod_name</varname></codeph>The supported logging levels are
+          <codeph>error</codeph>, <codeph>warning</codeph>, <codeph>info</codeph>,
+          <codeph>debug</codeph>, <codeph>trace</codeph> and <codeph>verbose</codeph>. The default
+        logging level is set to <codeph>debug</codeph> and can be modified in the helm chart. </p>
+    </section>
+  </conbody>
+</concept>

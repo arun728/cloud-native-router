@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_4a0a09aed70b77da--50508d9c-19014de23ff--7fab" xml:lang="en-US">
+  <title>Known Limitations</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>This section describes issues and limitations present in Juniper Cloud-Native Router (JCNR)
+      release 24.2.</p>
+    <section id="section_zqk_5dh_xvb">
+      <title>Known Issues and Limitations in Juniper Cloud-Native Router Release 24.2</title>
+      <ul id="ul_kdl_krr_xyb">
+        <li>
+          <p><b>JCNR-6166: Modifying the route-distinguisher of an active routing-instance is not
+              supported</b>— JCNR does not support modifying the route-distinguisher of an active
+            routing-instance and the event is considered catastrophic. To modify the
+            route-distinguisher deactivate the routing-instance, make the change and activate the
+            routing-instance.</p>
+        </li>
+        <li>
+          <p><b>JCNR-6211: Setting an MTU higher than the recommended 1500 bytes on JCNR interfaces
+              for Microsoft Azure Cloud Platform deployments results in BGP flapping</b>— Azure
+            Cloud Platform recommends an MTU &lt;=1500 on interfaces. If JCNR is deployed using a
+            fabric interface with MTU higher than 1500 bytes, it results in packet drops while
+            sending BGP updates and eventually BGP flapping. </p>
+        </li>
+        <li><b>JCNR-4248: Keepalived cores are generated when VRRP is initially configured in
+            cRPD</b>— When VRRP is initially configured in cRPD or deleted and re-configured,
+          keepalived cores are generated in the <codeph>/var/crash</codeph> directory.</li>
+        <li>
+          <p><b>JCNR-8275: Interface VLAN sensors not supported for L3 VLAN Sub-Interfaces—
+            </b>Interface VLAN sensors for gNMI based telemetry are not support for L3 VLAN
+            sub-interfaces. </p>
+        </li>
+        <li>
+          <p><b>JCNR-8498: JCNR Forwarding plane not fragmentating VLAN-tagged frames with size
+              greater than 8968 bytes</b>— The JCNR forwarding plane does not fragment VLAN-tagged
+            frames with size greater than 8968 bytes. The frames are currently dropped.</p>
+        </li>
+        <li>
+          <p><b>JCNR-8492: JCNR VPC Gateway does not support exchanging IPv6 routes over IPv4 BGP
+              peers</b>— The JCNR VPC Gateway application does not support exchanging IPv6 routes
+            over IPv4 BGP peers even when enableIPv6 flag is enabled.</p>
+        </li>
+        <li>
+          <p><b>JCNR-8470: JCNR VPC Gateway fails to configure route filter and prefix list for
+              Routing Policy</b>— When a routing policy is defined in the VPC Gateway application,
+            it fails to deploy the configuration with the defined <codeph>routeFilter</codeph> and
+              <codeph>prefixList</codeph> parameters. </p>
+        </li>
+        <li>
+          <p><b>JCNR-8448: Unable to modify the default gRPC server port configuration</b>—
+            Modification of the default gRPC server port configuration using the
+              <codeph>grpcTelemetryPort</codeph> parameter in the helm chart does not work. The gRPC
+            server continues to listen on port 500053. </p>
+        </li>
+        <li>
+          <p><b>JCNR-8389: JCNR Forwarding plane drops destination traffic if Neighbor Discovery
+              (ND) fails to resolve on remote Provider Edge (PE) router</b>—The JCNR forwarding
+            plane drops outgoing traffic if ND for the destination fails to resolve on the remote PE
+            router. Resolve ND between remote PE router and the destination as a workaround.</p>
+        </li>
+        <li>
+          <p><b>JCNR-8370: AWS VPC Route table not updated when a route is withdrawn or deleted from
+              the JCNR source routing table</b>— When a route is withdrawn or deleted from the JCNR
+            source routing table, the corresponding AWS VPC route table is not updated. </p>
+        </li>
+        <li>
+          <p><b>JCNR-8332: Loopback interface IP configuration is not removed when the JCNR VPC
+              Gateway application is deleted</b>— The Loopback interface IP configuration is not
+            removed when the JCNR VPC Gateway application is deleted. In a multinode JCNR
+            deployment, the loopback interface IP must be manually removed after the VPC gateway
+            application is deleted. </p>
+        </li>
+        <li>
+          <p><b>JCNR-8311: JCNR TWAMP Ingress/Egress Delay and Jitter measurements are prone to
+              errors due to clock synchronization between devices</b>— The JCNR TWAMP ingress/egress
+            delay and jitter measurements are affected by clock synchronization between devices and
+            may not be reliable.</p>
+        </li>
+        <li>
+          <p><b>JCNR-8264: TWAMP telemetry data is available via gNMI only if the
+                <codeph>test-count</codeph> is set to the default value (0)</b>— The TWAMP telemetry
+            data is available via gNMI only if the <codeph>test-count</codeph> is set to the default
+            value (0). </p>
+        </li>
+        <li>
+          <p><b>JCNR-8487: Restarting the vRouter-agent pod with running traffic causes one of the
+              fabric tap interfaces to go down</b>—If the vRouter-agent pod is restarting with
+            running traffic, one of the fabric tap interfaces do not come up due to a flood of trap
+            resolve requests to the agent. The behavior recovers in due time. </p>
+        </li>
+        <li>
+          <p><b>JCNR-8260: When deployed on VMWare Tanzu, the JCNR Forwarding plane drops traffic
+              with <codeph>rx_missed_errors</codeph> when restarted with running traffic</b>— In
+            JCNR deployment on VMWare Tanzu, restarting the vRouter with running traffic may result
+            in traffic drop with <codeph>rx_missed_errors</codeph> in the <codeph>dpdkinfo
+              -x</codeph> command output.</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

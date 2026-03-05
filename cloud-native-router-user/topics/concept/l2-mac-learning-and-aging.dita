@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7f59" xml:lang="en-US">
+  <title>MAC Learning and Aging</title>
+  <shortdesc>Juniper Cloud-Native Router provides automated learning and aging of MAC addresses.
+    Read this topic for an overview of the MAC learning and aging functionality in the cloud-native
+    router.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <section id="section_awx_v1b_mxb">
+      <title>MAC Learning</title>
+      <p>MAC learning enables the cloud-native router to efficiently send the received packets to
+        their respective destinations. The cloud-native router maintains a table of MAC addresses
+        grouped by interface. The table includes MAC addresses, VLANs, and the interface on which
+        the vRouter learns each MAC address and VLAN. The MAC table informs the vRouter about the
+        MAC addresses that each interface can reach.</p>
+      <p>The cloud-native router caches the source MAC address for a new packet flow to record the
+        incoming interface into the MAC table. ​The router learns the MAC addresses for each VLAN or
+        bridge domain. ​The cloud-native router creates a key in the MAC table from the MAC address
+        and VLAN of the packet. Queries sent to the MAC table return the interface associated with
+        the key. To enable MAC learning, the cloud-native router performs these steps:</p>
+      <ul id="ul_dzz_frj_pvb">
+        <li>
+          <p>Records the incoming interface into the MAC table by caching the source MAC address for
+            a new packet flow.</p>
+        </li>
+        <li>
+          <p>Learns the MAC addresses for each VLAN or bridge domain.</p>
+        </li>
+        <li>
+          <p>Creates a key in the MAC table from the MAC address and VLAN of the packet.</p>
+        </li>
+      </ul>
+      <p>If the destination MAC address and VLAN are missing (lookup failure), the cloud-native
+        router floods the packet out all the interfaces (except the incoming interface) in the
+        bridge domain.​</p>
+      <p>By default:</p>
+      <ul id="ul_ncf_v2n_s5b">
+        <li>
+          <p>MAC table entries time out after 60 seconds.</p>
+        </li>
+        <li>
+          <p>The MAC table size is limited to 10,240 entries.</p>
+        </li>
+      </ul>
+      <p>We recommend that you do not change the default values. Please contact Juniper Support if
+        you need to change the default values.</p>
+      <p>You can see the MAC table entries by using:</p>
+      <ul id="ul_oyp_lvj_pvb">
+        <li>
+          <p>Introspect agent at <filepath>http://<varname>host server
+              IP</varname>:8085/mac_learning.xml#Snh_FetchL2MacEntry</filepath>​<image href="../../images/2023-05-23_17-48-13.png" id="image_cym_r2h_4xb"/></p>
+        </li>
+        <li>
+          <p>The command <userinput>show bridge mac-table</userinput> on the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>controller
+            CLI:</p>
+          <codeblock><b>show bridge mac-table</b>
+Routing Instance : default-domain:default-project:ip-fabric:__default__
+Bridging domain VLAN id : 3002
+MAC                  MAC                Logical
+address              flags              interface
+
+00:00:5E:00:53:01      D                 bond0</codeblock>
+        </li>
+        <li>
+          <p>The command <userinput>rt --dump <varname>vrf_id</varname> --family bridge</userinput>
+            on the CLI of the vRouter pod:</p>
+          <codeblock>bash-5.1# rt --dump 0 --family bridge
+Flags: L=Label Valid, Df=DHCP flood, Mm=Mac Moved, L2c=L2 Evpn Control Word, N=New Entry, Ec=EvpnControlProcessing
+vRouter bridge table 0/1
+Index       BdID      DestMac                  Flags                 Label/VNID          Nexthop           Stats
+5644           1      00:10:94:00:00:01         Df                    -          	 23               615123154
+6480           1      00:10:94:00:00:01         Df                    -           	16               615123154
+5628           1      00:10:94:00:00:01         LDf                    0          	26               615123154</codeblock>
+        </li>
+      </ul>
+      <p>If you exceed the MAC address limit, the counter
+          <filepath>pkt_drop_due_to_mactable_limit</filepath> increments. You can see this counter
+        by using the introspect agent at <filepath>http://<varname>host server
+          IP</varname>:8085/Snh_AgentStatsReq</filepath>.​ </p>
+      <p>If you delete or disable an interface, the cloud-native router deletes all the MAC entries
+        associated with that interface from the MAC table.​</p>
+    </section>
+    <section id="section_v1l_tz1_mxb">
+      <title>MAC Entry Aging</title>
+      <p>The aging timeout for cached MAC entries is 60 seconds. You can configure the aging timeout
+        at deployment time by editing the <filepath>values.yaml</filepath> file. The minimum timeout
+        is 60 seconds and the maximum timeout is 10,240 seconds. You can see the time that is left
+        for each MAC entry through introspect at <filepath>http://<varname>host server
+          IP</varname>:8085/mac_learning.xml#Snh_FetchL2MacEntry</filepath>. We show an example of
+        the output below:</p>
+      <codeblock>l2_mac_entry_list
+vrf_id          vlan_id          mac                  index          packets          time_since_add          last_stats_change
+0               1001             00:10:94:00:00:01    5644           615123154        12:55:14.248785         00:00:00.155450
+0               1001             00:10:94:00:00:01    6480           615123154        12:55:14.247765         00:00:00.155461
+0               1002             00:10:94:00:00:01    5628           615123154        12:55:14.248295         00:00:00.155470</codeblock>
+    </section>
+  </conbody>
+</concept>

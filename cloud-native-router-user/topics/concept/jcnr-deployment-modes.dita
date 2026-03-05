@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7f74" xml:lang="en-US">
+  <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Deployment Modes</title>
+  <shortdesc>Read this topic to know about the various modes of deploying the cloud-native router. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+
+    <section>
+      <title>Deployment Modes</title>
+      <!--JCNR3036; Rel23.2-->
+      <p>Starting with Juniper Cloud-Native Router Release 23.2, you can deploy and operate Juniper
+        Cloud-Native Router in L2, L3 and L2-L3 modes, auto-derived based on the interface
+        configuration in the <codeph>values.yaml</codeph> file prior to deployment. </p>
+      <note>
+        <p>In the <codeph>values.yaml</codeph> file:</p>
+        <ul id="ul_y21_qzx_5xb">
+          <li>
+            <p>When all the interfaces have an <codeph>interface_mode</codeph> key configured, then
+              the mode of deployment would be L2. </p>
+          </li>
+          <li>
+            <p>When one or more interfaces have an <codeph>interface_mode</codeph> key configured
+              and some of the interfaces do not have the <codeph>interface_mode</codeph> key
+              configured, then the mode of deployment would be L2-L3. </p>
+          </li>
+          <li>
+            <p>When none of the interfaces have the <codeph>interface_mode</codeph> key configured,
+              then the mode of deployment would be L3.</p>
+          </li>
+        </ul>
+      </note>
+      <p>In L2 mode, the cloud-native router behaves like a switch and therefore does not performs
+        any routing functions and it doesn not run any routing protocols. The pod network uses VLANs
+        to direct traffic to various destinations.</p>
+      <p>In L3 mode, the cloud-native router behaves like a router and therefore performs routing
+        functions and runs routing protocols such as ISIS, BGP, OSPF, and segment routing-MPLS. In
+        L3 mode, the pod network is divided into an IPv4 or IPv6 underlay network and an IPv4 or
+        IPv6 overlay network. The underlay network is used for control plane traffic.</p>
+      <p>The L2-L3 mode provides the functionality of both the switch and the router at the same
+        time. It enables <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>to act as both a switch and a router simultaneously by performing
+        switching in a set of interfaces and routing in the other set of interfaces. Cell site
+        routers in a 5G deployment need to handle both L2 and L3 traffic. DHCP packets from radio
+        outdoor unit (RU) is an example of L2 traffic and data packets moving from outdoor unit
+        (ODU) to central unit (CU) is an example of L3 traffic.</p>
+      <!--To deploy the cloud-native router in L2 mode, retain or modify the values in the file Juniper_Cloud_Native_Router_release-number/helmchart/values.yaml. Review  for more information.
+To deploy the cloud-native router in L3 mode, retain or modify the values in the file Juniper_Cloud_Native_Router_release-number/helmchart/values_L3.yaml. Review  for more information.-->
+    </section>
+  </conbody>
+</concept>

@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_320475bc3dc4efec-6e6d333a-1900a7e1195--7eaa" xml:lang="en-US">
+    <title>Customize <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Configuration </title>
+    <shortdesc>Read this topic to understand how to customize <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>configuration using a
+        ConfigMap.</shortdesc>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <conbody>
+        <section id="section_rc1_3lz_5xb"><title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>ConfigMap</title>Starting with Juniper
+            Cloud-Native Router (JCNR) Release 23.3, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports customizing configuration using a
+            ConfigMap when deployed in L3 mode. In cloud-based deployments, in the event of a node
+            failure, the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>pods may be spawned on newer or different nodes. A ConfigMap decouples
+            the configuration parameters from node names and is based on node labels instead. This
+            enables the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>CNI deployer to consume the configuration parameters, apply them to the
+            cRPD configuration template and render the configuration, as long as a matching label is
+            available for the node.<p>A ConfigMap is an API object to store data in key-values
+                pairs. A ConfigMap defines per node variables that are consumed by nodes matching
+                the label. The key-value pairs are used to render the configuration via a go
+                template. The configured template must be available in the
+                        <codeph>Juniper_Cloud_Native_Router_<varname>release_number</varname>/helmchart/charts/jcnr-cni/files/</codeph>
+                directory for the configuration to be applied to the cRPD pods.</p><note>
+                <p>You must apply the ConfigMap before installing <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>to create cRPD pods with
+                    custom configuration. The cRPD pod must be deleted and respawned should you wish
+                    to apply the configuration parameters any time after <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation. The
+                    configuration parameters are applied by default to any newly spawned cRPD pods.
+                    The <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>customization via ConfigMap is optional.</p>
+            </note><note>
+                <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>also supports customization via node annotations for backward compatibility
+                    with previous releases. Considering that node annotations are coupled with node
+                    names, it is highly recommended to customize <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>via ConfigMaps, specifically
+                    for cloud deployments. Refer to <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.2/cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-annotation.html" scope="external">Customize JCNR Configuration using node
+                        annotations</xref> for more information. </p>
+            </note></section>
+        <section id="section_scf_grz_5xb">
+            <title>Configuration Example</title>
+            <p>Sample ConfigMap and template files are available under
+                        <codeph>Juniper_Cloud_Native_Router_<varname>&lt;release-number&gt;</varname>/helmchart/cRPD_examples</codeph>
+                directory. </p>
+            <p>You define the key-value pair for different node labels in your cluster. An example
+                of the <codeph>jcnr-params-configmap.yaml</codeph> file is provided below:</p>
+            <codeblock>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jcnr-params
+  namespace: jcnr
+data:
+  jcnr1: |
+    {
+      "isoLoopbackAddr": "49.0004.1000.0000.0001.00",
+      "IPv4LoopbackAddr": "110.1.1.2",
+      "srIPv4NodeIndex": "2000",
+      "srIPv6NodeIndex": "3000",
+      "BGPIPv4Neighbor": "110.1.1.254",
+      "BGPLocalAsn": "64512"    
+    }
+  jcnr2: |
+    {
+      "isoLoopbackAddr": "49.0004.1000.0000.0000.00",
+      "IPv4LoopbackAddr": "110.1.1.3",
+      "srIPv4NodeIndex": "2001",
+      "srIPv6NodeIndex": "3001",
+      "BGPIPv4Neighbor": "110.1.2.254",
+      "BGPLocalAsn": "64512"
+    }</codeblock>
+            <p>The key-value pairs you define in the annotations is used to render the cRPD
+                configuration via a go template. An example of the
+                    <codeph>jcnr-cni-custom-config-cm.tmpl</codeph> template file is provided
+                below:</p>
+            <codeblock>apply-groups [custom];
+groups {
+    custom {
+        interfaces {
+            lo0 {
+                unit 0 {
+                {{if .Params.isoLoopbackAddr}}
+                    family iso {
+                        address {{.Params.isoLoopbackAddr}};
+                    }
+                {{end}}
+                    family inet {
+                        address {{.Params.IPv4LoopbackAddr}};
+                    }
+                }
+            }
+        }
+        routing-options {
+            router-id {{.Params.IPv4LoopbackAddr}}
+            route-distinguisher-id {{.Params.IPv4LoopbackAddr}}
+        }
+        protocols {
+            isis {
+                interface all;
+                {{if and .Env.SRGB_START_LABEL .Env.SRGB_INDEX_RANGE}}
+                source-packet-routing {
+                    srgb start-label {{.Env.SRGB_START_LABEL}} index-range {{.Env.SRGB_INDEX_RANGE}};
+                    node-segment {
+                        {{if .Params.srIPv4NodeIndex}}
+                        ipv4-index {{.Params.srIPv4NodeIndex}};
+                        {{end}}
+                        {{if .Params.srIPv6NodeIndex}}
+                        ipv6-index {{.Params.srIPv6NodeIndex}};
+                        {{end}}
+                    }
+                }
+                {{end}}
+                level 1 disable;
+            }
+            ldp {
+                interface all;
+            }
+            mpls {
+                interface all;
+            }
+        }
+        policy-options {
+            # policy to signal dynamic UDP tunnel attributes to BGP routes
+            policy-statement udp-export {
+                then community add udp;
+            }
+            community udp members encapsulation:0L:13;
+        }
+        protocols {
+            bgp {
+                group jcnrbgp1 {
+                    type internal;
+                    local-address {{.Params.IPv4LoopbackAddr}};
+                    local-as {{.Params.BGPLocalAsn}};
+                    neighbor {{.Params.BGPIPv4Neighbor}};
+                    family inet-vpn {
+                        unicast;
+                    }
+                    family inet6-vpn {
+                        unicast;
+                    }
+                }
+            }
+        }
+        routing-options {
+                dynamic-tunnels {
+                dyn-tunnels {
+                    source-address {{.Params.IPv4LoopbackAddr}};
+                    udp;
+                    destination-networks {{.Params.BGPIPv4Neighbor}}/32;
+                }
+            }
+        }
+    }
+}</codeblock>
+            <note>
+                <p>You can define additional cRPD configuration hierarchies in the template. The
+                    values to be rendered from the ConfigMap defined in the
+                        <codeph>jcnr-params-configmap.yaml</codeph> must be defined as
+                            <codeph>{{.Params.<varname>var-name</varname>}}</codeph>. Any
+                    environment variables, such as variables defined in
+                    <codeph>values.yaml</codeph>, must be defined as
+                            <codeph>{{.Env.<varname>variable_name</varname>}}</codeph>. </p>
+            </note>
+            <p>Complete the following steps to apply the customizations.</p>
+            <ol>
+                <li>
+                    <p>Label each node based on the keys used in the ConfigMap.</p>
+                    <codeblock>kubectl label nodes &lt;node_name1&gt; jcnr.juniper.net/params-profile=jcnr1
+kubectl label nodes &lt;node_name2&gt; jcnr.juniper.net/params-profile=jcnr2</codeblock>
+                </li>
+                <li>Apply the ConfigMap to the cluster nodes using the command provided
+                    below:<codeblock># kubectl apply -f jcnr-params-configmap.yaml
+configmap/jcnr-params created</codeblock></li>
+                <li>Once the template is configured, you must copy the
+                        <codeph>jcnr-cni-custom-config.tmpl</codeph> file to the
+                            <codeph>Juniper_Cloud_Native_Router_<varname>release_number</varname>/helmchart/charts/jcnr-cni/files/</codeph>
+                    directory.<codeblock># cp Juniper_Cloud_Native_Router_<varname>release_number</varname>/helmchart/cRPD_examples/jcnr-cni-custom-config-cm.tmpl Juniper_Cloud_Native_Router_<varname>release_number</varname>/helmchart/charts/jcnr-cni/files/
+#</codeblock></li>
+                <li>Deploy the cloud-native router components, including the cRPD. Once the
+                    installation completes, <xref keyref="cloud-native-router-user.accessing-crpd-cli">access the cRPD
+                        CLI</xref> and issue the <codeph>show configuration | display set</codeph>
+                    command in the <codeph>cli</codeph> mode to view the custom configuration you
+                    applied.<codeblock>root@jcnr-01&gt; show configuration    
+## Last commit: 2023-06-23 08:30:42 EDT by root
+version 20230608.143922_builder.r1342735;
+groups {
+    base { /* OMITTED */ };
+    custom {
+        interfaces {
+            lo0 {
+                unit 0 {
+                    family inet {
+                        address 110.1.1.2/32;
+                    }
+                    family iso {
+                        address 49.0004.1000.0000.0001.00;
+                    }
+                }
+            }
+        }
+        policy-options {
+            # policy to signal dynamic UDP tunnel attributes to BGP routes
+            policy-statement udp-export {
+                then {
+                    community add udp;
+                }
+            }
+            community udp members encapsulation:0L:13;
+        }
+        routing-options {
+            route-distinguisher-id 110.1.1.2;
+            router-id 110.1.1.2;
+            dynamic-tunnels {
+                dyn-tunnels {
+                    source-address 110.1.1.2;
+                    udp;
+                    destination-networks {
+                        110.1.1.254/32;
+                    }
+                }
+            }
+        }
+        protocols {
+            bgp {
+                group jcnrbgp1 {
+                    type internal;
+                    local-address 110.1.1.2;
+                    family inet-vpn {
+                        unicast;
+                    }
+                    family inet6-vpn {
+                        unicast;
+                    }
+                    local-as 64512;
+                    neighbor 110.1.1.254;
+                }
+            }
+            isis {
+                interface all;
+                source-packet-routing {
+                    srgb start-label 400000 index-range 4000;
+                    node-segment {
+                        ipv4-index 2000;
+                        ipv6-index 3000;
+                    }                   
+                }
+                level 1 disable;
+            }
+            ldp {
+                interface all;
+            }
+            mpls {
+                interface all;
+            }
+        }
+    }
+    cni { /* OMITTED */ };
+    internal { /* OMITTED */ };
+}
+apply-groups [ custom base internal ]; </codeblock></li>
+            </ol>
+        </section>
+        <section id="section_rzm_qpn_vyb"><title>Modifying the ConfigMap</title>If you wish to
+            change the ConfigMap any time after <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation, you must delete the cRPD pod and
+            respawn it using the following
+            command:<codeblock>kubectl patch sts kube-crpd-worker-sts -n jcnr -p '{"spec":{"template":{"metadata":{"annotations":{"configmap-reload/timestamp":"'$(date +%s)'"}}}}}'</codeblock>This
+            triggers a rolling restart of all cRPD pods. Alternatively, you can identify the cRPD
+            pods on nodes for which the ConfigMap has changed and manually delete the pod. The
+            ConfigMap changes will be applied automatically to any respawned pods.</section>
+        <section id="section_ujq_mnc_wxb">
+            <title>Troubleshooting</title>
+            <p>The cRPD pod continues to restart in <codeph>CrashLoopBackOff</codeph> state if
+                invalid configuration is rendered and applied via the go template. The rendered
+                configuration is saved in <codeph>/config</codeph> directory on the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>host as
+                    <codeph>juniper.conf.master</codeph>. You can apply the rendered configuration
+                manually to a running cRPD pod to validate the configuration and identify issues.
+                For an AWS EKS deployment you can find the rendered config within the cRPD pod in
+                the <codeph>/config</codeph> directory.</p>
+        </section>
+    </conbody>
+    <related-links/>
+</concept>

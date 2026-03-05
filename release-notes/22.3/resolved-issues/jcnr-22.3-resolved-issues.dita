@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_d26aa45954d81d7a--5d5cdde6-1834a3f0056--7c98" xml:lang="en-US">
+  <title>Resolved Issues</title>
+  <prolog>
+    <author>probbins</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section describes the resolved issues in the Juniper Cloud-Native Router 22.3
+      release.</p>
+
+    <section><title>Resolved Issues in Juniper Cloud-Native Router Release 22.3</title>
+      <ul>
+        <li>
+          <p><b>JCNR-2428 - Cloud-native router applies the default <filepath>vlanIdList</filepath>
+              (1-4094) if any <filepath>vlanIdList</filepath> is specified in the network attachment
+              definition (NAD)</b>–Previously, cloud-native router ignored the
+              <filepath>vlanIdList</filepath> parameter in NAD files and applied the default value
+            of 1-4094 instead.</p>
+        </li>
+        <li>
+          <p><b>JCNR-2404 - Workload Pod stuck in ContainerCreating state</b>–In some rare
+            instances, the cRPD mgd-api daemon fails to accept connection requests. Restart the
+            mgd-api daemon manually to resolve the issue.</p>
+        </li>
+      </ul></section>
+  </conbody>
+</concept>

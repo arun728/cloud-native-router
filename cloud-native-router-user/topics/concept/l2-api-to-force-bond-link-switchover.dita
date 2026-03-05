@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7e99" xml:lang="en-US">
+  <title>APIs and CLI Commands for Bond Interfaces</title>
+  <shortdesc>Read this topic to learn about the APIs and CLIs available in the L2 mode of the
+    Juniper Cloud-Native Router. <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports an API that can be used to force traffic to switch
+    from the active interface to the standby interface in a bonded pair. Another <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>API and a CLI
+    can be used to view the active node details in a bond interface.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <section id="section_ngk_bdh_kyb">
+      <title>APIs for Bond Interfaces</title>
+      <p>When you run cloud-native router in L2 mode with cascaded nodes, you can configure those
+        nodes to use bond interfaces. You can configure the bond mode in the
+          <codeph>values.yaml</codeph> file before deployment. For example:</p>
+      <codeblock>bondInterfaceConfigs:
+    - name: "bond0"
+      mode: 1             # ACTIVE_BACKUP MODE
+      slaveInterfaces:
+      - "enp59s0f0v0"
+      - "enp59s0f0v1"</codeblock>
+      <subsection id="subsection_u55_nfh_kyb">
+        <title>API to View the Active and Backup Interfaces in a Bond Interface Pair</title>
+        <p>Starting with <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Release 23.3, use the REST API call: <codeph>curl -X GET
+            http://127.0.0.1:9091/bond-get-active/bond0</codeph> on localhost port 9091 to fetch the
+          active and backup interface details of a bond interface pair.</p>
+        <p>A sample output is shown below:</p>
+        <codeblock>root@nodep23:~# curl -X GET http://127.0.0.1:9091/bond-get-active/bond0
+{"active": "0000:af:01.0", "backup": "0000:af:01.1"}</codeblock>
+      </subsection>
+      <subsection id="subsection_yvd_pfh_kyb">
+        <title>API to Force Bond Link Switchover</title>
+        <p>Starting with <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Release 22.4, you can force traffic switchover from an active to
+          backup interface in a bond interface pair using a REST API. If you have configured the
+          bond interface pair in the <codeph>ACTIVE_BACKUP</codeph> mode before deploying JCNR, then
+          the vRouter-agent exposes the REST API call: <codeph>curl -X POST
+            http://127.0.0.1:9091/bond-switch/bond0</codeph> on localhost port 9091. Use this REST
+          API call to force traffic to switch from the active interface to the backup interface. </p>
+        <p>A sample output is shown below:</p>
+        <codeblock>root@nodep23:~# curl -X GET http://127.0.0.1:9091/bond-get-active/bond0
+{"active": "0000:af:01.0", "backup": "0000:af:01.1"}
+root@nodep23:~# curl -X POST http://127.0.0.1:9091/bond-switch/bond0
+{}
+root@nodep23:~# curl -X GET http://127.0.0.1:9091/bond-get-active/bond0
+{"active": "0000:af:01.1", "backup": "0000:af:01.0"}</codeblock>
+      </subsection>
+    </section>
+    <section id="section_dql_psp_wxb">
+      <title>CLI Commands for Bond Interfaces</title>
+      <p>The vRouter contains the following CLI commands which are related to bond interfaces:</p>
+      <ul id="ul_hj5_ghh_kyb">
+        <li>
+          <p><codeph>dpdkinfo -b</codeph>—displays the active interface in a bonded pair.</p>
+          <codeblock>[[root@jcnr-01 /]# dpdkinfo -b
+No. of bond slaves: 2
+Bonding Mode: Active Backup
+Transmit Hash Policy: Layer 2 (Ethernet MAC)
+MII status: UP
+MII Link Speed: 10000 Mbps
+Up Delay (ms): 0
+Down Delay (ms): 0
+Driver: net_bonding
+
+Slave Interface(0): 0000:17:01.0
+Slave Interface Driver: net_iavf
+Slave Interface (0): Active
+Slave Interface Mac : 6E: BD: 45:0F: 4A:02
+
+MII status: UP
+MII Link Speed: 10000 Mbps
+
+Slave Interface (1): 0000:17:11.0
+Slave Interface Driver: net_iavf
+Slave Interface Mac      6E: BD: 45:0F: 4A: C2
+
+MII status: UP
+MII Link Speed: 25000 Mbps</codeblock>
+        </li>
+        <li>
+          <p><codeph>dpdkinfo -n</codeph>—displays the traffic statistics associated with your bond
+            interfaces.</p>
+          <codeblock>[root@jcnr-01 /]# dpdkinfo -n2
+Master Info (eth_bond_bond0):
+RX Device Packets: 72019, Bytes: 96419113, Errors:0, Nombufs:0
+Dropped RX Packets: 37475
+TX Device Packets:0, Bytes:0, Errors:0
+Queue Rx:
+Tx:
+Rx Bytes:
+Tx Bytes:
+Errors:
+
+Slave Info (0000:17:01.0):
+Rx Device Packets: 72019, Bytes:66073908, Errors:0, Nombufs:0
+Dropped RX Packets: 588
+TX Device Packets:0, Bytes:0, Errors:0
+Queue Rx:
+Tx:
+Rx Bytes:
+Tx Bytes:
+Errors:
+
+Slave Info (0000:17:11.0):
+RX Device Packets:0, Bytes:30345205, Errors:0, Nombufs:0
+Dropped R Packets:36887
+TX Device Packets:0, Bytes:0, Errors:0
+Queue Rx:
+Tx:
+Rx Bytes:
+Tx Bytes:
+Errors:</codeblock>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+
+  <related-links/>
+</concept>

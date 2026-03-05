@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7cea" xml:lang="en-US">
+  <title>Troubleshoot using Introspect</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+
+    <section><title>Introspect</title>For vRouter-agent debugging, we use Introspect. You can access
+      the Introspect data at <filepath>http://&lt;host server IP&gt;:8085</filepath>. Here is a
+      sample of the Introspect data:<table>
+        <title>Modules shown in contrail-vrouter-agent debug output</title>
+        <tgroup cols="2">
+          <colspec colname="newCol1" colnum="1" colwidth="1*"/>
+          <colspec colname="c3" colnum="2" colwidth="1.67*" align="left"/>
+          <thead>
+            <row>
+              <entry>Link</entry>
+              <entry align="left">and Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p><filepath>agent.xml</filepath></p>
+              </entry>
+              <entry align="left">
+                <p>Shows agent operational data. Using this introspect, you can see the list of
+                  interfaces, VMs, VNs, VRFs, security groups,<?oxy_insert_start author="pkusnoor" timestamp="20221130T002102-0800"?>
+                  <?oxy_insert_end?>ACLs and mirror configurations.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><filepath>agent_ksync.xml</filepath></p>
+              </entry>
+              <entry align="left">
+                <p>Shows agent ksync layer for data objects such as interfaces and bridge ports.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><filepath>agent_profile.xml</filepath></p>
+              </entry>
+              <entry align="left">
+                <p>shows agent <filepath>operdb</filepath>, tasks, flows, and statistics
+                  summary.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><filepath>agent_stats_interval.xml</filepath></p>
+              </entry>
+              <entry align="left">
+                <p>View and set collection period for statistics.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><filepath>controller.xml</filepath></p>
+              </entry>
+              <entry align="left">
+                <p>Shows the connection status of the jcnr-controller (cRPD)</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><filepath>cpuinfo.xml</filepath></p>
+              </entry>
+              <entry align="left">
+                <p>Shows the CPU load and memory usage on the compute node.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><filepath>ifmap_agent.xml</filepath></p>
+              </entry>
+              <entry align="left">
+                <p>Shows the current configuration data
+                  rece<?oxy_insert_start author="pkusnoor" timestamp="20221130T002126-0800"?>i<?oxy_insert_end?>ved
+                  from <filepath>ifmap</filepath>.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><filepath>kstate.xml</filepath></p>
+              </entry>
+              <entry align="left">
+                <p>Shows data configured in the vRouter data path.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><filepath>mac_learning.xml</filepath></p>
+              </entry>
+              <entry align="left">
+                <p>Shows entries in vRouter-agent MAC learning table.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><filepath>sandesh_trace.xml</filepath></p>
+              </entry>
+              <entry align="left">
+                <p>Gives the different agent module traces such as <filepath>oper</filepath>,
+                    <filepath>ksync</filepath>, <filepath>mac learning</filepath>, and
+                    <filepath>grpc</filepath>.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><b><filepath>sandesh_uve.xml</filepath></b></p>
+              </entry>
+              <entry align="left">
+                <p>Lists all the user visible
+                  entitit<?oxy_insert_start author="pkusnoor" timestamp="20221130T002148-0800"?>i<?oxy_insert_end?>es
+                  (UVEs) in the vRouter-agent. The UVEs are used for analytics and telemetry.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><b><filepath>stats.xml</filepath></b></p>
+              </entry>
+              <entry align="left">
+                <p>Shows vRouter-agent slow path statistics such as error packets, trapped packets,
+                  and debug statistics.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><b><filepath>task.xml</filepath></b></p>
+              </entry>
+              <entry align="left">
+                <p>Shows vRouter-agent worker task details.</p>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table><note>
+        <p>The table shows grouped output. The cloud-native router does not group or sort the output
+          on live systems.</p>
+        <p> The <filepath>http://<varname>host server IP address</varname>:8085</filepath> page
+          displays only a list of HTML links.</p>
+      </note></section>
+  </conbody>
+</concept>

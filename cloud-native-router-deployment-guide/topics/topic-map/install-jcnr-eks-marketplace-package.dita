@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_048028fc5d39450a-2e4925b9-18a45bf518c--7f00" xml:lang="en-US">
+    <title>Install Juniper Cloud-Native Router on Amazon EKS (AWS Marketplace Package)</title>
+    <shortdesc/>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <task id="task_rdw_nj5_mpb">
+        <title>Install Juniper Cloud-Native Router Using AWS Marketplace Subscription (BYOL)</title>
+        <taskbody>
+            <context id="context_zdt_npy_wtb">
+                <p>Use this procedure to install JCNR (BYOL) from AWS Marketplace using Helm
+                    charts.</p>
+                <p>This procedure installs Cloud-Native Router on your existing Amazon EKS cluster.
+                    Ensure you've set up your Amazon EKS cluster prior to running this procedure.
+                    You can use any method to create an EKS cluster as long as it meets the system
+                    requirements described in <xref href="../concept/system-resource-requirements-eks.dita">System
+                        Requirements for EKS Deployment</xref>. </p>
+                <p>For convenience, we've provided a CloudFormation template that you can use to
+                    quickly get a cluster up and running. This template is provided in <xref href="../example/jcnr-aws-eks-cloud-formation-template.dita"/>.</p>
+            </context>
+            <steps id="steps_gn1_m3l_gxb">
+                <step>
+                    <cmd>Review the <xref href="../concept/system-resource-requirements-eks.dita">System Requirements for EKS Deployment</xref> to ensure the setup has
+                        all the required configuration.</cmd>
+                </step>
+                <step>
+                    <cmd>Log in to and search for Cloud-Native Router products from the <xref format="html" href="https://aws.amazon.com/marketplace/search/results?searchTerms=jcnr" scope="external">AWS Marketplace</xref>.</cmd>
+                </step>
+                <step>
+                    <cmd>Select the JCNR (BYOL) product and subscribe to it.</cmd>
+                </step>
+                <step>
+                    <cmd>Scroll down on the selected product's landing page to view the usage
+                        instructions.</cmd>
+                    <info>
+                        <p>The instructions show you how to log in to the ECR Helm registry and
+                            download the Cloud-Native Router helm chart.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Copy and run the provided usage instructions on the setup where you issue
+                        your AWS CLI commands.</cmd>
+                    <info>
+                        <codeblock id="codeblock_ift_p43_t1c">aws configure
+aws ecr get-login-password <varname>&lt;...&gt;</varname>
+helm pull oci: <varname>&lt;...&gt;</varname></codeblock>
+                    </info>
+                    <info>This downloads the
+                            <filepath>jcnr-<varname>&lt;version&gt;</varname>.tgz</filepath> file
+                        onto your setup.</info>
+                </step>
+                <step>
+                    <cmd>Expand the file
+                            <filepath>jcnr-<varname>&lt;version&gt;</varname>.tgz</filepath>.</cmd>
+                    <info>
+                        <codeblock>tar xzvf jcnr-<varname>&lt;version&gt;</varname>.tgz</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change directory to <codeph>jcnr</codeph>.</cmd>
+                    <info>
+                        <codeblock>cd jcnr</codeblock>
+                    </info>
+                    <info>
+                        <note>
+                            <p>All remaining steps in the installation assume that your current
+                                working directory is now <filepath>jcnr</filepath>.</p>
+                        </note>
+                    </info>
+                </step>
+                <step>
+                    <cmd>View the contents in the current directory.</cmd>
+                    <info>
+                        <codeblock>ls
+Chart.yaml  charts  cRPD_examples  scripts  secrets  values.yaml</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Follow the steps in <xref href="jcnr-licensing.dita#task_tk3_jgp_41c"/> to
+                        install your Cloud-Native Router license.</cmd>
+                </step>
+                <step id="step_vtx_pzw_kxb">
+                    <cmd>Enter the root password for your host server into the
+                            <filepath>secrets/jcnr-secrets.yaml</filepath> file at the following
+                        line:</cmd>
+                    <info>
+                        <codeblock id="codeblock_g53_tyz_51c">  root-password: &lt;add your password in base64 format&gt;</codeblock>
+                    </info>
+                    <info>You must enter the password in base64-encoded format. Encode your password
+                        as follows:
+                        <codeblock id="codeblock_eqx_kyz_51c">echo -n "<varname>password</varname>" | base64 -w0</codeblock>Copy
+                        the output of this command into
+                            <filepath>secrets/jcnr-secrets.yaml</filepath>.</info>
+                </step>
+                <step>
+                    <cmd>Apply <filepath>secrets/jcnr-secrets.yaml</filepath> to the cluster.</cmd>
+                    <info>
+                        <codeblock id="codeblock_qxz_skm_51c">kubectl apply -f secrets/jcnr-secrets.yaml
+namespace/jcnr created
+secret/jcnr-secrets created</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Create the <xref href="../concept/system-resource-requirements-eks.dita#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/section_b5d_xzg_vyb">JCNR ConfigMap</xref> if using the Virtual Router Redundancy Protocol
+                        (VRRP) for your Cloud-Native Router cluster. Apply the
+                            <codeph>jcnr-aws-config.yaml</codeph> to the Kubernetes system.</cmd>
+                    <info>
+                        <codeblock>kubectl apply -f jcnr-aws-config.yaml
+configmap/jcnr-aws-config created</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>If desired, configure how cores are assigned to the vRouter DPDK
+                        containers. See <xref href="jcnr-configure-vrouter-performance.dita"/>.</cmd>
+                </step>
+                <step>
+                    <cmd>Customize the helm chart for your deployment using the
+                            <filepath>values.yaml</filepath> file.</cmd>
+                    <info>
+                        <p>See, <xref href="../concept/deployment-config-files-eks.dita">Customize JCNR Helm Chart for EKS Deployment</xref> for
+                            descriptions of the helm chart configurations and a sample helm chart
+                            for EKS deployment.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Optionally, customize Cloud-Native Router configuration.</cmd>
+                    <info>See <xref href="../concept/crpd-customization-node-configlet.dita"/>
+                        for creating and applying the cRPD customizations.</info>
+                </step>
+                <step>
+                    <cmd>Verify that the Amazon EBS CSI driver role policy has been attached to the
+                        EKS cluster node role.</cmd>
+                    <info>
+                        <codeblock id="codeblock_uq4_hhb_v1c">aws iam list-attached-role-policies --role-name <varname>&lt;EKS_Cluster_Node_Role_Name&gt;</varname></codeblock>
+                        <p>Look for
+                                <codeph>arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy</codeph>
+                            in the output. If this policy is not listed, add it as follows:</p>
+                        <codeblock id="codeblock_zhh_nhb_v1c">aws iam attach-role-policy --role-name <varname>&lt;EKS_Cluster_Node_Role_Name&gt;</varname> --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Verify that the Amazon VPC CNI role policy has been attached to the EKS
+                        cluster node role.</cmd>
+                    <info>
+                        <codeblock id="codeblock_gqz_g3b_v1c">aws iam list-attached-role-policies --role-name <varname>&lt;EKS_Cluster_Node_Role-Name&gt;</varname></codeblock>
+                        <p>Look for <codeph>arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy</codeph> in
+                            the output. If this policy is not listed, add it as follows:</p>
+                        <codeblock id="codeblock_gqf_k3b_v1c">aws iam attach-role-policy --role-name <varname>&lt;EKS_Cluster_Node_Role_Name&gt;</varname> --policy-arn arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Verify that the Amazon EBS CSI driver and Amazon VPC CNI add-ons are
+                        installed.</cmd>
+                    <info>
+                        <codeblock id="codeblock_utc_x3b_v1c">aws eks describe-addon-versions --addon-name aws-ebs-csi-driver</codeblock>
+                        <codeblock id="codeblock_e55_fjb_v1c">aws eks describe-addon-versions --addon-name vpc-cni</codeblock>
+                        <p>If any of the add-ons is not installed, you can install them respectively
+                            as follows:</p>
+                        <codeblock id="codeblock_n1v_njb_v1c">aws eks create-addon --cluster-name my-cluster --addon-name aws-ebs-csi-driver --addon-version <varname>&lt;version&gt;</varname> --service-account-role-arn <varname>&lt;EKS_Cluster_Node_IAM_role_ARN&gt;</varname></codeblock>
+                        <codeblock id="codeblock_lcj_4jb_v1c">aws eks create-addon --cluster-name my-cluster --addon-name vpc-cni --addon-version <varname>&lt;version&gt;</varname> --service-account-role-arn <varname>&lt;EKS_Cluster_Node_IAM_role_ARN&gt;</varname></codeblock>
+                    </info>
+                    <info>Be sure to install the versions listed in <xref href="../concept/system-resource-requirements-eks.dita#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/section_kh4_wdk_gxb"/>.</info>
+                </step>
+                <step>
+                    <cmd>Label the nodes where you want Cloud-Native Router to be installed based on
+                        the <codeph>nodeaffinity</codeph> configuration (if defined in the
+                            <codeph>values.yaml</codeph>). For example:</cmd>
+                    <info>
+                        <codeblock id="codeblock_q1c_zgn_sbc">kubectl label nodes ip-10.0.100.17.us-east-2.compute.internal key1=jcnr --overwrite</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Deploy the Juniper Cloud-Native Router using the helm chart.</cmd>
+                    <info>Run the following
+                        command:<codeblock>helm install jcnr .</codeblock></info>
+                    <info>
+                        <codeblock>NAME: jcnr
+LAST DEPLOYED: <varname>&lt;date_time&gt;</varname>
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None</codeblock>
+                    </info>
+                </step>
+                <step id="ds-v-jcnr-cni">
+                    <cmd>Confirm Juniper Cloud-Native Router deployment.</cmd>
+                    <info>
+                        <codeblock>helm ls</codeblock>
+                        <p>Sample output:</p>
+                        <codeblock id="codeblock_dyc_xvb_v1c" scale="80">
+NAME    NAMESPACE    REVISION   UPDATED       STATUS      CHART            APP VERSION
+jcnr    default      1          <varname>&lt;date_time&gt;</varname>   deployed    jcnr-<varname>&lt;version&gt;</varname>   <varname>&lt;version&gt;</varname></codeblock>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

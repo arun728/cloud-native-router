@@ -1,0 +1,19 @@
+# Mac system files
+.DS_Store
+._*
+.Spotlight-V100
+
+# Windows system files (in case colleagues use Windows)
+Thumbs.db
+ehthumbs.db
+
+# DITA-OT Build Outputs & Temp files
+# NEVER commit generated PDFs or HTML to Git!
+out/
+temp/
+*.pdf
+*.html
+
+# Oxygen XML Editor temp files
+*.bak
+*~

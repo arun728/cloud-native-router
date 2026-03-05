@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_23cac8778b5b970f--2dc94744-18b7029ae73--750e" xml:lang="en-US">
+  <title>System Requirements for Azure Deployment</title>
+  <abstract>
+    <p>Read this section to understand the system, resource, port, and licensing requirements for
+      installing Juniper Cloud-Native Router on Microsoft Azure Cloud Platform.</p>
+  </abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <section id="section_kh4_wdk_gxb">
+      <title>Minimum Host System Requirements for Azure</title>
+      <p><xref format="dita" href="#xd_23cac8778b5b970f--2dc94744-18b7029ae73--750e/table_jsl_zdk_gxb"/> lists the host
+        system requirements for installing Cloud-Native Router on Azure. </p>
+      <table colsep="1" frame="all" id="table_jsl_zdk_gxb" rowsep="1">
+        <title>Minimum Host System Requirements for Azure</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="1.68*"/>
+          <colspec colname="newCol6" colnum="2" colwidth="1.14*"/>
+          <colspec colname="newCol7" colnum="3" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry align="center" valign="bottom">Component</entry>
+              <entry>Value/Version</entry>
+              <entry>Notes</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>Azure Deployment</entry>
+              <entry>VM-based</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Instance Type</entry>
+              <entry>Standard_F16s_v2</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>CPU</entry>
+              <entry>Intel x86 </entry>
+              <entry>The tested CPU is Intel Cascade Lake</entry>
+            </row>
+            <row>
+              <entry>Host OS</entry>
+              <entry>Rocky Linux 8.7</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Kernel Version</entry>
+              <entry>
+                <p>Rocky Linux: 4.18.X</p>
+              </entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Kubernetes (K8s)</entry>
+              <entry>Version 1.25.x</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Calico</entry>
+              <entry>Version 3.25.1</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Multus</entry>
+              <entry>Version 4.0</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Helm</entry>
+              <entry>3.9.x</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Container-RT</entry>
+              <entry>containerd 1.6.x, 1.7.x</entry>
+              <entry>Other container runtimes may work but have not been tested with JCNR.</entry>
+            </row>
+            <row>
+              <entry nameend="newCol7" namest="c1">
+                <note id="note_k5k_psg_zcc">
+                  <p>The component versions listed in this table are expected to work with JCNR, but
+                    not every version or combination is tested in every release.</p>
+                </note>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_sz1_d2k_gxb">
+      <title>Resource Requirements for Azure</title>
+      <p><xref format="dita" href="#xd_23cac8778b5b970f--2dc94744-18b7029ae73--750e/table_owl_sxr_wtb"/> lists the
+        resource requirements for installing Cloud-Native Router on Azure. </p>
+      <table colsep="1" frame="all" id="table_owl_sxr_wtb" rowsep="1">
+        <title>Resource Requirements for Azure</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="newCol4" colnum="2" colwidth="1*"/>
+          <colspec colname="newCol5" colnum="3" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry align="center" valign="bottom">Resource</entry>
+              <entry>Value</entry>
+              <entry>Usage Notes</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>Data plane forwarding cores</entry>
+              <entry>1 core (1P + 1S)</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Service/Control Cores</entry>
+              <entry>0</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>UIO Driver</entry>
+              <entry>
+                <p>uio_hv_generic</p>
+              </entry>
+              <entry>
+                <p>To enable, add the following modules to be loaded at boot:</p>
+                <codeblock id="codeblock_wnq_vhv_11c">cat /etc/modules-load.d/k8s.conf 
+uio
+uio_hv_genericib_uverbs
+mlx4_ib</codeblock>
+                <p>The above libraries are provided by ibverbs package.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>Hugepages (1G)</entry>
+              <entry>6 Gi</entry>
+              <entry>See <xref href="../topic-map/jcnr-configure-hugepages.dita#task_yml_55h_vcc"/>.</entry>
+            </row>
+            <row>
+              <entry>Cloud-Native Router Controller cores</entry>
+              <entry>.5</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Cloud-Native Router vRouter Agent cores</entry>
+              <entry>.5</entry>
+              <entry/>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_ekg_f2k_gxb">
+      <title>Miscellaneous Requirements for Azure</title>
+      <p><xref format="dita" href="#xd_23cac8778b5b970f--2dc94744-18b7029ae73--750e/table_tcl_qsk_xbc"/> lists
+        additional requirements for installing Cloud-Native Router on Azure. </p>
+      <table colsep="1" frame="all" id="table_tcl_qsk_xbc" rowsep="1">
+        <title>Miscellaneous Requirements for Azure</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Requirement</p>
+              </entry>
+              <entry>
+                <p>Example</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>Set IOMMU and IOMMU-PT in GRUB.</p>
+              </entry>
+              <entry>Add the following line to
+                  <filepath>/etc/default/grub</filepath>.<codeblock id="codeblock_ptw_5sk_xbc">GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 default_hugepagesz=1G hugepagesz=1G hugepages=64 <b>intel_iommu=on iommu=pt</b>"</codeblock><p>Update
+                  grub and
+                reboot.</p><codeblock id="codeblock_qtw_5sk_xbc">grub2-mkconfig -o /boot/grub2/grub.cfg </codeblock><codeblock id="codeblock_uyr_gmk_xbc">reboot</codeblock></entry>
+            </row>
+            <row>
+              <entry>
+                <p>Additional kernel modules need to be loaded on the host before deploying
+                  Cloud-Native Router in L3 mode. These modules are usually available in
+                    <codeph>linux-modules-extra</codeph> or <codeph>kernel-modules-extra</codeph>
+                  packages. </p>
+                <note id="note_ff4_ncw_vbc">
+                  <p>Applicable for L3 deployments only.</p>
+                </note>
+              </entry>
+              <entry>
+                <p>Create a <filepath>/etc/modules-load.d/crpd.conf</filepath> file and add the
+                  following kernel modules to it:</p>
+                <codeblock id="codeblock_gf4_ncw_vbc">tun
+fou
+fou6
+ipip
+ip_tunnel
+ip6_tunnel
+mpls_gso
+mpls_router
+mpls_iptunnel
+vrf
+vxlan</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Enable kernel-based forwarding on the Linux host.</p>
+              </entry>
+              <entry>
+                <codeblock id="codeblock_ypl_xcw_vbc">ip fou add port 6635 ipproto 137</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Add firewall rules for loopback address for VPC. </p>
+              </entry>
+              <entry>
+                <p>Configure the VPC firewall rule to allow ingress traffic with source filters set
+                  to the subnet range to which Cloud-Native Router is attached, along with the IP
+                  ranges or addresses for the loopback addresses. </p>
+                <p>For example:</p>
+                <p>Navigate to Firewall policies on the Azure console and create a firewall rule
+                  with the following attributes:</p>
+                <ol id="ol_ujf_nmb_wyb">
+                  <li>
+                    <p><codeph>Name</codeph>: Name of the firewall rule</p>
+                  </li>
+                  <li>
+                    <p><codeph>Network</codeph>: Choose the VPC network</p>
+                  </li>
+                  <li>
+                    <p><codeph>Priority</codeph>: 1000</p>
+                  </li>
+                  <li>
+                    <p><codeph>Direction</codeph>: Ingress</p>
+                  </li>
+                  <li>
+                    <p><codeph>Action on Match</codeph>: Allow</p>
+                  </li>
+                  <li>
+                    <p><codeph>Source filters</codeph>: 10.2.0.0/24, 10.51.2.0/24, 10.51.1.0/24,
+                      10.12.2.2/32, 10.13.3.3/32</p>
+                  </li>
+                  <li>
+                    <p><codeph>Protocols</codeph>: all</p>
+                  </li>
+                  <li>
+                    <p><codeph>Enforcement</codeph>: Enabled</p>
+                  </li>
+                </ol>
+                <p>where 10.2.0.0/24 is the subnet to which Cloud-Native Router is attached and
+                  10.51.2.0/24, 10.51.1.0/24, 10.12.2.2/32, and 10.13.3.3/32 are loopback IP
+                  ranges.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Set the MTU on all fabric interfaces to 1500 bytes.</p>
+              </entry>
+              <entry>
+                <p>After Cloud-Native Router comes up, use the cRPD CLI to set the MTU size on all
+                  fabric interfaces to 1500 bytes. Microsoft Azure Cloud Platform recommends an MTU
+                  size less than or equal to 1500 bytes on all interfaces that connect directly to
+                  the Azure infrastructure. These interfaces are the Cloud-Native Router fabric
+                  interfaces. Failure to follow this rule might lead to packet drops. </p>
+                <p>For information on how to access the cRPD CLI, see <xref keyref="cloud-native-router-user.accessing-crpd-cli"/>.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Ensure accelerated networking is enabled for the fabric interface.</p>
+              </entry>
+              <entry>
+                <p> If accelerated networking is enabled properly, two interfaces become available
+                  for the fabric interface. For example:</p>
+                <codeblock id="codeblock_lhz_dxg_tzb">3: eth1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 00:22:48:23:3b:9e brd ff:ff:ff:ff:ff:ff
+    inet 10.225.0.6/24 brd 10.225.0.255 scope global eth1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::222:48ff:fe23:3b9e/64 scope link 
+       valid_lft forever preferred_lft forever
+4: enP22960s2: &lt;BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP&gt; mtu 1500 qdisc mq master eth1 state UP group default qlen 1000
+    link/ether 00:22:48:23:3b:9e brd ff:ff:ff:ff:ff:ff
+    altname enP22960p0s2</codeblock>
+                <p>When configuring the fabric interface in the Helm chart, you must provide the
+                  interface with <codeph>hv_netvsc</codeph> bound to it. Issue the <codeph>ethtool
+                    -i <varname>interface_name</varname></codeph> command to verify it. For
+                  example:</p>
+                <codeblock id="codeblock_wqj_mxg_tzb">user@jcnr01:~# ethtool -i eth1
+driver: hv_netvsc
+version: 5.15.0-1049-azure
+firmware-version: N/A
+expansion-rom-version: 
+bus-info: 
+supports-statistics: yes
+supports-test: no
+supports-eeprom-access: no
+supports-register-dump: yes
+supports-priv-flags: no</codeblock>
+                <note id="note_gsp_4xg_tzb">
+                  <p>Do not enable accelerated networking for the management interface.</p>
+                </note>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Exclude Cloud-Native Router interfaces from NetworkManager control.</p>
+              </entry>
+              <entry>
+                <p>NetworkManager is a tool in some operating systems to make the management of
+                  network interfaces easier. NetworkManager may make the operation and configuration
+                  of the default interfaces easier. However, it can interfere with Kubernetes
+                  management and create problems.</p>
+                <p>To avoid NetworkManager from interfering with Cloud-Native Router interface
+                  configuration, exclude Cloud-Native Router interfaces from NetworkManager control.
+                  Here's an example on how to do this in some Linux distributions:</p>
+                <ol id="ol_fl4_24r_xxb">
+                  <li> Create the <filepath>/etc/NetworkManager/conf.d/crpd.conf</filepath> file and
+                    list the interfaces that you don't want NetworkManager to manage. <p>For
+                      example:</p><codeblock id="codeblock_u4r_fkk_xbc">[keyfile]
+ unmanaged-devices+=interface-name:enp*;interface-name:ens*</codeblock>where
+                      <codeph>enp*</codeph> and <codeph>ens*</codeph> refer to your Cloud-Native
+                    Router interfaces.<note id="note_pdd_gkk_xbc">
+                      <codeph>enp*</codeph> indicates all interfaces starting with
+                        <codeph>enp</codeph>. For specific interface names, provided a
+                      comma-separated list. </note></li>
+                  <li> Restart the NetworkManager
+                    service:<codeblock id="codeblock_v51_clk_xbc">sudo systemctl restart NetworkManager</codeblock>
+                  </li>
+                  <li> Edit the <filepath>/etc/sysctl.conf</filepath> file on the host and paste the
+                    following content in it:
+                    <codeblock id="codeblock_lyj_zlk_xbc">net.ipv6.conf.default.addr_gen_mode=0
+net.ipv6.conf.all.addr_gen_mode=0
+net.ipv6.conf.default.autoconf=0
+net.ipv6.conf.all.autoconf=0</codeblock></li>
+                  <li> Run the command <codeph>sysctl -p /etc/sysctl.conf</codeph> to load the new
+                      <filepath>sysctl.conf</filepath> values on the host. </li>
+                </ol>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Verify the core_pattern value is set on the host before deploying JCNR.</p>
+              </entry>
+              <entry>
+                <codeblock id="codeblock_ihl_pdw_vbc">sysctl kernel.core_pattern
+kernel.core_pattern = |/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h %e</codeblock>
+                <!--Removed as per Vinod Nair since it is not persistent - You may change the value with the following commands:<codeblock>sysctl -w kernel.core_pattern="&lt;path&gt;"</codeblock> For example:<codeblock>sysctl -w kernel.core_pattern="/var/crash/%p.core") </codeblock>-->
+                <p>You can update the core_pattern in <codeph>/etc/sysctl.conf</codeph>. For
+                  example:</p>
+                <codeblock id="codeblock_jhl_pdw_vbc">kernel.core_pattern=/var/crash/core_%e_%p_%i_%s_%h_%t.gz</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>Set adequate send and receive buffer sizes.</entry>
+              <entry>
+                <codeblock id="codeblock_oqc_d3t_w2c">sysctl -w net.core.rmem_default=67108864
+sysctl -w net.core.rmem_max=67108864
+sysctl -w net.core.wmem_default=67108864
+sysctl -w net.core.wmem_max=6710886</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry nameend="c2" namest="c1">
+                <note id="note_rz2_h5k_xbc">
+                  <p>Cloud-Native Router supports only IPv4 for Azure. </p>
+                </note>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_ufy_y2k_gxb">
+      <title>Port Requirements</title>
+      <p>Juniper Cloud-Native Router listens on certain TCP and UDP ports. This section lists the
+        port requirements for the cloud-native router.</p>
+      <table>
+        <title>Cloud-Native Router Listening Ports</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <colspec colname="c3" colnum="3" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>Protocol</entry>
+              <entry>Port</entry>
+              <entry>Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>TCP</entry>
+              <entry>8085</entry>
+              <entry>vRouter introspect–Used to gain internal statistical information about
+                vRouter</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8070</entry>
+              <entry>Telemetry Information- Used to see telemetry data from the Cloud-Native Router
+                vRouter</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8072</entry>
+              <entry>Telemetry Information-Used to see telemetry data from Cloud-Native Router
+                control plane</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8075, 8076</entry>
+              <entry>Telemetry Information- Used for gNMI requests</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>9091</entry>
+              <entry>vRouter health check–cloud-native router checks to ensure the vRouter agent is
+                running.</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>9092</entry>
+              <entry>vRouter health check–cloud-native router checks to ensure the vRouter DPDK is
+                running.</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>50052</entry>
+              <entry>gRPC port–Cloud-Native Router listens on both IPv4 and IPv6</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8081</entry>
+              <entry>Cloud-Native Router Deployer Port</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>24</entry>
+              <entry>cRPD SSH</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>830</entry>
+              <entry>cRPD NETCONF</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>666</entry>
+              <entry><filepath>rpd</filepath></entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>1883</entry>
+              <entry>Mosquito mqtt–Publish/subscribe messaging utility</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>9500</entry>
+              <entry><filepath>agentd</filepath> on cRPD</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>21883</entry>
+              <entry><filepath>na-mqttd</filepath></entry>
+            </row>
+            <row>
+              <entry>
+                <p>TCP</p>
+              </entry>
+              <entry>
+                <p>50053</p>
+              </entry>
+              <entry>
+                <p>Default gNMI port that listens to the client subscription request</p>
+              </entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>51051</entry>
+              <entry><filepath>jsd</filepath> on cRPD</entry>
+            </row>
+            <row>
+              <entry>UDP</entry>
+              <entry>50055</entry>
+              <entry>Syslog-NG</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_yk2_wnw_ryb">
+      <title>Download Options</title>
+      <p>See <xref href="../ref/jcnr-sw-download-packages.dita"/>.</p>
+      <note id="note_lhp_vdf_wbc">Before deploying Cloud-Native Router on Azure via Helm charts
+        downloaded from the Juniper Networks software download site, you must whitelist the <xref format="html" href="https://enterprise-hub.juniper.net" scope="external">enterprise-hub.juniper.net</xref> URL as the Cloud-Native Router image repository.</note>
+    </section>
+    <section id="section_jm3_ggk_gxb">
+      <title>Cloud-Native Router Licensing</title>
+      <p>See <xref href="../topic-map/jcnr-licensing.dita"/>.</p>
+    </section>
+  </conbody>
+</concept>

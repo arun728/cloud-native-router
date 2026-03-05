@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_73c1001ccde8abf9-1ccac70-18dea8feb50--7fd3" xml:lang="en-US">
+  <title>Troubleshoot via ebpf-ctl Utility</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>The ebpf_ctl utility is available to dump interface, drops, flows, nexthops, routes, labels,
+      tunnels, different forUS maps and more on the vRouter, for <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>deployed with eBPF XDP
+      datapath. The various commands are provided below:</p>
+    <p><b>Command Help</b>:</p>
+    <codeblock id="codeblock_mf3_qnp_41c">sudo ./ebpf_ctl -h/--help</codeblock>
+    <p><b>Dump flow key and related stats</b>:</p>
+    <codeblock id="codeblock_vml_lhp_41c">sudo ./ebpf_ctl -d/--dump_stats</codeblock>
+    <p><b>Dump flow keys along with nexthop (NH) information</b>:</p>
+    <codeblock id="codeblock_vdr_thp_41c">sudo ./ebpf_ctl -e/--dump_flows</codeblock>
+    <p><b>Dump NH information for a flow and resolves composite NHs in datapath (vRouter agent does
+        not use composite NHs in datapath); fat flow resolution supported:</b></p>
+    <codeblock id="codeblock_fx1_whp_41c">sudo ./ebpf_ctl -k/--dump_flow <varname>sip </varname> <varname> sport</varname> <varname>dip</varname> <varname>dport</varname> <varname>fat_flow_sport_wild</varname> <varname>fat_flow_dport_wild</varname> <varname>fat_flow_sip_bits</varname> <varname>fat_flow_dip_bits</varname> <varname>ipproto</varname> <varname>zone</varname></codeblock>
+    <p><b>Dump interface information and related forwarding/drop stats</b>:</p>
+    <codeblock id="codeblock_bkk_43p_41c">sudo ./ebpf_ctl -l/--dump_interface <varname>ifindex</varname></codeblock>
+    <p><b>Dump information related to logical interface for receiving packets from host and
+        stats:</b></p>
+    <codeblock id="codeblock_onl_t3p_41c">sudo ./ebpf_ctl -h/--dump_host_interface</codeblock>
+    <p><b>Dump NH associated with label and resolves composite NHs in datapath (vRouter agent does
+        not use composite NHs in eBPF datapath)</b>:</p>
+    <codeblock id="codeblock_p4w_x3p_41c">sudo ./ebpf_ctl -m/--dump_label <varname>label</varname> <varname>{</varname><varname>sip</varname>|<varname>sport</varname>|<varname>dip</varname>|<varname>dport</varname>|<varname>ipproto</varname>|<varname>zone</varname>}</codeblock>
+    <p><b>Dump NH associated with route and resolves composite NHs in datapath (vRouter agent does
+        not use composite NHs in eBPF datapath)</b>:</p>
+    <codeblock id="codeblock_p3b_mjp_41c">sudo ./ebpf_ctl -o/--dump_route <varname>vrf</varname> <varname>dip</varname> {<varname>sip</varname>|<varname>sport</varname>|<varname>dip</varname>|<varname>dport</varname>|<varname>ipproto</varname>|<varname>zone</varname>}</codeblock>
+    <p><b>Dump ARP proxy entries</b>:</p>
+    <codeblock id="codeblock_jgp_rjp_41c">sudo ./ebpf_ctl -p/--dump_arp_proxy <varname>vrf</varname> <varname>dip</varname></codeblock>
+    <p><b>Dump forUS entries; used for ARPs and ICMP requests to virtual gateway</b>:</p>
+    <codeblock id="codeblock_jf5_vjp_41c">sudo ./ebpf_ctl -q/--dump_forus <varname>ifindex</varname> <varname>ethertype</varname> <varname>dport</varname> <varname>ipproto</varname> <varname>reply</varname></codeblock>
+    <p><b>Dump label attribute information where label is interpreted as a logical
+      interface</b>:</p>
+    <codeblock id="codeblock_dqt_5kp_41c">sudo ./ebpf_ctl -r/--dump_lbl_attrs <varname>label</varname></codeblock>
+    <p><b>Dump logical interface information where interface, ip or port is interpreted as a logical
+        interface for underlay traffic:</b></p>
+    <codeblock id="codeblock_cg4_zkp_41c">sudo ./ebpf_ctl -s/--dump_logitf_attrs <varname>ifindex</varname> <varname>ip</varname> <varname>port</varname> <varname>dir</varname></codeblock>
+    <p><b>Dump tunnel endpoint (TEP) existence information</b>:</p>
+    <codeblock id="codeblock_bdx_dlp_41c">sudo ./ebpf_ctl -t/--dump_tunnel <varname>sip</varname> <varname>dip</varname> <varname>dport</varname></codeblock>
+    <p><b>Enable or disable debug traces:</b></p>
+    <p>Debug traces are enabled by default in linear mode to catch startup issues. Error traces are
+      always on defaulting to linear mode that controls debug and error trace buffer wrapping
+      policy. Enabling trace drops sends kernel drops to userspace to traverse userspace datapath to
+      allow tracing of packets through pipeline.</p>
+    <codeblock id="codeblock_p55_bmp_41c">sudo ./ebpf_ctl -b/--debug_enable {0 | 1} circular {0 | 1} trace drops {0 | 1} error circular</codeblock>
+    <p><b>Enable debug trace key filtering where appropriate in the userspace forwarding path; only
+        filters traces where key is checked for in pipeline</b>:</p>
+    <codeblock id="codeblock_rdh_ymp_41c">sudo ./ebpf_ctl -c/--debug_key_enable <varname>sip</varname> <varname>sport</varname> <varname>dip</varname> <varname>dport</varname> <varname>ipproto</varname> <varname>zone</varname></codeblock>
+    <p><b>Dump traces – debug or error; 0 for basic traces or 1 for error traces</b>:</p>
+    <codeblock id="codeblock_bym_bnp_41c">sudo ./ebpf_ctl -u/--dump_traces {0 | 1}</codeblock>
+    <p><b>Clear traces – debug or error; 0 for basic traces or 1 for error traces</b>:</p>
+    <codeblock id="codeblock_og3_gnp_41c">sudo ./ebpf_ctl -v/--clear_traces {0 | 1}</codeblock>
+    <p><b>Dump performance metrics for userspace datapath packet handling time and agent flow miss
+        time:</b></p>
+    <codeblock id="codeblock_tpl_3np_41c">sudo ./ebpf_ctl -w/--dump_perf</codeblock>
+    <p><b>Clears performance metrics for userspace datapath packet handling time and agent flow miss
+        time</b>:</p>
+    <codeblock id="codeblock_fqr_lnp_41c">sudo ./ebpf_ctl -x/--clear_perf</codeblock>
+  </conbody>
+
+  <related-links/>
+</concept>

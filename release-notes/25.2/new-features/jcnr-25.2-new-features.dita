@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_d8e20443e9c7f34b--35291001-19781c22496--7e33" xml:lang="en-US">
+  <title>New and Updated Features</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>This section describes the new features in the Juniper Cloud-Native Router (JCNR) 25.2
+      release.</p>
+    <section>
+      <title>New Features in Juniper Cloud-Native Router Release 25.2</title>
+      <ul>
+        <li>
+          <p><b>Support for Layer 2 Circuits</b>—Juniper Cloud-Native Router supports Layer 2
+            circuits for a point-to-point Layer 2 connection over an IP/MPLS-based service
+            provider's network. To establish the Layer 2 circuit, it uses Label Distribution
+            Protocol (LDP) as the signaling protocol to advertise the ingress label to the remote PE
+            routers. A targeted LDP session is established between the loopback addresses of the two
+            PEs to exchange VPN labels.  You can enable Layer 2 circuit features on Physical
+            (PF/VF), VLAN sub-interface, bond interface (towards core), and pod interfaces.</p>
+        </li>
+        <li>
+          <p><b>Support for multiple IPSec tunnels with service chaining on a single pair of
+              interfaces</b>—Juniper Cloud-Native Router supports multiple IPSec tunnels for
+            security services through service chaining with Juniper cSRX on a single pair of
+            interfaces. </p>
+        </li>
+        <li>
+          <p><b>Telemetry data for Layer 2 Circuits</b>—Juniper Cloud-Native Router provides
+            telemetry data for Layer 2 circuits through Prometheus-based API and gRPC Network
+            Management Interface (gNMI).</p>
+        </li>
+        <li>
+          <p><b>Support for Multihop BFD</b>—Juniper Cloud-Native Router supports both single-hop
+            and multihop Bidirectional Forwarding Detection (BFD) protocol to detect failures in a
+            network.</p>
+        </li>
+        <li>
+          <p><b>Overlay management access</b>—Juniper Cloud-Native Router can be managed across an
+            overlay network. This allows you to situate your management host on the overlay network
+            instead of only on the underlay network, giving you more options in your network
+            implementation.</p>
+        </li>
+        <li>
+          <p><b>Wind River pre-bound L2 interfaces</b>—In a Wind River deployment, Juniper
+            Cloud-Native Router supports pre-bound L2 interfaces in addition to pre-bound L3
+            interfaces.</p>
+        </li>
+        <li>
+          <p><b>Support for Dropper and Shaper modules in Layer-3 Class of Service</b>—Juniper
+            Cloud-Native Router supports the DPDK dropper module that drops packets arriving at the
+            scheduler block to avoid congestion. The drop is performed based on the weighted random
+            early detection (WRED) drop profile maps. The Cloud-Native Router also supports
+            configuring a transit rate to shape traffic per egress queue, preventing high priority
+            queues from starving low priority queues.</p>
+        </li>
+        <li>
+          <p><b>Support for configuring IPSec tunnels post deployment using Configlets</b>—Juniper
+            Cloud-Native Router supports deploying IPSec tunnels post cSRX deployment using
+            configlets. You must set the <codeph>enableUserConfig</codeph> flag to true in the
+            installation helm chart. You can then create IPSec tunnels or modify the tunnel
+            configuration after deployment using a configlet.</p>
+        </li>
+        <li>
+          <p><b>Support for four QoS scheduler cores</b>—Juniper Cloud-Native Router supports up to
+            four cores for the QoS scheduler (up from one).</p>
+        </li>
+        <li>
+          <p><b>Contrail Tools</b>—Juniper Cloud-Native Router makes available the optional Contrail
+            Tools package, with initial support for the <codeph>collect_jcnr_support_info</codeph>
+            and <codeph>dpdkvifstats</codeph> commands (to collect troubleshooting information and
+            DPDK performance statistics respectively).</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7ce7" xml:lang="en-US">
+  <title>Logging and Notifications</title>
+  <abstract>
+    <shortdesc>Read this topic to learn about logging and notification functions in Juniper
+      Cloud-Native Router. We discuss the location of log files, what you can log, and various log
+      levels. You can also learn about the available notifications and how the notifications are
+      implemented in the Cloud-Native Router.</shortdesc>
+  </abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+
+    <section>
+      <title>Logging</title>
+      <p>The system stores log files from all the Cloud-Native Router pods and containers in the
+          <filepath>log_path</filepath> directory. You can configure the location of the log files
+        at the deployment time by retaining or changing the value of the
+          <filepath>log_path</filepath> key in the <codeph>values.yaml</codeph> helm chart. By
+        default, the location of the log files is <filepath>/var/log/jcnr</filepath>. </p>
+      <p>The Juniper Cloud-Native Router pods and containers use syslog as their logging mechanism.
+        The syslog-ng pod stores event notification data in JSON format on the host server. By
+        default, the file location is <filepath>/var/log/jcnr</filepath> and the filename is
+          <filepath>jcnr_notifications.json</filepath>. You can change the location and filename by
+        changing the value of the <filepath>syslog_notifications</filepath> key in the
+          <codeph>values.yaml</codeph> helm chart when installing the Cloud-Native Router. You can
+        disable syslog logging by configuring the <codeph>installSyslog</codeph> parameter as false
+        in the <codeph>values.yaml</codeph> helm chart. Please review the <xref keyref="cloud-native-router-deployment-guide.deployment-config-files-bms">Customizing
+          Cloud-Native Router Helm Chart</xref> for more details.</p>
+      <p>When you use the default file locations, the <filepath>/var/log/jcnr</filepath> directory
+        displays the following files:</p>
+      <codeblock>[root@jcnr-01 jcnr]# ls
+action.log                    contrail-vrouter-dpdk-init.log  filter                   l2cos.log      __policy_names_rpdc__
+contrail-vrouter-agent.log    contrail-vrouter-dpdk.log       filter.log               license        mgd-api        
+__policy_names_rpdn__         cos                             jcnr-cni.log             messages       mosquitto                 
+vrouter-kernel-init.log       cscript.log                     jcnr_notifications.json  messages.0.gz  na-grpcd</codeblock>
+      <note> The host server must manage the log rotation for the
+          <filepath>contrail-vrouter-dpdk.log</filepath> and the <filepath>jcnr-cni.log</filepath>
+        files.</note>
+    </section>
+    <section id="section_pnn_fg1_hxb"><title>Notifications</title>The syslog-ng pod continuously
+      monitors the preceding log files for notification events such as interface up, interface down,
+      interface add, and so on. When these events appear in a log file, syslog-ng converts the log
+      events into notification events and stores the events in JSON format within the
+        <filepath>syslog_notifications</filepath> file configured in the
+        <filepath>values.yaml</filepath> file. <p>Here is a sample of syslog-ng notifications:</p><table>
+        <title>Supported Notifications</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>Notification</entry>
+              <entry>Source Pod</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>License Near Expiry​</p>
+              </entry>
+              <entry>cRPD</entry>
+            </row>
+            <row>
+              <entry>
+                <p>License Expired</p>
+              </entry>
+              <entry>cRPD</entry>
+            </row>
+            <row>
+              <entry>
+                <p>License Invalid​</p>
+              </entry>
+              <entry>cRPD</entry>
+            </row>
+            <row>
+              <entry>
+                <p>License OK​</p>
+              </entry>
+              <entry>cRPD</entry>
+            </row>
+            <row>
+              <entry>License Grace Period</entry>
+              <entry>cRPD</entry>
+            </row>
+            <row>
+              <entry>License Not Present</entry>
+              <entry>cRPD</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Cloud-Native Router Init Success​</p>
+              </entry>
+              <entry>Deployer</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Cloud-Native Router Init Failure​</p>
+              </entry>
+              <entry>Deployer</entry>
+            </row>
+            <row>
+              <entry>Cloud-Native Router Graceful Shutdown Request</entry>
+              <entry>Deployer</entry>
+            </row>
+            <row>
+              <entry>Cloud-Native Router Graceful Shutdown Complete</entry>
+              <entry>Deployer</entry>
+            </row>
+            <row>
+              <entry>Cloud-Native Router Graceful Shutdown Failure</entry>
+              <entry>Deployer</entry>
+            </row>
+            <row>
+              <entry>Cloud-Native Router Restart</entry>
+              <entry>Deployer</entry>
+            </row>
+            <row>
+              <entry>Cloud-Native Router Upgrade Success</entry>
+              <entry>Deployer</entry>
+            </row>
+            <row>
+              <entry>Cloud-Native Router Upgrade Failure</entry>
+              <entry>Deployer</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Upstream Fabric Bond Member Link Up​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Upstream Fabric Bond Member Link Down​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Upstream Fabric Bond Link Up​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Upstream Fabric Bond Link Down​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>Upstream Fabric Bond Link Switchover</entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Downstream Fabric Link Up​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Downstream Fabric Link Down​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Appliance Link Up​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Appliance Link Down​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Any Cloud-Native Router Application Critical Errors​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>Any Cloud-Native Router Application Warnings</entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>Any Cloud-Native Router Application Info</entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>Cloud-Native Router Rate Limits Reached</entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Cloud-Native Router MAC Table Limit Reached​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Cloud-Native Router CLI Start​</p>
+              </entry>
+              <entry>cRPD or vRouter-Agent</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Cloud-Native Router CLI Stop​</p>
+              </entry>
+              <entry>cRPD or vRouter-Agent</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Cloud-Native Router Kernel App Interface Up​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Cloud-Native Router Kernel App Interface Down​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Cloud-Native Router Virtio User Interface Up​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Cloud-Native Router Virtio User Interface Down​</p>
+              </entry>
+              <entry>vRouter</entry>
+            </row>
+            <row>
+              <entry>Purel2 Macmove Loop Detected</entry>
+              <entry>vRouter</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table></section>
+  </conbody>
+</concept>

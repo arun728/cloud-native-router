@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "/SysSchema/dita13/dtd/bookmap/dtd/bookmap.dtd">
+<bookmap xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" xml:lang="en-US">
+    <!--Use the guide template (based on the bookmap structure) to create long documents in the book format such as user guides. -->
+    <booktitle>
+        <booklibrary/>
+        <mainbooktitle>Juniper Cloud-Native Router <ph keyref="product_version"/> Deployment Guide</mainbooktitle>
+    </booktitle>
+    <bookmeta>
+        <author>bfong</author>
+        <data name="24.2"/>
+    </bookmeta>
+    <frontmatter>
+        <keydef keys="product_version">
+            <topicmeta>
+                <keywords>
+                    <keyword>26.1</keyword>
+                </keywords>
+            </topicmeta>
+        </keydef>
+        <booklists>
+            <toc/>
+        </booklists>
+        <!--The bookabstract element specifies the path to the topic containing high level overview of the pathway page. The topic filename should be <book-name>-abstract.dita. For example, high-availability-abstract.dita. Make sure that bookabstract has the processing-role=resource-only attribute. -->
+        <bookabstract href="cloud-native-router-deployment-guide/topics/concept/about-this-guide.dita" processing-role="resource-only"/>
+        <mapref href="cloud-native-router-deployment-guide/keys-cloud-native-router-deployment-guide.ditamap" keyscope="cloud-native-router-deployment-guide" processing-role="resource-only"/>
+    
+<!-- Thu Jun 29 04:02:18 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.l3-virtual-router" inserted by "umas" -->
+<mapref href="cloud-native-router-user/keys-cloud-native-router-user.ditamap" keyscope="cloud-native-router-user" processing-role="resource-only" scope="peer"/>
+</frontmatter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Introduction</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-user/topics/concept/jcnr-overview.dita" navtitle="Juniper Cloud-Native Router Overview"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/jcnr-components.dita" navtitle="Components"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/jcnr-datapath.dita" navtitle="JCNR vRouter Datapath"/>
+        <topicref href="cloud-native-router-user/topics/concept/jcnr-deployment-modes.dita" navtitle="Deployment Modes"/>
+        <topicref href="cloud-native-router-user/topics/concept/jcnr-interfaces-overview.dita" navtitle="JCNR Interfaces Overview"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Install Cloud-Native Router on Baremetal Server</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/install-jcnr-bms.dita" navtitle="Install and Verify Juniper Cloud-Native Router for Baremetal Servers"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/system-resource-requirements-bms.dita" navtitle="System Requirements for Baremetal Servers"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/deployment-config-files-bms.dita" navtitle="Customer JCNR Helm Chart for Baremetal Servers"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configlet.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-install-hbn.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-overlay-mgmt-bms.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/single-pod-jcnr-in-pod-network-ns.dita"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Install Cloud-Native Router on Red Hat OpenShift</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/install-jcnr-ocp.dita" navtitle="Install and Verify Juniper Cloud-Native Router for OpenShift Deployment "/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/system-resource-requirements-ocp.dita" navtitle="System Requirements for OpenShift Deployment"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/deployment-config-files-ocp.dita" navtitle="Customize JCNR Helm Chart for OpenShift Deployment "/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configlet.dita" navtitle="Customize JCNR Configuration"/>
+        <topicref audience="internal" href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-crpd-customization-node-configlet.dita"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Install Cloud-Native Router on Amazon EKS</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/install-jcnr-eks.dita" navtitle="Install and Verify Juniper Cloud-Native Router on Amazon EKS"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/system-resource-requirements-eks.dita" navtitle="System Requirements for EKS Deployment"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/deployment-config-files-eks.dita" navtitle="Customize JCNR Helm Chart for EKS Deployment "/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configlet.dita" navtitle="Customize JCNR Configuration"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-install-vpc-gateway.dita"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Install Cloud-Native Router on Google Cloud Platform</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/install-jcnr-gcp.dita" navtitle="Install and Verify Juniper Cloud-Native Router for GCP Deployment"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/system-resource-requirements-gcp.dita" navtitle="System Requirements for GCP Deployment"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/deployment-config-files-gcp.dita" navtitle="Customize JCNR Helm Chart for GCP Deployment"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configlet.dita" navtitle="Customize JCNR Configuration"/>
+        <topicref audience="internal" href="cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configmap-gcp.dita" navtitle="Customize JCNR Configuration (Google Cloud Marketplace)"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Install Cloud-Native Router on Wind River Cloud Platform</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/install-jcnr-windriver.dita" navtitle="Install and Verify Juniper Cloud-Native Router for Wind River Deployment"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/system-resource-requirements-windriver.dita" navtitle="System Requirements for Wind River Deployment"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/deployment-config-files-windriver.dita" navtitle="Customize JCNR Helm Chart for Wind River Deployment "/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configlet.dita" navtitle="Customize JCNR Configuration"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-overlay-mgmt-wr.dita"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Install Cloud-Native Router on Microsoft Azure Cloud Platform</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/install-jcnr-azure.dita" navtitle="Install and Verify Juniper Cloud-Native Router for Azure Deployment"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/system-resource-requirements-azure.dita" navtitle="System Requirements for Azure Deployment"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/deployment-config-files-azure.dita" navtitle="Customize JCNR Helm Chart for Azure Deployment"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configlet.dita" navtitle="Customize JCNR Configuration"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Install Cloud-Native Router on VMWare Tanzu</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/jcnr-install-jcnr-tanzu.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/jcnr-system-resource-requirements-tanzu.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/jcnr-deployment-config-files-tanzu.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/jcnr-crpd-customization-node-configmap-tanzu.dita"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Deploying Service Chain (cSRX) with JCNR</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-deploy-csrx.dita"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Manage</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-manage-software.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-licensing.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-configure-vrouter-performance.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/jcnr-control-plane-policing.dita"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Validate and Troubleshoot</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/jcnr-readiness-checks.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-validation-factory.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-troubleshoot-deployment.dita"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Appendix</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/kubernetes-overview.dita" navtitle="Kubernetes Overview"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/ref/jcnr-sw-download-packages.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/ref/jcnr-default-helm-chart.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/cn-cloud-native-k8s-configure-secrets.dita" navtitle="Configure Repository Credentials"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/task/jcnr-deploy-prepackaged-images.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/topic-map/jcnr-configure-hugepages.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/ref/jcnr-readiness-checks-list.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/example/jcnr-aws-eks-cloud-formation-template.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/example/jcnr-hbr-config-files.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/example/jcnr-mgmt-overlay-tunnel-config-example.dita"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/juniper-jcnr-tech-preview.dita" navtitle="Juniper JCNR Technology Previews (Tech Previews)"/>
+    </chapter>
+</bookmap>

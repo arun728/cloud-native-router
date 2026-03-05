@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b38af575324e42a4-2678ef71-18a5bf4f261--7da0" xml:lang="en-US">
+  <title>Customize Cloud-Native Router Helm Chart for Wind River Deployment</title>
+  <abstract>
+    <shortdesc>Read this topic to learn about the deployment configuration available for the Juniper
+      Cloud-Native Router on a Wind River Deployment. </shortdesc>
+  </abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>You can deploy and operate Juniper Cloud-Native Router in the L3 mode on a Wind River
+      deployment. You configure the deployment mode by editing the appropriate attributes in the
+        <codeph>values.yaml</codeph> file prior to deployment. </p>
+    <section conref="../ref/jcnr-helm-chart-container.dita#xd_aa1b6500adc67cb2-c89f836-18ff470b581--7fff/section_crk_tyg_sbc" id="section_pkh_1wj_sbc"><title/><p/></section>
+  </conbody>
+</concept>

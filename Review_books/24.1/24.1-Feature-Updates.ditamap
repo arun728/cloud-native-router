@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "/SysSchema/dita13/dtd/technicalContent/dtd/map.dtd">
+<map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" xml:lang="en-US">
+    <title>24.1-Feature-Updates</title>
+    <!-- Use the Review Map template to assemble topics that you wish to send for technical or editorial review. The review maps must be created in the /Content/internal/<username>/review/ folder. After the review is completed, please delete the review map file you created. -->
+    <topicmeta>
+        <author>tkaur</author>
+    </topicmeta>
+    <topicref href="../../cloud-native-router-user/topics/concept/segment-routing.dita"><?oxy-placeholder content="Use topicref elements to add topics that you wish to send for technical or editorial review."?></topicref>
+    <topicref href="../../cloud-native-router-user/topics/concept/l3-access-control-lists.dita"/>
+    <topicref href="../../cloud-native-router-user/topics/concept/jcnr-telemetry.dita"/>
+    <topicref href="../../cloud-native-router-deployment-guide/topics/concept/jcnr-components.dita"/>
+    <topicref href="../../cloud-native-router-deployment-guide/topics/concept/jcnr-datapath.dita"/>
+    <topicref href="../../cloud-native-router-deployment-guide/topics/concept/system-resource-requirements-bms.dita"/>
+</map>

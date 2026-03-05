@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_19e939a6782fa58a--74813304-195a32dabb2--7d07" xml:lang="en-US">
+  <title>Overlay Management Overview</title>
+  <shortdesc>We present an example on how to configure a Cloud-Native Router for management access
+    across the overlay.</shortdesc>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>In some deployments, you may want to have management access to a Cloud-Native Router across a
+      dedicated management network on the overlay. This overlay network would carry OAM traffic
+      (such as SSH, SNMP, gNMI, syslog, etc.) between a Cloud-Native Router and a remote management
+      host.</p>
+    <p>To facilitate this, we provide the ability for you to specify a low-throughput overlay
+      interface on the vRouter to carry OAM traffic from the local Linux kernel on an SR-IOV-enabled
+      and Virtual Ethernet Bridge (VEB)-capable NIC. Due to internal limitations, you can't use a
+      regular fabric interface to connect to an overlay interface.</p>
+    <p><xref href="#xd_19e939a6782fa58a--74813304-195a32dabb2--7d07/fig_cvy_ydp_s2c"/> shows an
+      example of this approach where a management host manages the Cloud-Native Router on a managed
+      node across an overlay. For completeness, we show a transit node that sits between the
+      management host and the managed node.</p>
+    <fig id="fig_cvy_ydp_s2c">
+      <title>Overlay Management Example</title>
+      <image href="../../images/jn-001338.png" id="image_l1v_pzb_x2c"/>
+    </fig>
+    <p>The managed node has three virtual functions: one for the Linux kernel and two for the
+      vRouter. OAM traffic originating from the Linux kernel is sent on the ens1f0v0 interface where
+      it is switched by the VEB in the SR-IOV-enabled NIC to the local vRouter on the ens1f0v1
+      interface. This ens1f0v1 interface is configured as the overlay OAM interface. We recommend
+      that you rate limit and implement firewall rules on this interface to control and limit
+      traffic going to the Linux kernel.</p>
+    <p>The local vRouter receives OAM traffic on the ens1f0v1 interface and routes it out the
+      ens1f0v2 interface through a tunnel to the transit node. The tunnel can be any type that the
+      Cloud-Native Router supports, such as MPLSoUDP, VxLAN, or SR-MPLS.</p>
+    <p>The transit node receives the tunneled traffic on the ens1f0 interface and extracts the OAM
+      packets from the tunnel and routes them out the ens1f1 interface to the attached management
+      host. OAM traffic in the other direction behaves similarly but in reverse.</p>
+    <p>To make use of this capability, you must do the following:</p>
+    <ul id="ul_vnz_w1b_s2c">
+      <li>
+        <p>Create three virtual functions for the SR-IOV-enabled NIC on the managed node. As a
+          minimum, the kernel and the vRouter OAM interface must be on the same NIC. </p>
+      </li>
+      <li>
+        <p>Configure the Cloud-Native Router installation Helm chart on the managed node to specify
+          the OAM (fabricWorkload) interface and install the Cloud-Native Router.</p>
+      </li>
+      <li>
+        <p>Install the Cloud-Native Router on the transit node.</p>
+      </li>
+      <li>
+        <p>Add a route on the Linux kernel on the managed node to route OAM traffic to the local
+          Cloud-Native Router.</p>
+      </li>
+      <li>
+        <p>Configure a tunnel between the managed node and the transit node.</p>
+      </li>
+      <li>
+        <p>Add a route on the management host to route OAM traffic to the transit Cloud-Native
+          Router.</p>
+      </li>
+    </ul>
+    <p>The following sections provide the details behind these steps.</p>
+  </conbody>
+</concept>

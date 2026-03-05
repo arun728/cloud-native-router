@@ -1,0 +1,856 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_7e3d4cfaadd2ebfd-32a31670-18d53a6a7c1--7c69" xml:lang="en-US">
+  <title>Segment Routing</title>
+  <shortdesc>The Juniper Cloud-Native Router provides support for Segment Routing (SR-MPLS and
+    SRv6). Read this topic to understand the supported features.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>Segment routing (SR) is a modern variant of source routing that simplifies the network by
+      removing network state information from intermediate routers and instead adds path state
+      information into packet headers in the forwarding plane. When a packet arrives at an SR
+      ingress node, the ingress node subjects the packet to policy. The policy associates the packet
+      with an SR path to its destination. The SR path is an ordered list of segments that connects
+      an SR ingress node to an SR egress node. This SR path can be engineered to satisfy any number
+      of constraints for example, link bandwidth, minimum path latency and more.</p>
+    <p>Segment Routing can leverage either MPLS or IPv6 in the forwarding plane. When Segment
+      Routing uses the MPLS forwarding plane, it is referred to as SR-MPLS. SR-MPLS supports both an
+      IPv4 and IPv6 underlay. When Segment Routing leverages an IPv6 forwarding plane, it is called
+      SRv6. Review the <xref format="pdf" href="https://www.juniper.net/documentation/en_US/day-one-books/DO_SegmentRouting.pdf" scope="external">SR-MPLS Day One Book</xref> and <xref format="pdf" href="https://www.juniper.net/documentation/en_US/day-one-books/DayOne-Intro-SRv6.pdf" scope="external">SRv6 Day One Book</xref> for more details.</p>
+    <p>Segment Routing can be used as a transport tunneling technology for interconnecting data
+      centers for the next-generation Network Function Virtualization (NFV) based telco cloud, 5G,
+      cloud WAN and content distribution networks (CDNs). It can provide multiple benefits in the
+      following use cases:</p>
+    <ul>
+      <li>
+        <p>Traffic Engineering— Segment Routing provides efficient and dynamic steering of traffic
+          based on networking conditions to enable load balancing, congestion avoidance and better
+          utilization of bandwidth. This results in improved network performance and user
+          experience.</p>
+      </li>
+      <li>
+        <p>Network Slicing— Segment Routing creates virtualized network slices by enabling different
+          services or tenants to coexist on the same physical infrastructure. Each network slice can
+          have its own forwarding policies and resources, providing enhanced isolation and
+          flexibility for diverse applications.</p>
+      </li>
+      <li>
+        <p>Service Function Chaining— Segment Routing enables flexible and dynamic service function
+          chaining, where packets traverse a sequence of network services such as firewalls,
+          load-balancing and more. It simplifies service deployments and enables on-demand service
+          chaining by defining specific paths for packet flow.</p>
+      </li>
+      <li>
+        <p>Mobile Networks— Segment Routing optimizes traffic routing and handover procedures for a
+          mobile network by enabling efficient path selection and reduced latency.</p>
+      </li>
+    </ul>
+    <section id="section_yxn_1f4_qbc">
+      <title>SR-MPLS</title>
+      <p><!--RLI56375,JCNR3268--><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports SR-MPLS for both IPv4 and IPv6 underlay. The
+        cloud-native router can participate as a sending, receiving or transit router in SR-MPLS
+        networks. It supports SR-MPLS implementation with or without penultimate hop popping (PHP),
+        with and without overlay ECMP, and Explicit/Implicit NULL. Segment Routing <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/is-is/topics/topic-map/infocus-isis-flex-algo-sr.html" scope="external">Flexible Algorithm</xref> (Flex-Algo) is supported from
+        <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Release 24.1 onwards. Review <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/is-is/ospf/topics/concept/source-packet-routing.html" scope="external">Segment Routing (IS-IS)</xref> for more information.</p>
+      <subsection id="subsection_vs3_2g4_qbc">
+        <title>Configuring SR-MPLS on JCNR</title>
+        <p>Consider the following topology:<image href="../../images/jn-000972.png" id="image_wtd_v3s_sbc"/></p>
+      </subsection>
+      <p>We want to segment routing in this network. PE1 is an ingress <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>node, P is a transit
+        <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>node while PE2 is an egress <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>node. We will configure a common segment routing
+        global block (SRGB) range for all nodes. All nodes are assigned a segment ID (node SID) for
+        both IPv4 and IPv6.</p>
+      <note id="note_v5f_c5n_sbc">
+        <p>Use the <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">configlet resource</xref> to configure the cRPD pods.</p>
+      </note>
+      <p>
+        <subsection id="subsection_env_1vp_qbc">
+          <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Ingress (PE1) Configuration</title>
+          <p>Configure the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Ingress (PE1) router with the following configuration:</p>
+          <ol id="ol_xgp_jgq_rbc">
+            <li><p>Configure the
+              interfaces:</p><codeblock id="codeblock_gzy_bwp_qbc">set interfaces ens192 unit 0 family inet address 172.16.0.11/24
+set interfaces ens192 unit 0 family inet6 address 172::11/64
+set interfaces ens192 unit 0 family iso
+set interfaces ens192 unit 0 family mpls
+set interfaces lo0 unit 0 family inet address 192.168.1.11/32
+set interfaces lo0 unit 0 family inet6 address 192::11/128
+set interfaces lo0 unit 0 family iso address 49.0002.0190.0160.0019.00
+set interfaces lo0 unit 0 family mpls</codeblock></li>
+            <li><p>Configure
+              IS-IS:</p><codeblock id="codeblock_dl1_lyp_qbc">set protocols isis interface ens192
+set protocols isis interface lo0.0
+set protocols isis level 1 disable </codeblock></li>
+            <li><p>Configure routing
+              options:</p><codeblock id="codeblock_d15_myp_qbc">set routing-options route-distinguisher-id 192.168.1.11
+set routing-options router-id 192.168.1.11
+set routing-options autonomous-system 64512</codeblock></li>
+            <li><p>Configure MPLS protocol on the
+              interfaces:</p><codeblock id="codeblock_chj_1xp_qbc">set protocols mpls ipv6-tunneling
+set protocols mpls interface ens192
+set protocols mpls interface lo0.0</codeblock></li>
+            <li><p>Configure BGP
+              neighbors:</p><codeblock id="codeblock_es5_twp_qbc">set protocols bgp group sr_mpls type internal
+set protocols bgp group sr_mpls multihop
+set protocols bgp group sr_mpls local-address 192.168.1.11
+set protocols bgp group sr_mpls family inet-vpn unicast
+set protocols bgp group sr_mpls family inet6-vpn unicast
+set protocols bgp group sr_mpls local-as 64512
+set protocols bgp group sr_mpls neighbor 192.168.3.13</codeblock></li>
+            <li><p>Configure the start label and index range of
+              SRGB:</p><codeblock id="codeblock_ktg_hxp_qbc">set protocols isis source-packet-routing srgb start-label 16000
+set protocols isis source-packet-routing srgb index-range 23999</codeblock></li>
+            <li><p>Configure the IPv4 and IPv6 node segment
+              ID:</p><codeblock id="codeblock_rdv_zxp_qbc">set protocols isis source-packet-routing node-segment ipv4-index 11
+set protocols isis source-packet-routing node-segment ipv6-index 111</codeblock></li>
+            <li><p>Optionally, configure the explicit null
+              label:</p><codeblock id="codeblock_lmw_mcq_qbc">set protocols isis source-packet-routing explicit-null</codeblock></li>
+          </ol>
+        </subsection>
+        <subsection id="subsection_l5x_pbq_qbc">
+          <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Transit (P) Configuration</title>
+          <p>Configure the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Transit (P) router with the following configuration:</p>
+          <ol id="ol_m5x_pbq_qbc">
+            <li><p>Configure the
+              interfaces:</p><codeblock id="codeblock_n5x_pbq_qbc">set interfaces ens192 unit 0 family inet address 172.16.0.12/24
+set interfaces ens192 unit 0 family inet6 address 172::12/64
+set interfaces ens192 unit 0 family iso
+set interfaces ens192 unit 0 family mpls
+set interfaces ens224 unit 0 family inet address 172.16.1.12/24
+set interfaces ens224 unit 0 family inet6 address 172::112/64
+set interfaces ens224 unit 0 family iso
+set interfaces ens224 unit 0 family mpls
+set interfaces lo0 unit 0 family inet address 192.168.2.12/32
+set interfaces lo0 unit 0 family inet6 address 192::12/128
+set interfaces lo0 unit 0 family iso address 49.0002.0190.0160.0020.00
+set interfaces lo0 unit 0 family mpls</codeblock></li>
+            <li><p>Configure
+              IS-IS:</p><codeblock id="codeblock_o5x_pbq_qbc">set protocols isis interface ens192
+set protocols isis interface ens224
+set protocols isis interface lo0.0
+set protocols isis level 1 disable </codeblock></li>
+            <li><p>Configure routing
+              options:</p><codeblock id="codeblock_p5x_pbq_qbc">set routing-options route-distinguisher-id 192.168.2.12
+set routing-options router-id 192.168.2.22
+set routing-options autonomous-system 64512</codeblock></li>
+            <li><p>Configure MPLS protocol on the
+              interfaces:</p><codeblock id="codeblock_q5x_pbq_qbc">set protocols mpls interface ens192
+set protocols mpls interface lo0.0
+set protocols mpls interface ens224</codeblock></li>
+            <li><p>Configure the start label and index range of
+              SRGB:</p><codeblock id="codeblock_s5x_pbq_qbc">set protocols isis source-packet-routing srgb start-label 16000
+set protocols isis source-packet-routing srgb index-range 23999</codeblock></li>
+            <li><p>Configure the IPv4 and IPv6 node segment
+              ID:</p><codeblock id="codeblock_t5x_pbq_qbc">set protocols isis source-packet-routing node-segment ipv4-index 11
+set protocols isis source-packet-routing node-segment ipv6-index 111</codeblock></li>
+          </ol>
+        </subsection>
+        <subsection id="subsection_qdf_pcq_qbc">
+          <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Egress (PE2) Configuration</title>
+          <p>Configure the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Egress (PE2) router with the following configuration:</p>
+          <ol id="ol_rdf_pcq_qbc">
+            <li><p>Configure the
+              interfaces:</p><codeblock id="codeblock_sdf_pcq_qbc">set interfaces ens192 unit 0 family inet address 172.16.1.13/24
+set interfaces ens192 unit 0 family inet6 address 172::13/64
+set interfaces ens192 unit 0 family iso
+set interfaces ens192 unit 0 family mpls
+set interfaces lo0 unit 0 family inet address 192.168.3.13/32
+set interfaces lo0 unit 0 family inet6 address 192::13/128
+set interfaces lo0 unit 0 family iso address 49.0002.0190.0160.0021.00
+set interfaces lo0 unit 0 family mpls</codeblock></li>
+            <li><p>Configure
+              IS-IS:</p><codeblock id="codeblock_tdf_pcq_qbc">set protocols isis interface ens192
+set protocols isis interface lo0.0
+set protocols isis level 1 disable </codeblock></li>
+            <li><p>Configure routing
+              options:</p><codeblock id="codeblock_udf_pcq_qbc">set routing-options route-distinguisher-id 192.168.3.13
+set routing-options router-id 192.168.3.13
+set routing-options autonomous-system 64512</codeblock></li>
+            <li><p>Configure MPLS protocol on the
+              interfaces:</p><codeblock id="codeblock_vdf_pcq_qbc">set protocols mpls ipv6-tunneling
+set protocols mpls interface ens192
+set protocols mpls interface lo0.0</codeblock></li>
+            <li><p>Configure BGP
+              neighbors:</p><codeblock id="codeblock_wdf_pcq_qbc">set protocols bgp group sr_mpls type internal
+set protocols bgp group sr_mpls multihop
+set protocols bgp group sr_mpls local-address 192.168.3.13
+set protocols bgp group sr_mpls family inet-vpn unicast
+set protocols bgp group sr_mpls family inet6-vpn unicast
+set protocols bgp group sr_mpls local-as 64512
+set protocols bgp group sr_mpls neighbor 192.168.1.11</codeblock></li>
+            <li><p>Configure the start label and index range of
+              SRGB:</p><codeblock id="codeblock_xdf_pcq_qbc">set protocols isis source-packet-routing srgb start-label 16000
+set protocols isis source-packet-routing srgb index-range 23999</codeblock></li>
+            <li><p>Configure the IPv4 and IPv6 node segment
+              ID:</p><codeblock id="codeblock_ydf_pcq_qbc">set protocols isis source-packet-routing node-segment ipv4-index 13
+set protocols isis source-packet-routing node-segment ipv6-index 113</codeblock></li>
+            <li><p>Optionally, configure the explicit null
+              label:</p><codeblock id="codeblock_zdf_pcq_qbc">set protocols isis source-packet-routing explicit-null</codeblock></li>
+          </ol>
+        </subsection>
+        <subsection id="subsection_t4j_xcq_qbc">
+          <title>Verify SR-MPLS Configuration on JCNR </title>
+          <p>The following commands can be used to verify the SRv6 configuration on <xref href="accessing-crpd-cli.dita">cRPD</xref>:</p>
+          <codeblock id="codeblock_iy2_fdq_qbc"><b>user@pe1&gt; show isis database detail </b>
+IS-IS level 1 link-state database:
+
+IS-IS level 2 link-state database:
+
+pe1.00-00 Sequence: 0x125, Checksum: 0xce5c, Lifetime: 590 secs
+  IPV4 Index: 11, IPV6 Index: 111
+  Node Segment Blocks Advertised:
+    Start Index : 0, Size : 23999, Label-Range: [ 16000, 39998 ]
+   IS neighbor: node2.02                      Metric:       10
+     LAN IPv4 Adj-SID:      16, Weight:   0, Neighbor: node3, Flags: --VL--
+     LAN IPv6 Adj-SID:      17, Weight:   0, Neighbor: node3, Flags: F-VL--
+   IP prefix: 172.16.0.0/24                   Metric:       10 Internal Up
+   IP prefix: 192.168.1.11/32                 Metric:        0 Internal Up
+   V6 prefix: 172::/64                        Metric:       10 Internal Up
+   V6 prefix: 192::11/128                     Metric:        0 Internal Up
+   V6 prefix: fe80::50c8:9dff:fee2:4655/128   Metric:        0 Internal Up
+
+pe1.02-00 Sequence: 0x11f, Checksum: 0x4305, Lifetime: 468 secs
+   IS neighbor: node2.00                      Metric:        0
+   IS neighbor: node3.00                      Metric:        0
+
+p.00-00 Sequence: 0x83, Checksum: 0xcd5e, Lifetime: 506 secs
+  IPV4 Index: 12, IPV6 Index: 112
+  Node Segment Blocks Advertised:
+    Start Index : 0, Size : 23999, Label-Range: [ 16000, 39998 ]
+   IS neighbor: node2.02                      Metric:       10
+     LAN IPv4 Adj-SID:      16, Weight:   0, Neighbor: node2, Flags: --VL--
+     LAN IPv6 Adj-SID:      17, Weight:   0, Neighbor: node2, Flags: F-VL--
+   IS neighbor: node3.02                      Metric:       10
+     LAN IPv4 Adj-SID:      20, Weight:   0, Neighbor: node4, Flags: --VL--
+     LAN IPv6 Adj-SID:      21, Weight:   0, Neighbor: node4, Flags: F-VL--
+   IP prefix: 172.16.0.0/24                   Metric:       10 Internal Up
+   IP prefix: 172.16.1.0/24                   Metric:       10 Internal Up
+   IP prefix: 192.168.2.12/32                 Metric:        0 Internal Up
+   V6 prefix: 172::/64                        Metric:       10 Internal Up
+   V6 prefix: 192::12/128                     Metric:        0 Internal Up
+   V6 prefix: fe80::50e4:70ff:fe46:76dd/128   Metric:        0 Internal Up
+
+p.02-00 Sequence: 0x78, Checksum: 0xf2e5, Lifetime: 1156 secs
+   IS neighbor: node3.00                      Metric:        0
+   IS neighbor: node4.00                      Metric:        0
+                                        
+pe2.00-00 Sequence: 0x76, Checksum: 0xb5bf, Lifetime: 644 secs
+  IPV4 Index: 13, IPV6 Index: 113
+  Node Segment Blocks Advertised:
+    Start Index : 0, Size : 23999, Label-Range: [ 16000, 39998 ]
+   IS neighbor: node3.02                      Metric:       10
+     LAN IPv4 Adj-SID:      16, Weight:   0, Neighbor: node3, Flags: --VL--
+     LAN IPv6 Adj-SID:      17, Weight:   0, Neighbor: node3, Flags: F-VL--
+   IP prefix: 172.16.1.0/24                   Metric:       10 Internal Up
+   IP prefix: 192.168.3.13/32                 Metric:        0 Internal Up
+   V6 prefix: 172::/64                        Metric:       10 Internal Up
+   V6 prefix: 192::13/128                     Metric:        0 Internal Up
+   V6 prefix: fe80::3c1e:39ff:fe28:1a8a/128   Metric:        0 Internal Up</codeblock>
+          <codeblock id="codeblock_r4k_ndq_qbc">user@pe1&gt; <b>show route table inet.3</b>     
+
+inet.3: 2 destinations, 2 routes (2 active, 0 holddown, 0 hidden)
++ = Active Route, - = Last Active, * = Both
+
+192.168.2.12/32    *[L-ISIS/14] 1d 01:20:51, metric 10
+                    &gt;  to 172.16.0.12 via ens192
+192.168.3.13/32    *[L-ISIS/14] 1d 00:59:01, metric 20
+                    &gt;  to 172.16.0.12 via ens192, Push 16013</codeblock>
+          <codeblock id="codeblock_nxw_5dq_qbc">user@p&gt; <b>show route table mpls.0 </b>
+
+mpls.0: 20 destinations, 20 routes (20 active, 0 holddown, 0 hidden)
++ = Active Route, - = Last Active, * = Both
+
+0                  *[MPLS/0] 1d 02:05:44, metric 1
+                       Receive
+1                  *[MPLS/0] 1d 02:05:44, metric 1
+                       Receive
+2                  *[MPLS/0] 1d 02:05:44, metric 1
+                       Receive
+13                 *[MPLS/0] 1d 02:05:44, metric 1
+                       Receive
+16                 *[L-ISIS/14] 1d 01:12:40, metric 0
+                    &gt;  to 172.16.0.11 via ens192, Pop      
+16(S=0)            *[L-ISIS/14] 1d 01:12:40, metric 0
+                    &gt;  to 172.16.0.11 via ens192, Pop      
+17                 *[L-ISIS/14] 1d 01:12:40, metric 0
+                    &gt;  to fe80::250:56ff:fea9:5f96 via ens192, Pop      
+17(S=0)            *[L-ISIS/14] 1d 01:12:40, metric 0
+                    &gt;  to fe80::250:56ff:fea9:5f96 via ens192, Pop      
+20                 *[L-ISIS/14] 1d 01:13:06, metric 0
+                    &gt;  to 172.16.1.13 via ens224, Pop      
+20(S=0)            *[L-ISIS/14] 1d 01:13:06, metric 0
+                    &gt;  to 172.16.1.13 via ens224, Pop      
+21                 *[L-ISIS/14] 1d 01:13:06, metric 0
+                    &gt;  to fe80::250:56ff:fea9:5dc via ens224, Pop      
+21(S=0)            *[L-ISIS/14] 1d 01:13:06, metric 0
+                    &gt;  to fe80::250:56ff:fea9:5dc via ens224, Pop      
+16011              *[L-ISIS/14] 1d 01:00:38, metric 10
+                    &gt;  to 172.16.0.11 via ens192, Swap 0
+16011(S=0)         *[L-ISIS/14] 1d 01:12:40, metric 10
+                    &gt;  to 172.16.0.11 via ens192, Pop      
+16013              *[L-ISIS/14] 1d 01:00:24, metric 10
+                    &gt;  to 172.16.1.13 via ens224, Swap 0
+16013(S=0)         *[L-ISIS/14] 1d 01:12:57, metric 10
+                    &gt;  to 172.16.1.13 via ens224, Pop      
+16111              *[L-ISIS/14] 1d 01:00:38, metric 10
+                    &gt;  to fe80::250:56ff:fea9:5f96 via ens192, Swap 2
+16111(S=0)         *[L-ISIS/14] 1d 01:12:40, metric 10
+                    &gt;  to fe80::250:56ff:fea9:5f96 via ens192, Pop      
+16113              *[L-ISIS/14] 1d 01:00:24, metric 10
+                    &gt;  to fe80::250:56ff:fea9:5dc via ens224, Swap 2
+16113(S=0)         *[L-ISIS/14] 1d 01:12:57, metric 10
+                    &gt;  to fe80::250:56ff:fea9:5dc via ens224, Pop      </codeblock>
+        </subsection>
+        <subsection id="subsection_vhd_hf1_rbc">
+          <title>Verify Configuration on <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Forwarding Plane</title>
+          <p>Verify the traffic flow via the <xref href="accessing-vrouter-cli.dita">vRouter</xref> on each PE
+            node:</p>
+          <codeblock id="codeblock_spx_kf1_rbc"><b>user@pe1# mpls --dump</b>
+MPLS Input Label Map
+
+   Label    NextHop
+-------------------
+       0        26
+       1        26
+       2        26
+      13        26
+      16        27
+      17        28
+   16012        27
+   16013        29
+   16112        28
+   16113        30</codeblock>
+          <codeblock id="codeblock_hfv_nf1_rbc"><b>user@pe1# mpls --get 16013</b>
+MPLS Input Label Map
+
+   Label    NextHop
+-------------------
+   16013        29</codeblock>
+          <codeblock id="codeblock_wpl_rf1_rbc"><b>user@pe1# nh --get 29</b>
+Id:29         Type:Tunnel         Fmly: AF_MPLS  Rid:0  Ref_cnt:2          Vrf:0
+              Flags:Valid, Policy, Etree Root, MPLS,
+              Oif:1 Len:14 Data:00 50 56 a9 10 fa 00 50 56 a9 5f 96 88 47 Number of Transport Labels:1 Transport Labels:16013, </codeblock>
+          <codeblock id="codeblock_qjc_zf1_rbc"><b>user@pe1# mpls --get 16</b>
+MPLS Input Label Map
+
+   Label    NextHop
+-------------------
+      16        27</codeblock>
+          <codeblock id="codeblock_lmt_cg1_rbc"><b>user@pe1# nh --get 27</b>
+Id:27         Type:Encap          Fmly:AF_INET/6  Rid:0  Ref_cnt:6          Vrf:0
+              Flags:Valid, Policy, Etree Root, 
+              EncapFmly:0806 Oif:1 Len:14
+              Encap Data: 00 50 56 a9 10 fa 00 50 56 a9 5f 96 </codeblock>
+        </subsection>
+      </p>
+    </section>
+    <section id="section_rb4_wsm_51c"><title>SRv6</title><p><!--RLI56450, JCNR897-->SRv6 is a
+        segment routing paradigm that is applied to an IPv6 underlay with a new IPv6 extension
+        header called Segment Routing Header (SRH). SRv6 leverages existing IPv6 forwarding
+        technology to encode network programming instructions, also known as Segment Identifiers
+        (SIDs). In SRv6, the SIDs are represented as IPv6 addresses when compared with SR-MPLS where
+        SIDs are encoded as SR-MPLS labels. An SRv6 SID is 128 bits and consists of the following
+        components:</p><table frame="all" id="table_xcl_2jf_51c">
+        <title>SID Components</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="2.23*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Component</p>
+              </entry>
+              <entry>
+                <p>Description</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>Locator</p>
+              </entry>
+              <entry>
+                <p>First part of an SID that identifies the address of an SRv6 node. It is a network
+                  address that provides route to its parent node and is installed in inet6.0 table
+                  by the IS-IS protocol. IS-IS routes the segment to its parent node, which performs
+                  a function that is defined in the second part of the SID. It is 64 bits in
+                  length.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Function</p>
+              </entry>
+              <entry>
+                <p>Second part of an SID that defines the function that a node (identified by the
+                  locator) performs, such as:</p>
+                <p><b>End</b>: Endpoint function for SRv6 instantiation of a Prefix SID
+                  [RFC8402]</p>
+                <p><b>End.X</b>: Endpoint with L3 cross-connect function for SRv6 instantiation of
+                  an Adjacent SID [RFC8402]</p>
+                <p><b>End.DT4</b>: Endpoint with decapsulation and specific IPv4 table lookup
+                  function for SRv6 instantiation of Global or IPv4 L3VPN (transport IPv4 services
+                  over SRv6 underlay)</p>
+                <p><b>End.DT6</b>: Endpoint with decapsulation and specific IPv6 table lookup
+                  function for SRv6 instantiation of Global or IPv6 L3VPN (Transport IPv6 services
+                  over SRv6 underlay)</p>
+                <p><b>End.DT46</b>: Endpoint with decapsulation and specific IP table lookup
+                  function for SRv6 instantiation of Global, IPv4 or IPv6 L3VPN (Transport both IPv4
+                  and IPv6 services over SRv6 underlay). It is shared across IPv4 and IPv6
+                  prefixes.</p>
+                <p>The End SID behavior can be specified through flavors such as Penultimate Segment
+                  Pop (PSP), Ultimate Segment Pop (USP), and Ultimate Segment Decapsulation
+                  (USD).</p>
+                <p>The Function component is 16 bits in length.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Argument</p>
+              </entry>
+              <entry>
+                <p>A variable length field that provides additional information about the forwarding
+                  action. Can be maximum 48 bits in length.</p>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>The SRH carries the SIDs. As the packet travels through the network, each node
+      examines the next SID in the SRH to determine the corresponding next-hop and forwards the
+      packet until the packet reaches its destination. If a packet is required to be guided via
+      multiple segments in the SRv6 path, the SRv6-SIDs need to be stacked up using the SRH, to a
+      maximum of 6 typical SRv6-SIDs. This presents additional bandwidth and processing overhead.
+      Thus, <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/statement/routing-options-source-packet-routing-srv6-locator-micro-sid.html" scope="external">micro-SIDs</xref> (uSIDs) are envisaged where multiple
+      SRV6-addresses are compressed into a single IPv6 address. The 16-byte uSID is encoded as a
+      micro-program or a container instruction that is carried either in the packet destination
+      address or in the SRH. It has a specific structure represented by the following format:<p/><p>
+        <codeph>BBBB:BBBB:&lt;uSID1&gt;:&lt;uSID2&gt;:&lt;uSID3&gt;:&lt;uSID4&gt;:&lt;uSID5&gt;:&lt;uSID6&gt;</codeph></p><p/><p>where
+          <codeph>BBBB:BBBB/32</codeph> represents the prefix or block assigned by an operator
+        within an SR domain. Various prefix lengths are supported including
+          <codeph>/16,</codeph><codeph> /32</codeph>, <codeph>/48</codeph>, <codeph>/64</codeph>
+        blocks. A <codeph>/32</codeph> block is most commonly used. The blocks can either be a
+        Global Identifier Block (GIB) or a Local Identifier Block (LIB). The GIB represents a
+        globally unique range of uSIDs allocated from a public or reserved address space
+        specifically designated for SRv6 deployments. The LIB is assigned by a specific network node
+        within the SR domain and applicable only within the node's local context. The
+          <codeph>uSIDx</codeph> represents the individual 16-bit uSIDs that can either be from the
+        GIB or LIB. The uSIDs implement the following functions:</p><ul id="ul_idb_hsf_51c">
+        <li>
+          <p>uN: Micro-node-SID that maps to the ultimate destination (End). </p>
+        </li>
+        <li>
+          <p>uA: Micro-adjacency-SID that has adjacency specific behavior (End.X)</p>
+        </li>
+        <li>
+          <p>uDT: Micro-service-SID that is domain specific information (End.DT4, End.DT6,
+            End.DT46)</p>
+        </li>
+      </ul><p/><p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports the following SRv6 functionalities:</p><table frame="all" id="table_p3f_drm_51c">
+        <title>SRv6 Supported Functionalities</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Functionalities</p>
+              </entry>
+              <entry>
+                <p>Notes</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>SRv6 L3VPN with uSID</p>
+              </entry>
+              <entry>
+                <p>uSID Types: Global uSID, Local uSID</p>
+                <p>uSID encoding in Destination Address</p>
+              </entry>
+            </row>
+            <row>
+              <entry>Block and uSID sizes</entry>
+              <entry>
+                <p>Support for /16, /32, /48, /64 blocks</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>SRv6 Node Types and Micro-instructions</p>
+              </entry>
+              <entry>
+                <p>Ingress: SRv6 Encapsulation in Destination Address (SRH is not required)</p>
+                <p>Transit: IPv6 forwarding if Ingress node is JCNR; Shift and forward if Ingress
+                  node is non-JCNR</p>
+                <p>Egress: Decpasulate and execute the SID service function</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>SR Endpoints (Functions)</p>
+              </entry>
+              <entry>
+                <p>End, End.X, End.DT4, End.DT6, and End.DT46</p>
+              </entry>
+            </row>
+            <row>
+              <entry>uSID Behavior</entry>
+              <entry>
+                <p>uN, uDT</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Failure Recovery</p>
+              </entry>
+              <entry>
+                <p>Control plane initiated failure recovery (alternative path as next hop)</p>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports the following SRv6 network programming features:<table frame="all" id="table_kzt_c4n_41c">
+        <title>SRv6 Supported Features</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Feature</p>
+              </entry>
+              <entry>
+                <p>Description</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>SRv6 uSID underlay tunnels via IS-IS </p>
+              </entry>
+              <entry>
+                <p>IS-IS brings up Best Effort tunnel to advertised locators and programs them in
+                  inet6.3 table.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>SRv6 uSID underlay tunnels via IS-IS with ECMP paths</p>
+              </entry>
+              <entry>
+                <p>IS-IS brings up Best Effort tunnel to advertised locators and programs them in
+                  inet6.3 table. The tunnels can have ECMP forwarding paths.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Routes for BGP internet prefixes advertised with uN SID</p>
+              </entry>
+              <entry>
+                <p>BGP internet prefixes advertised with uN SIDs will resolve over corresponding
+                  locators (SRv6 uSID underlay tunnels). The underlay routes can have a single
+                  gateway or ECMP.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Multipath routes for BGP internet prefixes advertised with uN SID</p>
+              </entry>
+              <entry>
+                <p>Multiple Provide Edge (PE) routers could originate the same internet prefix
+                  (multihoming) that can lead to BGP multipath at the ingress PE. Each multipath
+                  route resolves over underlay SRv6 tunnels that have either a single gateway or
+                  ECMP.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Routes for L3VPN prefixes advertised with uN SID</p>
+              </entry>
+              <entry>
+                <p>L3VPN prefixes advertised with uN SIDs will resolve over corresponding locators
+                  (SRV6 uSID underlay tunnels). These underlay routes can have a single gateway or
+                  have ECMP.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Multipath routes for L3VPN prefixes advertised with uN SID</p>
+              </entry>
+              <entry>
+                <p>Multiple PEs could originate the same L3VPN prefix (multihoming) and this can
+                  lead to BGP multipath at the ingress PE. Each multipath route resolves over the
+                  underlay SRv6 tunnels that have either a single gateway or ECMP.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>BGP intent routes over flex-algorithm IS-IS tunnels</p>
+              </entry>
+              <entry>
+                <p>Flex algorithm uSIDs can be advertised via IS-IS with SRv6 underlay tunnels
+                  created. BGP internet prefixes and L3VPN prefixes with uSIDs can resolve over the
+                  underlay tunnels. These prefixes can be non-intent (without any color-community
+                  attached to them). The prefixes are resolved over SRV6 underlay tunnels installed
+                  in inet6.3 table.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>BGP intent routes over flex-algorithm IS-IS tunnels with fallback mechanism</p>
+              </entry>
+              <entry>
+                <p>Flex algorithm uSIDs can be advertised via IS-IS with SRv6 underlay tunnels
+                  created. The BGP internet prefixes and L3VPN prefixes with uSIDs can resolve over
+                  the underlay tunnels. These prefixes can be intent (with a color-community
+                  attached to them). The prefixes are resolved over SRv6 underlay tunnels installed
+                  in <i>junos-rti-tc-&lt;color&gt;.inet6.3</i> table, where color corresponds to the
+                  color in the color-community advertised with the prefix. If the prefix resolution
+                  does not happen over the <i>junos-rti-tc-&lt;color&gt;.inet6.3 </i>table, it can
+                  resolve over flex-algorithm underlay tunnel installed in inet6.3 table, thus
+                  providing a fallback mechanism.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Support for programming uN SID and forwarding packets based on the uN SID
+                  routes</p>
+              </entry>
+              <entry>
+                <p>We support programming uN SID routes in inet6.0 table. This facilitates
+                  forwarding of packets that have uN SIDs as a part of their destination address.
+                  Note that packets having Segment Routing Header (SRH) is not supported
+                  currently.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Supported SID Functionalities</p>
+              </entry>
+              <entry>
+                <p>uN SID shift and lookup (flavor type <codeph>none</codeph>)</p>
+                <p>uDT for IPv4</p>
+                <p>uDT for IPv6</p>
+                <p>uDT for IPv4 and IPv6</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Locator summarization and leaking</p>
+              </entry>
+              <entry>
+                <p>Locator summarization and leaking is an advantage of SRv6 over SR-MPLS. An L1-L2
+                  may summarize locators from other levels and leak them to another level. Locator
+                  leaking can happen even without summarization. </p>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table><subsection id="subsection_z1l_tf4_qbc">
+        <title>Configuring SRv6 in JCNR</title>
+        <p>Consider the following topology:</p>
+      </subsection><fig id="fig_q1r_dlr_w1c">
+        <title>Topology Diagram</title>
+        <image href="../../images/jn-000881.png" id="image_r1r_dlr_w1c"/>
+      </fig><p>We want to enable communication between hosts 10.1.1.1/32 and 10.2.2.2/32 via an SRv6
+        tunnel. PE1 is an ingress <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>node, P is transit <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>node while PE2 is an egress <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>node. PE1, P, and PE2 advertise their uSIDs (shown in the figure) via IS-IS along with
+        overlay prefixes via BGP to each other. CE1 initiates the packet flow to the ingress node
+        (PE1). PE1 encapsulates the source packet with the SRv6 header while setting the destination
+        address to the uSID of the egress node (PE2). Since <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is the ingress node in this
+        topology, the transit node (P) simply forwards the IPv6 packet. The egress node (PE2) is
+        configured with a micro-service-SID (uDT) to decapsulate the packet and lookup a specific IP
+        table to route the packet to CE2.</p><p>The configuration of SRv6 in <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>includes the <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/statement/routing-options-source-packet-routing-srv6-block.html" scope="external">micro-SID block</xref> configuration, <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/statement/locator-edit-routing-options-source-packet-routing-srv6.html" scope="external">micro-SID locator</xref> configuration, <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/is-is/topics/example/isis-configuring-srv6-network-programming.html" scope="external">micro-node-SID (uN) configuration in IS-IS</xref> and <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/statement/srv6-edit-protocols-bgp-source-packet-routing.html" scope="external">micro-service-SID (uDT) configuration in BGP</xref>.
+          </p><p><xref href="accessing-crpd-cli.dita">Configure the JCNR
+          control plane</xref> for SRv6. For brevity, we will cover the configuration for the egress
+        <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>node (PE2) in this example. The configuration for other nodes is similar.</p><ol id="ol_hmx_5f4_qbc">
+        <li><p>Configure the micro-SID block and optionally the maximum number of local static SIDs
+            (default value is 0, must be configured if using static
+          uSIDs):</p><codeblock id="codeblock_bsl_jg4_51c">user@PE2# set routing-options source-packet-routing srv6 block blk16_1 2001:db8::/32
+user@PE2# set routing-options source-packet-routing srv6 block blk16_1 local-micro-sid maximum-static-sids 2000</codeblock></li>
+        <li><p>Configure the micro-SID
+          locator:</p><codeblock id="codeblock_znc_lg4_51c">user@PE2# set routing-options source-packet-routing srv6 locator myloc 2001:db8:4600::/48
+user@PE2# set routing-options source-packet-routing srv6 locator myloc micro-sid block-name blk16_1
+user@PE2# set routing-options source-packet-routing srv6 locator myloc micro-sid flavor none</codeblock></li>
+        <li><p>Configure micro-node-SID (uN SID) in IS-IS to advertise locator TLV and
+            micro-node-SID:</p><codeblock id="codeblock_fhc_kh4_51c">user@PE2# set protocols isis source-packet-routing srv6 locator myloc micro-node-sid</codeblock></li>
+        <li><p>There are two ways to configure micro-service-SIDs. The first is only BGP, which
+            enables one set of dt4, dt6, and dt46 uSIDs to be configured per BGP instance. The uSID
+            can either be static or dynamically allocated. The second way is to configure an export
+            policy to specify the micro-service-SID used by a prefix or the locator to derive the
+            micro-service-SID from. BGP is configured via the <codeph>non-default</codeph> keyword.
+            An example for each method is provided below. You must use only one of them for a set of
+            dt4, dt6, and dt46 uSIDs.</p><ol id="ol_qyk_p34_51c">
+            <li><p>Static default micro-service-SID for IPv4 services. Note that the static uSID
+                must be in the <codeph>maximum-static-sids</codeph> range defined in Step
+              1:</p><codeblock id="codeblock_ivc_s34_51c">user@PE2# set routing-instances pe-2 protocols bgp source-packet-routing srv6 locator myloc micro-dt4-sid 0xF831</codeblock></li>
+            <li><p>Set auto-allocated default micro-service-SID for IPv4
+              services:</p><codeblock id="codeblock_vrj_x34_51c">user@PE2# set routing-instances pe-2 bgp source-packet-routing srv6 locator myloc micro-dt4-sid</codeblock></li>
+            <li><p>Set non-default micro-service-SID with BGP export
+              policy:</p><codeblock id="codeblock_ugb_1j4_51c">user@PE2# set routing-instances pe-2 bgp source-packet-routing srv6 locator myloc micro-dt4-sid non-default</codeblock><codeblock id="codeblock_tzx_bj4_51c">user@PE2# set policy-options policy-statement EXPORT_BGP_SRV6 term 1 then srv6 locator myloc
+user@PE2# set policy-options policy-statement EXPORT_BGP_SRV6 term 1 then srv6 micro-dt4-sid</codeblock></li>
+          </ol></li>
+        <li><p>Configure BGP to advertise SRv6 service. An example for family <codeph>inet</codeph>
+            is provided
+          below:</p><codeblock id="codeblock_p1h_sjs_51c">user@PE2# set protocols bgp group CNIv6 family inet unicast advertise-srv6-service
+user@PE2# set protocols bgp group CNIv6 family inet unicast accept-srv6-service</codeblock></li>
+      </ol><subsection id="subsection_bcx_2ls_51c">
+        <title>Verify SRv6 Configuration on JCNR </title>
+        <p>The following commands can be used to verify the SRv6 configuration on <xref href="accessing-crpd-cli.dita">cRPD</xref>:</p>
+        <codeblock id="codeblock_ilb_hls_51c"><b>user@host&gt; show srv6 block blk16_1 </b>
+Block: blk16_1
+  Block Prefix: 2001:db8::, Block length: 32, Micro-sid length: 16
+  Global Micro SIDs:
+    Static SID range: 0x0-0xDFFF, Dynamic SID range: -
+    Allocated static SID count: 1, Allocated dynamic SID count: 0
+    Available static SID count: 57343, Available dynamic SID count: 0
+  Local Micro SIDs:
+    Static SID range: 0xF830-0xFFFF, Dynamic SID range: 0xE000-0xFFFF
+    Allocated static SID count: 0, Allocated dynamic SID count: 0
+    Available static SID count: 2000, Available dynamic SID count: 8192</codeblock>
+        <codeblock id="codeblock_jlb_hls_51c"><b>user@host&gt; show srv6 locator</b> 
+Locator: myloc
+  Locator prefix: 2001:db8:4600::, Locator length: 48
+  Block length: 32, Node length: 16
+  Function length: 16, Argument length: 0
+  Micro SID Locator, Flavor [ None ]
+  Micro SID Block Name: blk16_1</codeblock>
+        <codeblock id="codeblock_klb_hls_51c"><b>user@host&gt; show isis overview</b> 
+Instance: master
+  Router ID: 10.1.1.1
+  IPv6 Router ID: ::10.1.1.1
+  ...
+  Source Packet Routing (SPRING): Enabled
+    Node Segments: Disabled
+    SRv6: Enabled
+      Locator: 2001:db8:4600::/48, Algorithm: 0
+        micro-node-SID: 2001:db8:4600::, Flavor: None
+...</codeblock>
+        <codeblock id="codeblock_llb_hls_51c"><b>user@host&gt; show isis database extensive</b> 
+IS-IS level 1 link-state database:
+...
+SRv6 Locator: 2001:db8:4600::/48, Metric: 0, MTID: 0, Flags: 0x0, Algorithm: 0
+      SRv6 SID: 2001:db8:4600::, Flavor: None
+      sid-structure-sub-sub-tlv: Block-length:32, Node-length:16
+...</codeblock>
+      </subsection><subsection id="subsection_tgr_hls_51c">
+        <title>Verify Packet Flow via <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Forwarding Plane</title>
+        <p>Verify the traffic flow via the <xref href="accessing-vrouter-cli.dita">vRouter</xref> on each PE
+          node:</p>
+        <ol id="ol_lld_cg4_qbc">
+          <li><p>Ingress SRv6 node
+              (PE1)</p><codeblock id="codeblock_tt3_c4s_51c"><b>[user@PE1 /]# flow --match 10.1.1.1
+</b>Flow table(size 161218560, entries 629760)
+
+Entries: Created 300 Added 300 Deleted 400 Changed 600Processed 300 Used Overflow entries 0
+(Created Flows/CPU: 0 0 0 0 0 0 0 0 0 0 0 72 87 72 69)(oflows 0)
+
+Action:F=Forward, D=Drop N=NAT(S=SNAT, D=DNAT, Ps=SPAT, Pd=DPAT, L=Link Local Port)
+ Other:K(nh)=Key_Nexthop, S(nh)=RPF_Nexthop
+ Flags:E=Evicted, Ec=Evict Candidate, N=New Flow, M=Modified Dm=Delete Marked
+TCP(r=reverse):S=SYN, F=FIN, R=RST, C=HalfClose, E=Established, D=Dead
+ Stats:Packets/Bytes
+
+Listing flows matching ([10.1.1.1]:*)
+
+    Index                Source:Port/Destination:Port                      Proto(V)
+-----------------------------------------------------------------------------------
+   231600&lt;=&gt;349580       <b>10.1.1.1:1024</b>                                      6 (98)
+                         <b>10.2.2.2:1024</b> 
+(Gen: 3, <b>K(nh):98</b>, Action:F, Flags:, TCP:, QOS:-1, S(nh):0,  Stats:77632/8228992, 
+ SPort 63335, TTL 0, Sinfo 22.0.0.0)
+
+   349580&lt;=&gt;231600       10.2.2.2:1024                                     6 (98)
+                         10.1.1.1:1024 
+(Gen: 3, K(nh):98, Action:F, Flags:, TCP:, QOS:-1, S(nh):623,  Stats:0/0, 
+ SPort 63397, TTL 0, Sinfo 0.0.0.0)</codeblock><codeblock id="codeblock_scg_v4s_51c"><b>[user@PE1 /]# rt --get 10.2.2.2/32 --vrf 98</b>
+Match 10.2.2.2/32 in vRouter inet4 table 0/98/unicast
+
+Flags: L=Label Valid, P=Proxy ARP, T=Trap ARP, F=Flood ARP, Ml=MAC-IP learnt route
+vRouter inet4 routing table 0/98/unicast
+Destination           PPL        Flags        Label         Nexthop    Stitched MAC(Index)
+<b>10.2.2.0/24</b>           0          LPT          -            <b>623</b>        -</codeblock><codeblock id="codeblock_xcv_v4s_51c"><b>[user@PE1 /]# nh --get 623
+</b>Id:623        <b>Type:Tunnel</b>         Fmly:AF_INET6  Rid:0  Ref_cnt:2          Vrf:0
+              Flags:Valid, Policy, Etree Root, <b>SRv6</b>, 
+              Oif:2 Len:14 Data:40 a6 b7 a0 ef f1 50 7c 6f 48 9c 89 86 dd 
+              Sip: abcd:44:44:44::44
+              Block Len:32 Block: 2001:db8:: 
+              Number of Containers:1
+              <b>Container Dips:[1]: 2001:db8:4600:e001::</b></codeblock><p>Note that
+              the next hop for traffic to 10.2.2.2/32 is an SRv6 tunnel with Destination
+                IP:<codeph>2001:db8:4600:e001::</codeph> (The uSID of egress node) </p></li>
+          <li><p>Transit SRv6 node
+              (P)</p><codeblock id="codeblock_uy3_5ps_51c"><b>[user@P /]# flow --match 2001:db8:4600:e001::
+</b>Flow table(size 161218560, entries 629760)
+
+Entries: Created 300 Added 300 Deleted 400 Changed 600Processed 300 Used Overflow entries 0
+(Created Flows/CPU: 0 0 0 0 0 0 0 0 0 0 0 72 87 72 69)(oflows 0)
+
+Action:F=Forward, D=Drop N=NAT(S=SNAT, D=DNAT, Ps=SPAT, Pd=DPAT, L=Link Local Port)
+ Other:K(nh)=Key_Nexthop, S(nh)=RPF_Nexthop
+ Flags:E=Evicted, Ec=Evict Candidate, N=New Flow, M=Modified Dm=Delete Marked
+TCP(r=reverse):S=SYN, F=FIN, R=RST, C=HalfClose, E=Established, D=Dead
+ Stats:Packets/Bytes
+
+Listing flows matching ([2001:db8:4600:e001::]:*)
+
+    Index                Source:Port/Destination:Port                      Proto(V)
+-----------------------------------------------------------------------------------
+   137640&lt;=&gt;238208       <b>abcd:44:44:44::44:0</b>                                 4 (0)
+                         <b>2001:db8:4600:e001:::0</b>        
+(Gen: 1, <b>K(nh):0</b>, Action:F, Flags:, QOS:-1, S(nh):0,  Stats:81560/11907760, 
+ SPort 53031, TTL 0, Sinfo 0.0.0.0)
+
+   238208&lt;=&gt;137640       2001:db8:4600:e001:::0                             4 (0)
+                         abcd:44:44:44::44:0        
+(Gen: 1, K(nh):0, Action:F, Flags:, QOS:-1, S(nh):0,  Stats:0/0,  SPort 55361,
+ TTL 0, Sinfo 0.0.0.0)</codeblock><codeblock id="codeblock_lwr_h1t_51c"><b>[user@P /]# rt --get 2001:db8:4600:e001::/128 --vrf 0 --family inet6</b>
+rt --get fcbb:bb01:4600:e001::/128 --vrf 0 --family inet6
+Match fcbb:bb01:4600:e001::/128 in vRouter inet6 table 0/0/unicast
+
+Flags: L=Label Valid, P=Proxy ARP, T=Trap ARP, F=Flood ARP, Ml=MAC-IP learnt route
+vRouter inet6 routing table 0/0/unicast
+Destination           PPL        Flags        Label         Nexthop    Stitched MAC(Index)
+<b>2001:db8:4600::/48</b>     0            T          -             <b>80</b>        -</codeblock><codeblock id="codeblock_rnf_j1t_51c"><b>[user@P /]# nh --get 80</b>
+Id:80         Type:Encap          Fmly:AF_INET/6  Rid:0  Ref_cnt:11         Vrf:0
+              Flags:Valid, Policy, Etree Root, 
+              EncapFmly:0806 Oif:7 Len:14
+              Encap Data: 50 7c 6f 48 83 79 40 a6 b7 a0 f9 3b </codeblock><p>Note that
+              P only forwards the IPv6 packet.</p></li>
+          <li><p>Egress SRv6 node
+              (PE2)</p><codeblock id="codeblock_bpy_lbt_51c"><b>[root@PE2 /]# rt --get 2001:db8:4600:e001::/128 --vrf 0 --family inet6
+</b>Match 2001:db8:4600:e001::/128 in vRouter inet6 table 0/0/unicast
+
+Flags: L=Label Valid, P=Proxy ARP, T=Trap ARP, F=Flood ARP, Ml=MAC-IP learnt route
+vRouter inet6 routing table 0/0/unicast
+Destination               PPL        Flags        Label         Nexthop    Stitched MAC(Index)
+<b>2001:db8:4600:e001::/80</b>   0            T          -             <b>72</b>        -</codeblock><codeblock id="codeblock_v2w_mbt_51c"><b>[root@PE2 /]# nh --get 72
+</b>Id:72         <b>Type:Vrf_Translate</b>  Fmly:AF_INET6  Rid:0  Ref_cnt:7          Vrf:19
+              Flags:Valid, Etree Root, SRv6, 
+              Vrf:19</codeblock><codeblock id="codeblock_zxm_nbt_51c"><b>[root@PE2 /]# rt --get 10.2.2.2/32 --vrf 19</b>
+Match 10.2.2.2/32 in vRouter inet4 table 0/19/unicast
+
+Flags: L=Label Valid, P=Proxy ARP, T=Trap ARP, F=Flood ARP, Ml=MAC-IP learnt route
+vRouter inet4 routing table 0/19/unicast
+Destination           PPL        Flags        Label         Nexthop    Stitched MAC(Index)
+<b>10.2.2.2/32</b>           0           PT          -            <b>776</b>        -</codeblock><codeblock id="codeblock_mjd_4bt_51c"><b>[root@PE2 /]# nh --get 776</b>
+Id:776        Type:Encap          Fmly:AF_INET/6  Rid:0  Ref_cnt:2          Vrf:19
+              Flags:Valid, Policy, Etree Root, 
+              EncapFmly:0806 Oif:21 Len:14
+              Encap Data: 00 10 94 00 04 1e 50 7c 6f 48 77 64 </codeblock><p>Note that
+              the Egress PE looks up for the uSID IPv6 address in the default table. The exact match
+              next-hop is configured to <codeph>Vrf_Translate</codeph>. It looks up
+                <codeph>10.2.2.2/32</codeph> destination IP address in the specified VRF and routes
+              the packet to CE2.</p></li>
+        </ol>
+      </subsection></section>
+  </conbody>
+  <related-links/>
+</concept>

@@ -1,0 +1,730 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_5db4c6d51f2bfde1-6cb03e6b-1918e87234e--7f03" xml:lang="en-US">
+  <!--Use the Concept template to introduce a new product or functionality. Also use this template to provide high-level explanations, definitions of key concepts, terminology, or general background information. Limit one topic to one theme or subject.-->
+  <!--For <title>, follow these guidelines:
+- Avoid the gerund form and minimize the use of “Understanding.” 
+- Use "[Feature] Overview" if the topic is indeed an overview. 
+- Use the feature name as the topic title for very long feature names. 
+- Use the Who, What, Where, When, Why, or How (not How to) phrase to describe a specific aspect of a product, feature, or user scenario.-->
+  <title>L3 CoS Overview</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  
+  <conbody>
+    <p>When a network experiences congestion and delay, some packets must be prioritized to avoid
+      random loss of data. Class of service (CoS), also known as Quality of Service (QoS)
+      accomplishes this prioritization by dividing similar types of traffic, such as e-mail,
+      streaming video, voice, large document file transfer, into classes. You then apply different
+      levels of priority, such as those for throughput and packet loss, to each group, and thereby
+      control traffic behavior. Juniper Cloud-Native Router supports CoS, enabling it to
+      differentiate or classify traffic. It can either drop traffic or lower the priority of the
+      traffic as per the rules configured. You can read more about <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cos/topics/concept/cos-overview-cos-config-guide.html" scope="external">Class of Service</xref> in the Junos documentation.</p>
+    <p>The Cloud-Native Router CoS application supports DiffServ, which uses a 6-bit differentiated
+      services code point (DSCP) in the differentiated services field of the IPv4 and IPv6 packet
+      header. For IPv6, DSCP is referred to as traffic class. The configuration uses DSCP values to
+      decide the CoS treatment for the incoming packet. The DSCP field is also used to notify the
+      modified priority of a packet to the next hop.</p>
+    <section id="section_i3x_v51_4cc">
+      <title>Cloud-Native Router Supported CoS Mechanisms</title>
+      <p>Cloud-Native Router supports Classifier, Policer and Rewrite/Marker CoS mechanisms. Let us
+        look at the Cloud-Native Router CoS implementations in detail in the sections below.</p>
+      <subsection id="subsection_skg_y51_4cc">
+        <title>Forwarding Classes and Loss Priority</title>
+        <p>The forwarding classes affect the forwarding and marking policies applied to packets as
+          they transit JCNR. By default Cloud-Native Router has no forwarding classes defined. You
+          can define up to 16 custom forwarding classes mapped to 8 queues. </p>
+        <p>In Cloud-Native Router CoS implementation forwarding class along with the loss priority
+          is used for rewrite rules and policer. Loss priority is set by the classifier as low,
+          medium low, medium high and high. Here are some of the ways loss priority is used in the
+          Cloud-Native Router CoS implementation:</p>
+      </subsection>
+      <table frame="all" id="table_rdp_twg_4cc">
+        <title>Using Forwarding Class and Loss Priority</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="3*"/>
+          <thead>
+            <row>
+              <entry>QoS Block</entry>
+              <entry>
+                <p><b>How Loss priority is used</b></p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>Classifier</p>
+              </entry>
+              <entry>
+                <p>Forwarding class and loss priority are set by the classifier.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Rewrite</p>
+              </entry>
+              <entry>
+                <p>Loss priority is used as an index along with the Traffic Class (Forwarding Class)
+                  to obtain a new DSCP value. </p>
+              </entry>
+            </row>
+            <row>
+              <entry>Policer</entry>
+              <entry>
+                <p>Only color aware policer uses loss priority. Loss priority maps to traffic colors
+                  as follows:</p>
+                <ul id="ul_dn2_dyg_4cc">
+                  <li>Loss priority Low is mapped to Green</li>
+                  <li>Loss priority Medium High and Medium Low are mapped to Yellow</li>
+                  <li>Loss priority High is mapped to Red</li>
+                </ul>
+              </entry>
+            </row>
+            <row>
+              <entry>Scheduler</entry>
+              <entry>Forwarding class and loss priority are inputs to the scheduler for queuing the
+                traffic based on strict priority.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <subsection id="subsection_rhn_qyg_4cc">
+        <title>Classifiers</title>
+        <p>Packet classification refers to the examination of an incoming packet. This function
+          associates the packet with a particular CoS servicing level. Classifiers associate
+          incoming packets with a forwarding class and loss priority and, based on the associated
+          forwarding class, assign packets to output queues. Two general types of classifiers are
+          supported:</p>
+        <ul id="ul_shn_qyg_4cc">
+          <li>
+            <p>Behavior Aggregate Classifier—Behavior aggregate (BA) is a method of classification
+              that operates on a packet as it enters JCNR. The CoS value in the packet header is
+              examined, and this single field determines the CoS settings applied to the packet. BA
+              classifiers allow you to set the forwarding class and loss priority of a packet based
+              on the Differentiated Services code point (DSCP) value and DSCP IPv6 value. BA
+              classifier is configured at the interface level. You can read more about <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cos/topics/concept/classifier-ba-overview-cos-config-guide.html" scope="external">Behavior Aggregate Classifer</xref> in the Junos
+              documentation.</p>
+          </li>
+          <li>
+            <p>Multifield Traffic Classifier—A multifield (MF) classifier can examine multiple
+              fields in the packet, such as the source and destination address of the packet as well
+              as the source and destination port numbers. With multifield classifiers, you set the
+              forwarding class and loss priority of a packet based on firewall filter (ACL) rules.
+              If a packet matches both BA and MF classifiers, MF classifier takes precedence. You
+              can read more about the <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cos/topics/concept/mf-classifiers-overview-cos-config-guide.html" scope="external">Multified Traffic Classifier</xref> in the Junos
+              documentation.</p>
+          </li>
+        </ul>
+      </subsection>
+      <subsection id="subsection_bg3_pw1_4cc">
+        <title>Policers</title>
+        <p>Policers allow you to limit traffic of a certain class to a specified bandwidth and burst
+          size. Policer meters (measures) each packet against traffic rates and burst sizes
+          configured. It then passes the packet and the metering result to the marker (rewrite
+          rules), which assigns a packet loss priority that corresponds to the metering result.
+          Based on the particular set of traffic limits configured, a policer identifies a traffic
+          flow as belonging to one of either two or three categories that are similar to the colors
+          of a traffic light used to control automobile traffic. Policers can be applied per packet
+          or per traffic class. Cloud-Native Router CoS implementation supports 16 policer profiles.
+          You can read more about <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/routing-policy/topics/concept/policer-mx-m120-m320-implementation-overview.html" scope="external">Policer Implementation</xref> in Junos documentation. In Cloud-Native
+          Router CoS implementation policers work in Single-rate three color marker (srTCM) or
+          Two-rate three-color marker (trTCM) mode. Policers can perform traffic color marking in
+          color aware or color blind modes. In color aware mode, the policer considers the packet’s
+          color as derived by classifier as additional input. In color blind mode the policer does
+          not take into consideration packet’s color while determining the new color. We will look
+          at the different considerations for each of the modes in the tables provided
+          hereafter.</p>
+        <ul id="ul_l3q_5jg_4cc">
+          <li>
+            <p>Single-rate three-color—A Single Rate Three Color Marker (srTCM) meters traffic based
+              on the configured committed information rate (CIR), committed burst size (CBS), and
+              the peak burst size (PBS). A single-rate three-color policer is most useful when a
+              service is structured according to packet length and not peak arrival rate. Traffic is
+              marked as belonging to one of three categories—green, yellow, or red based on the
+              following considerations:</p>
+            <table frame="all" id="table_svb_3kg_4cc">
+              <title>Color Aware srTCM </title>
+              <tgroup cols="5">
+                <colspec colname="c1" colnum="1" colwidth="1*"/>
+                <colspec colname="c2" colnum="2" colwidth="1.17*"/>
+                <colspec colname="c3" colnum="3" colwidth="1.09*"/>
+                <colspec colname="c4" colnum="4" colwidth="1.09*"/>
+                <colspec colname="c5" colnum="5" colwidth="1.09*"/>
+                <thead>
+                  <row>
+                    <entry>Incoming Color</entry>
+                    <entry>
+                      <p><b>Packet Metered Against</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>Possible Cases</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>New Color</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>Action on the packet</b></p>
+                    </entry>
+                  </row>
+                </thead>
+                <tbody>
+                  <row>
+                    <entry morerows="2">
+                      <p>Green</p>
+                    </entry>
+                    <entry morerows="2">
+                      <p>CIR, CBS, PBS</p>
+                    </entry>
+                    <entry>
+                      <p>Below CBS</p>
+                    </entry>
+                    <entry>
+                      <p>Green</p>
+                    </entry>
+                    <entry>
+                      <p>Not dropped</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry>
+                      <p>Above CBS but below PBS</p>
+                    </entry>
+                    <entry>Yellow</entry>
+                    <entry>
+                      <p>Change the traffic class using the rewrite rules.</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry>
+                      <p>Above PBS</p>
+                    </entry>
+                    <entry>
+                      <p>Red</p>
+                    </entry>
+                    <entry>
+                      <p>Discard</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry morerows="1">
+                      <p>Yellow</p>
+                    </entry>
+                    <entry morerows="1">
+                      <p>PBS</p>
+                    </entry>
+                    <entry>
+                      <p>Below PBS</p>
+                    </entry>
+                    <entry>
+                      <p>Yellow</p>
+                    </entry>
+                    <entry>
+                      <p>Change the traffic class using the rewrite rules.</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry>
+                      <p>Above PBS</p>
+                    </entry>
+                    <entry>
+                      <p>Red</p>
+                    </entry>
+                    <entry>Discard</entry>
+                  </row>
+                  <row>
+                    <entry>Red</entry>
+                    <entry>Not metered</entry>
+                    <entry>NA</entry>
+                    <entry>Red</entry>
+                    <entry>Discard</entry>
+                  </row>
+                </tbody>
+              </tgroup>
+            </table>
+            <table frame="all" id="table_irq_xzg_4cc">
+              <title>Color Blind srTCM </title>
+              <tgroup cols="4">
+                <colspec colname="c2" colnum="1" colwidth="1.17*"/>
+                <colspec colname="c3" colnum="2" colwidth="1.09*"/>
+                <colspec colname="c4" colnum="3" colwidth="1.09*"/>
+                <colspec colname="c5" colnum="4" colwidth="1.09*"/>
+                <thead>
+                  <row>
+                    <entry>
+                      <p><b>Packet Metered Against</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>Possible Cases</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>New Color</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>Action on the packet</b></p>
+                    </entry>
+                  </row>
+                </thead>
+                <tbody>
+                  <row>
+                    <entry morerows="2">
+                      <p>CIR, CBS, PBS</p>
+                    </entry>
+                    <entry>
+                      <p>Below CBS</p>
+                    </entry>
+                    <entry>
+                      <p>Green</p>
+                    </entry>
+                    <entry>
+                      <p>Not dropped</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry>
+                      <p>Above CBS but below PBS</p>
+                    </entry>
+                    <entry>Yellow</entry>
+                    <entry>
+                      <p>Change the traffic class using the rewrite rules.</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry>
+                      <p>Above PBS</p>
+                    </entry>
+                    <entry>
+                      <p>Red</p>
+                    </entry>
+                    <entry>
+                      <p>Discard</p>
+                    </entry>
+                  </row>
+                </tbody>
+              </tgroup>
+            </table>
+          </li>
+          <li>
+            <p>Two-rate three-color—A Two Rate Three Color Marker (trTCM) meters traffic based on
+              the configured CIR and peak information rate (PIR). A two-rate three-color policer is
+              most useful when a service is structured according to arrival rates and not
+              necessarily packet length. Traffic is marked as belonging to one of three categories
+              based on the following considerations:</p>
+            <table frame="all" id="table_zrg_31h_4cc">
+              <title>Color Aware trTCM </title>
+              <tgroup cols="5">
+                <colspec colname="c1" colnum="1" colwidth="1*"/>
+                <colspec colname="c2" colnum="2" colwidth="1.17*"/>
+                <colspec colname="c3" colnum="3" colwidth="1.09*"/>
+                <colspec colname="c4" colnum="4" colwidth="1.09*"/>
+                <colspec colname="c5" colnum="5" colwidth="1.09*"/>
+                <thead>
+                  <row>
+                    <entry>Incoming Color</entry>
+                    <entry>
+                      <p><b>Packet Metered Against</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>Possible Cases</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>New Color</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>Action on the packet</b></p>
+                    </entry>
+                  </row>
+                </thead>
+                <tbody>
+                  <row>
+                    <entry morerows="2">
+                      <p>Green</p>
+                    </entry>
+                    <entry morerows="2">
+                      <p>CIR, PIR</p>
+                    </entry>
+                    <entry>
+                      <p>Below CIR</p>
+                    </entry>
+                    <entry>
+                      <p>Green</p>
+                    </entry>
+                    <entry>
+                      <p>Not dropped</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry>
+                      <p>Above CIR but below PIR</p>
+                    </entry>
+                    <entry>Yellow</entry>
+                    <entry>
+                      <p>Change the traffic class using the rewrite rules.</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry>
+                      <p>Above PIR</p>
+                    </entry>
+                    <entry>
+                      <p>Red</p>
+                    </entry>
+                    <entry>
+                      <p>Discard</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry morerows="1">
+                      <p>Yellow</p>
+                    </entry>
+                    <entry morerows="1">
+                      <p>PIR</p>
+                    </entry>
+                    <entry>
+                      <p>Below PIR</p>
+                    </entry>
+                    <entry>
+                      <p>Yellow</p>
+                    </entry>
+                    <entry>
+                      <p>Change the traffic class using the rewrite rules.</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry>
+                      <p>Above PIR</p>
+                    </entry>
+                    <entry>
+                      <p>Red</p>
+                    </entry>
+                    <entry>Discard</entry>
+                  </row>
+                  <row>
+                    <entry>Red</entry>
+                    <entry>Not metered</entry>
+                    <entry>NA</entry>
+                    <entry>Red</entry>
+                    <entry>Discard</entry>
+                  </row>
+                </tbody>
+              </tgroup>
+            </table>
+            <table frame="all" id="table_c3b_p1h_4cc">
+              <title>Color Blind trTCM </title>
+              <tgroup cols="4">
+                <colspec colname="c2" colnum="1" colwidth="1.17*"/>
+                <colspec colname="c3" colnum="2" colwidth="1.09*"/>
+                <colspec colname="c4" colnum="3" colwidth="1.09*"/>
+                <colspec colname="c5" colnum="4" colwidth="1.09*"/>
+                <thead>
+                  <row>
+                    <entry>
+                      <p><b>Packet Metered Against</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>Possible Cases</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>New Color</b></p>
+                    </entry>
+                    <entry>
+                      <p><b>Action on the packet</b></p>
+                    </entry>
+                  </row>
+                </thead>
+                <tbody>
+                  <row>
+                    <entry morerows="2">
+                      <p>CIR, PIR</p>
+                    </entry>
+                    <entry>
+                      <p>Below CIR</p>
+                    </entry>
+                    <entry>
+                      <p>Green</p>
+                    </entry>
+                    <entry>
+                      <p>Not dropped</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry>
+                      <p>Above CIR but below PIR</p>
+                    </entry>
+                    <entry>Yellow</entry>
+                    <entry>
+                      <p>Change the traffic class using the rewrite rules.</p>
+                    </entry>
+                  </row>
+                  <row>
+                    <entry>
+                      <p>Above PIR</p>
+                    </entry>
+                    <entry>
+                      <p>Red</p>
+                    </entry>
+                    <entry>
+                      <p>Discard</p>
+                    </entry>
+                  </row>
+                </tbody>
+              </tgroup>
+            </table>
+          </li>
+        </ul>
+        <p>The colors marked by Policer are mapped to loss priority as follows:</p>
+      </subsection>
+      <table frame="all" id="table_pwk_y1h_4cc">
+        <title>Mapping Colors to Loss Priority</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Color</p>
+              </entry>
+              <entry>
+                <p>Loss Priority</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>Green</p>
+              </entry>
+              <entry>
+                <p>Low</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Yellow</p>
+              </entry>
+              <entry>
+                <p>Medium-Low (Medium-High is not used while mapping color to loss priority)</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Red</p>
+              </entry>
+              <entry>
+                <p>High</p>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <subsection id="subsection_ljf_ghh_4cc">
+        <title>Rewrite/Marker</title>
+        <p>A rewrite rule or marker sets the appropriate CoS bits in the outgoing packet. This
+          allows the next downstream routing device to classify the packet into the appropriate
+          service group. Rewriting, or marking, outbound packets is useful when the routing device
+          is at the border of a network and must alter the CoS values to meet the policies of the
+          targeted peer. A rewrite profile is applied to the interface and is based on the
+          forwarding class and loss priority derived by the classifier and/or the metering results
+          of the policer. Cloud-Native Router rewrite rules supports copying outer IPv4/IPv6 DSCP
+          marking to inner IP header DSCP field as well as MPLS EXP bit marking. Cloud-Native Router
+          supports 16 rewrite profiles. You can read more about <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cos/topics/concept/rewrite-pkt-hdr-overview-cos-config-guide.html" scope="external">Rewrite rules</xref> in Junos documentation.</p>
+      </subsection>
+      <note id="note_hyk_lzj_pcc">
+        <p>Cloud-Native Router CoS implementation does not support implicit best effort treatment
+          for traffic that does not match any CoS block. An explicit catch-all rule must be
+          configured for best effort treatment.</p>
+      </note>
+      <note id="note_tvg_hyj_pcc">
+        <p>Cloud-Native Router CoS implementation modifies the DSCP value of the outer IP header
+          only for tunneled packets (MPLSoUDP and VXLAN). </p>
+      </note>
+      <subsection id="subsection_zhx_nwz_3dc">
+        <title>Scheduler</title>
+        <p>Scheduler is the last block in Cloud-Native Router's CoS implementation and computes the
+          priority of the packets. Cloud-Native Router implements a strict priority 8-queue
+          scheduler, with priority order high to low. The forwarding class is directly mapped to
+          scheduler priority. The Cloud-Native Router supports a maximum of 4 scheduler profiles in
+          the deployment helm chart and a maximum of 16 scheduler maps and forwarding classes. You
+          can read more about <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cos-security-devices/topics/concept/cos-scheduler-security-overview.html" scope="external">Scheduler</xref> in Junos documentation. You can
+          configure a scheduler with one of 8 priorities as provided in the below table. Note that
+          the scheduler priorities are already mapped to interface queues (8 queues). </p>
+      </subsection>
+      <table frame="all" id="table_urx_r11_jdc">
+        <title>Scheduler Priorities</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Priority</p>
+              </entry>
+              <entry>
+                <p>Scheduling Priority (Queue)</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>high</p>
+              </entry>
+              <entry>
+                <p>Scheduling priority 1</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>low</p>
+              </entry>
+              <entry>
+                <p>Scheduling priority 7 (Least)</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>low-high</p>
+              </entry>
+              <entry>
+                <p>Scheduling priority 5</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>low-latency</p>
+              </entry>
+              <entry>Scheduling priority 4</entry>
+            </row>
+            <row>
+              <entry>
+                <p>low-medium</p>
+              </entry>
+              <entry>Scheduling priority 6</entry>
+            </row>
+            <row>
+              <entry>
+                <p>medium-high</p>
+              </entry>
+              <entry>
+                <p>Scheduling priority 2</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>medium-low</p>
+              </entry>
+              <entry>
+                <p>Scheduling priority 3</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>strict-high</p>
+              </entry>
+              <entry>
+                <p>Scheduling priority 0 (Highest)</p>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <subsection id="subsection_s4c_zvs_rfc">
+        <title>Dropper and Shaper</title>
+        <p>The scheduler blocks also includes dropper and shaper modules.</p>
+        <ul id="ul_pgd_2hs_kfc">
+          <li>Dropper—The DPDK dropper module drops packets arriving at the scheduler block to avoid
+            congestion. The drop is performed based on the weighted random early detection (WRED)
+            drop profile maps configured. In the event of severe congestion, the dropper module may
+            perform tail drop, resulting in dropping all arriving packets. The drop profile is
+            applied per scheduler queue and may be based on packet loss priority. A maximum of 32
+            drop profiles and 3 drop profile maps per scheduler are supported. You can read more
+            about <xref href="https://www.juniper.net/documentation/us/en/software/junos/traffic-mgmt-qfx/topics/concept/cos-qfx-series-tail-drop-understanding.html" format="html" scope="external">dropper</xref> in Junos documentation.</li>
+          <li>
+            <p>Shaper—The shaper or transmit rate is used to shape traffic per egress queue. By
+              limiting the queue transmit rate, shaper can prevent high priority queues from
+              starving low priority queues. Shaping rate is applied on the scheduler queues.</p>
+          </li>
+        </ul>
+      </subsection>
+      <subsection id="subsection_yfz_5bk_pcc">
+        <title>Supported Interfaces</title>
+        <p>Cloud-Native Router supports the following interfaces for CoS implementation:</p>
+      </subsection>
+      <table frame="all" id="table_rtn_3dk_pcc">
+        <title>Support Interfaces for CoS Implementation</title>
+        <tgroup cols="4">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <colspec colname="c3" colnum="3" colwidth="1*"/>
+          <colspec colname="c4" colnum="4" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>CoS Component/Interface Type</entry>
+              <entry>
+                <p>Pod Interface</p>
+              </entry>
+              <entry>
+                <p>Fabric Interface</p>
+              </entry>
+              <entry>
+                <p>IRB Interface</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>Classifier</p>
+              </entry>
+              <entry>Supported</entry>
+              <entry>
+                <p>Supported</p>
+              </entry>
+              <entry>
+                <p>Supported</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Policer</p>
+              </entry>
+              <entry>
+                <p>Supported</p>
+              </entry>
+              <entry>
+                <p>Supported</p>
+              </entry>
+              <entry>
+                <p>Supported</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Marker</p>
+              </entry>
+              <entry>
+                <p>Supported</p>
+              </entry>
+              <entry>
+                <p>Supported</p>
+              </entry>
+              <entry>
+                <p>Supported</p>
+              </entry>
+            </row>
+            <row>
+              <entry>Scheduler</entry>
+              <entry>Not Supported</entry>
+              <entry>Supported</entry>
+              <entry>Not Supported</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+  </conbody>
+</concept>

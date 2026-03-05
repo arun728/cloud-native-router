@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_c0b3c49bbf8a8319--891c1fe-191b8839e55--7c57" xml:lang="en-US">
+  <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Readiness Checks</title>
+  <shortdesc>Learn how <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Readiness checks verify that your <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation is working properly. </shortdesc>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  
+  <conbody>
+    <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Readiness checks are a set of tests that validate your installation. They consist of
+      preflight and postflight checks.</p>
+    <dl>
+      <dlentry>
+        <dt>Preflight checks</dt>
+        <dd>
+          <p>Preflight checks verify that your cluster nodes can support JCNR. The checks test for
+            resource capacity, OS version, and other infrastructure requirements. Preflight checks
+            run prior to <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>coming up.</p>
+        </dd>
+      </dlentry>
+      <dlentry>
+        <dt>Postflight checks</dt>
+        <dd>
+          <p>Postflight checks verify that your <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation is working properly. The checks
+            test for status and other basic functions. Postflight checks run after <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>comes
+            up.</p>
+        </dd>
+      </dlentry>
+    </dl>
+    <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Readiness is the name of the custom resource where these preflight and postflight checks
+      are defined. When you enable <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Readiness checks in <filepath>values.yaml</filepath>
+        (<codeph>readinessCheck: true</codeph>), a set of pods that run these tests are created. For
+      example:</p>
+    <codeblock id="codeblock_hkc_bmy_rcc">kubectl get pods -A | grep preflight</codeblock>
+    <codeblock id="codeblock_y5m_bmy_rcc">
+cpuavailability-preflight-k8s-cp0-wtt92         0/1     Completed   0          
+cpuavailability-preflight-k8s-worker0-p7bxk     0/1     Completed   0          
+cpuinstructionset-preflight-k8s-cp0-4zmzq       0/1     Completed   0          
+cpuinstructionset-preflight-k8s-worker0-gh9zl   0/1     Completed   0          
+crpd-prerequisite-preflight-k8s-cp0-sqnjj       0/1     Completed   0          
+crpd-prerequisite-preflight-k8s-worker0-29psj   0/1     Completed   0          
+&lt;trimmed&gt;
+</codeblock>
+    <note id="note_zjw_35r_tcc">
+      <p>To see the list of checks that are currently performed, see <xref href="../ref/jcnr-readiness-checks-list.dita"/>.</p>
+    </note>
+    <p>When <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Readiness checks are enabled, they run automatically when you install the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Helm
+      chart. A failed check does not necessarily fail the installation. In some cases, the
+      installation is allowed to continue. </p>
+    <p>To see the results of the checks, look at the results ConfigMap. For best viewing of the
+      results, use the JSON processor jq.</p>
+    <note id="note_tth_qzg_scc">
+      <p>If jq is not installed on your OS by default, install it using the appropriate package
+        manager for your OS. For example:</p>
+      <codeblock id="codeblock_uxs_h1h_scc">dnf install jq</codeblock>
+      <codeblock id="codeblock_wzh_31h_scc">apt install jq</codeblock>
+    </note>
+    <p>Here's an example of the preflight results ConfigMap:</p>
+    <codeblock id="codeblock_rwy_n4y_rcc">kubectl get cm preflight-results -n contrail-deploy -ojsonpath={".data.readinessStatus"} | jq</codeblock>
+    <codeblock id="codeblock_iv3_n4y_rcc">
+{
+  "preflight": {
+    "taskResults": [
+      {
+        "name": "cpuavailability",
+        "taskExecutionTime": "2s",
+        "message": "task completed (2/2)",
+        "taskPassed": false,
+        "failure_reason": "core 2 is not available on the node\ncore 2 is not available on the node\n"
+      },
+&lt;trimmed&gt;
+</codeblock>
+    <p>If there are any errors, fix them and then uninstall and reinstall JCNR.</p>
+    <p>Here's an example of the postflight results ConfigMap:</p>
+    <codeblock id="codeblock_nkn_lsy_rcc">kubectl get cm postflight-results -n contrail-deploy -ojsonpath={".data.readinessStatus"} | jq</codeblock>
+    <codeblock id="codeblock_lzh_p3c_scc">{
+  "postflight": {
+    "taskResults": [
+      {
+        "name": "jcnrresources",
+        "taskExecutionTime": "0s",
+        "message": "task completed (1/1)",
+        "taskPassed": true
+      }
+    ],
+    "result": "success"
+  }
+}
+</codeblock>
+    <p>Although preflight and postflight checks can detect many common errors, some errors can slip
+      through undetected. If the installation still fails after you fix all listed errors, look at
+      the deployer and applier logs for more information:</p>
+    <ul id="ul_fb4_tdr_tcc">
+      <li>
+        <p>For deployer logs, see <xref href="../topic-map/jcnr-troubleshoot-deployment.dita#task_izg_svj_scc"/>.</p>
+      </li>
+      <li>
+        <p>For applier logs, see <xref href="../topic-map/jcnr-troubleshoot-deployment.dita#concept_lmm_hsj_scc"/>.</p>
+      </li>
+    </ul>
+    <p>Also see the various general troubleshooting suggestions in <xref href="../topic-map/jcnr-troubleshoot-deployment.dita"/>.</p>
+  </conbody>
+</concept>

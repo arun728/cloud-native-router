@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_d87e9349076d396b--1938f98d-19a9727c3dc--7f2f" xml:lang="en-US">
+  <!--Use the Concept template to introduce a new product or functionality. Also use this template to provide high-level explanations, definitions of key concepts, terminology, or general background information. Limit one topic to one theme or subject.-->
+  <!--For <title>, follow these guidelines:
+- Avoid the gerund form and minimize the use of “Understanding.” 
+- Use "[Feature] Overview" if the topic is indeed an overview. 
+- Use the feature name as the topic title for very long feature names. 
+- Use the Who, What, Where, When, Why, or How (not How to) phrase to describe a specific aspect of a product, feature, or user scenario.-->
+  <title>Deploying Cloud-Native Router as a Single Pod in Pod Network Namespace</title>
+  <shortdesc>Cloud-Native Router can deployed as a single pod in pod network namespace for increased
+    security, simplified deployment and enhanced portability. Read this topic to understand the
+    deployment prerequisites and processes. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  
+  <conbody>
+    <p><!--Cloud-Native Router can be deployed as a Container Network Interface (CNI) or Container Network Function (CNF). To support the JCNR-CNI, the Cloud-Native Router operates within the host network namespace, which may result in broader exposure and reduced isolation. It also requires privileged execution and root-level access. Cloud-Native Router also has host-level dependencies including shared volume mounts and file system access. Since the deployment consists of multiple pods, it requires adequate lifecycle management and orchestration. -->For
+      pure CNF deployments, you now have the option to deploy Cloud-Native Router as a single pod in
+      pod network namespace, offering the following advantages:</p>
+    <ul id="ul_ktv_2cc_jhc">
+      <li><b>Consolidate all Cloud-Native Containers to a single pod</b>—Simplifies deployment and
+        lifecycle management.</li>
+      <li>
+        <p><b>Deploy Cloud-Native Router in Pod network namespace</b>—Eliminates the requirement for
+          host-level networking and improves security.</p>
+      </li>
+      <li>
+        <p><b>Minimise host-level dependencies</b>—Minimises shared volume mounts and
+          priviledged/root file system access, enhancing portability and reducing security
+          risks.</p>
+      </li>
+    </ul>
+    <p>In addition, the solution also implements the following changes:</p>
+    <ul id="ul_mkl_cdc_jhc">
+      <li><b>Enable Physical Function (PF) and Virtual Function (VF) provisioning using Kubernetes
+          resource requests</b>—The interfaces should be available within the Cloud-Native Router's
+        namespace so the JCNR pod can bind it to DPDK.:<ul id="ul_q12_z2c_jhc">
+          <li>
+            <p>VFs are derived from a PF and allocated to the Cloud-Native Router pod using the
+              SR-IOV CNI plugin.</p>
+          </li>
+          <li>
+            <p>PFs are allocated to the Cloud-Native Router pod using the host-device CNI
+              plugin.</p>
+          </li>
+        </ul></li>
+      <li>
+        <p><b>Support for Nokia CPU Pooler</b>—Manages dedicated and shared CPU resources for
+          containers.</p>
+      </li>
+      <li>
+        <p><b>Custom Namespace Support</b>—Ability to deploy Cloud-Native Router in a user-defined
+          namespace. </p>
+        <note id="note_xjb_n3z_khc">JCNR-CNI is not supported when deploying Cloud-Native Router as
+          a single pod in pod network namespace. </note>
+        <note id="note_pfb_pl4_phc">You can configure application pods that use SR-IOV VF to send
+          traffic to Cloud-Native Router using SR-IOV CNI. The application pods must be configured
+          with the Cloud-Native Router VF interface as gateway. The pod VF and Cloud-Native Router
+          VF must be on the same PF. </note>
+      </li>
+    </ul>
+    <section id="section_dlb_fm3_jhc">
+      <title>Install Cloud-Native Router as a Single Pod in Pod Network Namespace</title>
+      <p>Read this section to learn the steps required to  install the Cloud-Native Router.</p>
+      <p>Key points about single pod deployment:</p>
+      <ul id="ul_f1b_yj3_jhc">
+        <li>Supported on open-source Kubernetes deployed on Rocky Linux or Ubuntu OS.</li>
+        <li>
+          <p>Supported for Cloud-Native Router CNF deployments only.</p>
+        </li>
+        <li>
+          <p>Service chaining with cSRX is not supported.</p>
+        </li>
+        <li>
+          <p>The <codeph>jcnrDeploymentMode</codeph> must be set to <codeph>singlePod</codeph> in
+            the deployment helm chart.</p>
+        </li>
+      </ul>
+      <ol>
+        <li><p>Ensure you have configured a server based on the <xref href="system-resource-requirements-bms.dita">System
+              Requirements</xref>.</p></li>
+        <li><p>Download the Cloud-Native Router software package
+              Juniper_Cloud_Native_Router_<varname>release</varname>.tar.gz to the directory of your
+            choice.</p></li>
+        <li><p>Expand the downloaded
+          package.</p><codeblock id="codeblock_cxf_tq3_jhc">tar xzvf Juniper_Cloud_Native_Router_<varname>release</varname>.tar.gz</codeblock></li>
+        <li><p>Change directory to the main installation
+          directory.</p><codeblock id="codeblock_dn4_gr3_jhc">cd Juniper_Cloud_Native_Router_<varname>release</varname></codeblock></li>
+        <li><p>View the contents in the current
+          directory.</p><codeblock id="codeblock_c3k_jr3_jhc">ls
+helmchart  images  README.md  secrets</codeblock></li>
+        <li><p>Change to the <codeph>helmchart</codeph> directory and untar the
+              jcnr-<varname>release</varname>.tgz.</p><codeblock id="codeblock_jg4_vr3_jhc">cd helmchart</codeblock><codeblock id="codeblock_ptg_zr3_jhc">ls
+jcnr-<codeph>release</codeph>.tgz</codeblock><codeblock id="codeblock_d5r_xr3_jhc">tar -xzvf jcnr-<codeph>release</codeph>.tgz</codeblock><codeblock id="codeblock_bsc_bs3_jhc">ls
+jcnr   jcnr-&lt;release&gt;.tgz</codeblock></li>
+        <li><p>The Cloud-Native Router container images are required for deployment. Choose one of
+            the following options:</p><ul id="task_rdw_nj5_mpb_steps_gn1_m3l_gxb">
+            <li><p>Configure your cluster to deploy images from the Juniper Networks
+                  <codeph>enterprise-hub.juniper.net</codeph> repository. See <xref href="cn-cloud-native-k8s-configure-secrets.dita">Configure
+                  Repository Credentials</xref> for instructions on how to configure repository
+                credentials in the deployment Helm chart.</p></li>
+            <li><p>Configure your cluster to deploy images from the images tarball included in the
+                downloaded Cloud-Native Router software package. See <xref href="../task/jcnr-deploy-prepackaged-images.dita">Deploy
+                  Prepackaged Images</xref> for instructions on how to import images to the local
+                container runtime.</p></li>
+          </ul></li>
+        <li><p>Configure the namespace, root password, and license for the Cloud-Native Router
+            installation:</p><ol id="ol_rpz_xmq_jhc">
+            <li><p>Modify the namespace in the <codeph>secrets/jcnr-secrets.yaml</codeph> to a
+                user-defined namespace you would like to install the Cloud-Native Router pod
+              to:</p><codeblock id="codeblock_c3y_fmq_jhc">---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: custom
+---</codeblock></li>
+            <li><p>Enter the root password for your host server into the
+                  <codeph>secrets/jcnr-secrets.yaml</codeph> file.</p><ol id="ol_ijw_d53_jhc">
+                <li><p>You must enter the password in base64-encoded format. Encode your password as
+                    follows:</p><codeblock id="codeblock_v5n_253_jhc">echo -n "password" | base64 -w0</codeblock></li>
+                <li><p>Copy the output of this command into
+                      <codeph>secrets/jcnr-secrets.yaml</codeph>.</p><codeblock id="codeblock_nhh_g53_jhc">root-password: &lt;add your password in base64 format&gt;</codeblock></li>
+              </ol></li>
+            <li><p>Enter the Cloud-Native Router license in base64 encoded format.</p><ol id="ol_nbf_fnq_jhc">
+                <li><p>Encode your license in base64. The licenseFile is the license file that you
+                    obtained from Juniper
+                  Networks.</p><codeblock id="codeblock_b5f_gnq_jhc">base64 -w 0 licenseFile</codeblock></li>
+                <li><p>Copy and paste your base64-encoded license into
+                      <codeph>secrets/jcnr-secrets.yaml</codeph>.The
+                      <codeph>secrets/jcnr-secrets.yaml</codeph> file contains a parameter called
+                      <codeph>crpd-license</codeph>:</p><codeblock id="codeblock_irm_knq_jhc">  crpd-license: |
+    &lt;add your license in base64 format&gt;</codeblock></li>
+              </ol></li>
+          </ol></li>
+        <li><p>Apply the secrets to the
+          cluster.</p><codeblock id="codeblock_rtx_353_jhc">kubectl apply -f secrets/jcnr-secrets.yaml
+namespace/custom created
+secret/jcnr-secrets created</codeblock></li>
+        <li><p id="p_ksp_lrp_jhc">You can allocate PFs and VFs to Cloud-Native Router. Follow the
+            instructions in <xref href="#xd_d87e9349076d396b--1938f98d-19a9727c3dc--7f2f/section_oj3_3fc_jhc"/> and
+              <xref href="#xd_d87e9349076d396b--1938f98d-19a9727c3dc--7f2f/section_p5k_4rp_jhc"/> to
+            allocate Cloud-Native Router interfaces.</p></li>
+        <li><p>Configure how cores are assigned to the vRouter DPDK containers. The single-pod
+            Cloud-Native Router installation supports either <xref href="../topic-map/jcnr-configure-vrouter-performance.dita#task_zds_vcg_51c">Static CPU Allocation</xref> or <xref href="../topic-map/jcnr-configure-vrouter-performance.dita#task_g5h_szk_khc">CPU Allocation via Nokia CPU Pooler</xref>.</p></li>
+        <li><p>Configure NodePort or LoadBalancer services for accessing agent introspect, vrouter
+            and crpd
+          telemetry.</p><codeblock id="codeblock_o5c_yf1_phc"> #ports that need to be expose as a service for single pod deployment
+ #default service creation is disabled and will not be created until enableService flag is set to true
+  enableService: true
+  service:
+    type: NodePort
+
+    labels: {}
+    annotations: {}
+    clusterIP: ""
+
+    externalIPs: []
+
+    # Only use if service.type is "LoadBalancer"
+    loadBalancerIP: ""
+
+    # Ports to expose on each node
+    # Only used if service.type is "NodePort"
+    nodePort:
+      crpdMetricsPort: 30070
+      vrouterMetricsPort: 30072
+      agentIntrospectPort: 30085
+      #crpdGnmiPort: 30077
+      #vrouterGnmiPort: 30079</codeblock></li>
+        <li><p>Optionally, customize Cloud-Native Router configuration. See <xref href="crpd-customization-node-configlet.dita">Customize
+              Cloud-Native Router Configuration</xref> for creating and applying the cRPD
+            customizations.</p></li>
+        <li><p>Label the nodes where you want Cloud-Native Router to be installed based on the
+              <codeph>nodeaffinity</codeph> configuration (if defined in the values.yaml). For
+            example:</p><codeblock id="codeblock_my3_5v3_jhc">kubectl label nodes ip-10.0.100.17.lab.net key1=jcnr --overwrite</codeblock></li>
+        <li><p>Deploy the Juniper Cloud-Native Router using the Helm chart in
+              <codeph>custom</codeph> namespace. Navigate to the <codeph>helmchart/jcnr</codeph> and
+            run the following
+          command:</p><codeblock id="codeblock_qrv_vv3_jhc">helm install jcnr . -n custom</codeblock><codeblock id="codeblock_hlr_wv3_jhc">NAME: jcnr
+LAST DEPLOYED: Fri Dec 22 06:04:33 2023
+NAMESPACE: custom
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None</codeblock></li>
+        <li><p>Confirm Juniper Cloud-Native Router
+          deployment.</p><codeblock id="codeblock_sfr_yv3_jhc">helm ls -A</codeblock><codeblock id="codeblock_vdm_zv3_jhc">NAME	NAMESPACE	REVISION	UPDATED           STATUS  	CHART             APP VERSION
+jcnr	custom  	1       	&lt;date-time&gt;       deployed	jcnr-&lt;version&gt;    &lt;version&gt;</codeblock></li>
+        <li><p>Verify the jcnr pod is running. You can list the containers and their state. A sample
+            output from the K9s tool is provided
+          below.</p><codeblock id="codeblock_k45_knp_jhc">NAME↑                                PF IMAGE                                                                                                 READY STATE      INIT   RESTARTS PROBES(L:R)   CPU/R:L   MEM/R:L PORTS                              │
+| contrail-init                        ●  s-artifactory.juniper.net/atom-docker/cn2/bazel-build/dev/contrail-init:R25.4-27                      true  Completed  true          0 off:off           0:0       0:0                                  │
+│ contrail-tools                       ●  s-artifactory.juniper.net/atom-docker/cn2/bazel-build/dev/x86_64/contrail-tools:R25.4-27              true  Running    false         1 off:off           0:0       0:0                                  │
+│ contrail-vrouter-agent               ●  s-artifactory.juniper.net/atom-docker/cn2/bazel-build/dev/contrail-vrouter-agent:R25.4-27             true  Running    false         3 on:off            0:0       0:0 introspect:8085,grpc:50052       │
+│ contrail-vrouter-agent-dpdk          ●  s-artifactory.juniper.net/atom-docker/cn2/bazel-build/dev/contrail-vrouter-dpdk:R25.4-27              true  Running    false         3 on:off      4000:4000 1024:1024                                  │
+│ contrail-vrouter-kernel-init-dpdk    ●  s-artifactory.juniper.net/atom-docker/cn2/bazel-build/dev/contrail-vrouter-kernel-init-dpdk:R25.4-27  true  Completed  true          0 off:off           0:0   500:500                                  │
+│ contrail-vrouter-telemetry-exporter  ●  s-artifactory.juniper.net/atom-docker/cn2/bazel-build/dev/contrail-telemetry-exporter:R25.4-27        true  Running    false         1 off:off           0:0       0:0 metrics:8070                     │
+│ crpd                                 ●  s-artifactory.juniper.net/junos-docker-local/warthog/crpd:25.4R1.3                                    true  Running    false         4 on:off            0:0       0:0 179                              │
+│ init                                 ●  s-artifactory.juniper.net/atom-docker/cn2/bazel-build/dev/jcnr-init:R25.4-27                          true  Completed  true          1 off:off           0:0       0:0                                  │
+│ install-cni                          ●  s-artifactory.juniper.net/junos-docker-local/warthog/jcnr-cni:25.4-20251114-e8e0e38                   true  Completed  true          0 off:off           0:0       0:0                                  │
+│ jcnr-config-controller               ●  s-artifactory.juniper.net/atom-docker/cn2/bazel-build/dev/jcnr-init:R25.4-27                          true  Running    false         1 off:off           0:0       0:0                                  │
+│ jcnr-crpd-telemetry-exporter         ●  s-artifactory.juniper.net/atom-docker/cn2/bazel-build/dev/contrail-telemetry-exporter:R25.4-27        true  Running    false         1 off:off           0:0       0:0 metrics:8072                     │
+│ syslog-ng                            ●  s-artifactory.juniper.net/contrail-docker/syslog-ng:v6                                                true  Running    false         1 on:off            0:0       0:0 syslog-tcp:6601,syslog-udp:5514╱ │</codeblock>
+        </li>
+      </ol>
+      <note id="note_w1n_t3n_phc">Readiness checks are not supported for single pod JCNR
+        deployments. </note>
+    </section>
+    <section id="section_oj3_3fc_jhc">
+      <title>Allocate VFs to Cloud-Native Router Pod</title>
+      <p>You can allocate VFs to the Cloud-Native Router Pod using the SR-IOV CNI plugin. The
+        following steps must be performed to complete the allocation:</p>
+      <ol id="ol_qdj_pfc_jhc">
+        <li>Create VFs from SR-IOV enabled PFs.
+          <codeblock id="codeblock_jwt_qfc_jhc">echo 2 &gt; /sys/class/net/ens1f0/device/sriov_numvfs &amp;&amp; sleep 1  </codeblock></li>
+        <li><p>Ensure SR-IOV CNI plugin is installed in your Kubernetes environment.</p></li>
+        <li><p>Create and apply <codeph>NetworkAttachmentDefinition</codeph> manifests for SR-IOV
+              networks—<codeph>ens1f0v1</codeph> and <codeph>ens1f0v2</codeph> in the Cloud-Native
+            Router pod's
+          namespace:</p><codeblock id="codeblock_yjp_wgc_jhc">apiVersion: "k8s.cni.cncf.io/v1" 
+kind: NetworkAttachmentDefinition 
+metadata: 
+  name: ens1f0v1 
+  namespace: custom 
+  annotations: 
+    k8s.v1.cni.cncf.io/resourceName: intel.com/intel_sriov_netdevice 
+spec: 
+  config: '{ 
+    "cniVersion": "0.3.1",
+    "type": "sriov",
+    "name": "sriov-network",
+    "spoofchk": "off",
+    "trust": "on"
+  }' </codeblock><codeblock id="codeblock_swp_zgc_jhc">apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ens1f0v2
+  namespace: custom 
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: intel.com/intel_sriov_netdevice
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "type": "sriov",
+    "name": "sriov-network",
+    "spoofchk": "off",
+    "trust": "on"
+  }' </codeblock><codeblock id="codeblock_g1f_tsp_jhc">kubectl apply -f ens1f0v1.yaml</codeblock><codeblock id="codeblock_o3w_5sp_jhc">kubectl apply -f ens1f0v2.yaml</codeblock></li>
+        <li><p>Configure the Cloud-Native Router helm chart to set
+              <codeph>jcnrDeploymentMode</codeph> as <codeph>singlePod</codeph> and add references
+            to the SR-IOV networks. Leave all other configuration as
+            default.</p><codeblock id="codeblock_bxz_mh3_jhc"> # uncomment below to set jcnrDeploymentMode to singlePod; in this mode all jcnr components
+  # (vRouter, cRPD, config-controller, syslog-ng, contrail-tools, etc) will be
+  # deployed in a single pod
+  jcnrDeploymentMode: singlePod
+
+################### SinglePod JCNR mode section ###################
+ # To run JCNR in singlePod mode, uncomment jcnrDeploymentMode: singlePod in the global section above.
+
+  # NetworkDetails - list of network attachment definition
+  networkDetails:
+    - name: ens1f0v1       # network attachment definition name
+      namespace: test      # namespace name where the network attachment definition is created
+      type: fabric         # fabric or workload, default is fabric (workload type is specifically for OAM interface and it should be a VF)
+
+    - name: ens1f0v2       # network attachment definition name
+      namespace: test      # namespace name where the network attachment definition is created
+      type: fabric         # fabric or workload, default is fabric (workload type is specifically for OAM interface and it should be a VF)
+
+  # NetworkDeviceResources
+  networkResources:
+    limits:
+      intel.com/intel_sriov_netdevice: "2"
+    requests:
+      intel.com/intel_sriov_netdevice: "2"</codeblock><note id="note_xyh_xvy_khc">You
+            can configure the interface type as fabric when deploying Cloud-Native Router as a
+            transit node or to receive traffic from an application pod using SR-IOV VF. If
+            Cloud-Native Router is set up for <xref href="../topic-map/jcnr-overlay-mgmt-bms.dita">overlay management
+              access</xref>, please use the workload interface type.</note></li>
+        <li><p>Continue the <xref href="#xd_d87e9349076d396b--1938f98d-19a9727c3dc--7f2f/p_ksp_lrp_jhc">Cloud-Native
+              Router installation</xref>.</p></li>
+      </ol>
+    </section>
+    <section id="section_p5k_4rp_jhc">
+      <title>Allocate PFs to Cloud-Native Router Pod</title>
+      <p>You can allocate Physical Functions (PFs) to the Cloud-Native Router pod using the
+        host-device CNI plugin. The CNI plugin is included as a part of standard plugins on
+        Kubernetes installation.</p>
+      <ol id="ol_ihv_msp_jhc">
+        <li>Configure the host-device networking configuration files. Create configuration files for
+          each PF under <codeph>/etc/cni/net.d</codeph><codeblock id="codeblock_x1s_xsp_jhc">{ 
+  "cniVersion": "0.3.1", 
+  "type": "host-device", 
+  "device": "ens1f1" 
+} </codeblock><codeblock id="codeblock_hhv_zsp_jhc">{ 
+  "cniVersion": "0.3.1", 
+  "type": "host-device", 
+  "device": "ens1f2" 
+} </codeblock></li>
+        <li>Configure the <codeph>NetworkAttachmentDefinition</codeph> for each
+          PF:<codeblock id="codeblock_hcs_dtp_jhc">apiVersion: "k8s.cni.cncf.io/v1" 
+kind: NetworkAttachmentDefinition 
+metadata: 
+  name: ens1f1 
+  namespace: custom 
+spec: 
+  config: '{ 
+    "cniVersion": "0.3.1", 
+    "type": "host-device", 
+    "device": "ens1f1"
+  }'</codeblock><codeblock id="codeblock_imh_wnq_jhc">apiVersion: "k8s.cni.cncf.io/v1" 
+kind: NetworkAttachmentDefinition 
+metadata: 
+  name: ens1f2 
+  namespace: custom 
+spec: 
+  config: '{ 
+    "cniVersion": "0.3.1", 
+    "type": "host-device", 
+    "device": "ens1f2"
+  }' </codeblock></li>
+        <li><p>Configure the Cloud-Native Router helm chart to set
+              <codeph>jcnrDeploymentMode</codeph> as <codeph>singlePod</codeph> and add references
+            to the host-device networks. Leave all other configuration as
+            default.</p><codeblock id="codeblock_efv_g4q_jhc"> # uncomment below to set jcnrDeploymentMode to singlePod; in this mode all jcnr components
+  # (vRouter, cRPD, config-controller, syslog-ng, contrail-tools, etc) will be
+  # deployed in a single pod
+  jcnrDeploymentMode: singlePod
+
+################### SinglePod JCNR mode section ###################
+ # To run JCNR in singlePod mode, uncomment jcnrDeploymentMode: singlePod in the global section above.
+
+  # NetworkDetails - list of network attachment definition
+  networkDetails:
+    - name: ens1f1     # network attachment definition name
+      namespace: custom   # namespace name where the network attachment definition is created
+      type: fabric         # fabric or workload, default is fabric (workload type is specifically for OAM interface and it should be a VF)
+
+    - name: ens1f2    # network attachment definition name
+      namespace: custom      # namespace name where the network attachment definition is created
+      type: fabric         # fabric or workload, default is fabric (workload type is specifically for OAM interface and it should be a VF)
+
+  # NetworkDeviceResources
+  # networkResources:
+  #  limits:
+  #    intel.com/intel_sriov_netdevice: "1"
+  #  requests:
+  #    intel.com/intel_sriov_netdevice: "1"</codeblock><note id="note_kv5_dxy_khc">Workload type interfaces are not supported when allocating PFs to Cloud-Native
+            Router.</note></li>
+        <li><p>Continue the <xref href="#xd_d87e9349076d396b--1938f98d-19a9727c3dc--7f2f/p_ksp_lrp_jhc">Cloud-Native
+              Router installation</xref>.</p></li>
+      </ol>
+    </section>
+  </conbody>
+</concept>

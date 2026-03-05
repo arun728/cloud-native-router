@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE reference PUBLIC "-//Juniper//DTD DITA 1.3 Reference//EN" "/SysSchema/dita13/dtd/subsection/dtd/reference.dtd">
+<reference xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_7c2748c5bef7692f--1232a976-191fef4bac9--7d4b" xml:lang="en-US">
+    <title>List of Cloud-Native Router Readiness Checks</title>
+    <shortdesc>This section provides the list of Cloud-Native Router Readiness checks. This list may
+        change from release to release.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <refbody>
+        <section id="section_cyh_fln_2yb">
+            <title>Preflight and Postflight Checks</title>
+            <p><xref format="dita" href="#xd_7c2748c5bef7692f--1232a976-191fef4bac9--7d4b/table_pmt_bvr_tcc"/> lists the hard preflight checks. A hard preflight check stops
+                the installation if the check fails.</p>
+            <table colsep="1" frame="all" id="table_pmt_bvr_tcc" rowsep="1">
+                <title>Hard Preflight Checks</title>
+                <tgroup cols="2">
+                    <colspec colname="c1" colnum="1" colwidth="1*"/>
+                    <colspec colname="c3" colnum="2" colwidth="1*"/>
+                    <thead>
+                        <row>
+                            <entry>Preflight Check Name</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>
+                                <p>cpuavailability</p>
+                            </entry>
+                            <entry>
+                                <p>Checks that the requested CPU cores are available.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>cpuinstructionset</p>
+                            </entry>
+                            <entry>
+                                <p>Checks that the processor supports the required instruction
+                                    set.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>crpdlicense</p>
+                            </entry>
+                            <entry>
+                                <p>Checks for the presence of jcnr-secrets.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>dpdk</p>
+                            </entry>
+                            <entry>Checks that the proper DPDK driver is installed.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>hugepages</p>
+                            </entry>
+                            <entry>Checks that the required hugepages are available.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>nads</p>
+                            </entry>
+                            <entry>Checks the network configuration when running with pre-bound
+                                interfaces in a Wind River deployment. This check is disabled in all
+                                other situations.</entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>noderesources</p>
+                            </entry>
+                            <entry>
+                                <p>Checks that the required CPU, memory, and storage resources are
+                                    available.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>ports</p>
+                            </entry>
+                            <entry>
+                                <p>Checks that there are no port conflicts.</p>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <p><xref format="dita" href="#xd_7c2748c5bef7692f--1232a976-191fef4bac9--7d4b/table_pfg_dcl_gyb"/> lists the soft preflight checks. A soft preflight check does not
+                stop the installation if the check fails.</p>
+            <table colsep="1" frame="all" id="table_pfg_dcl_gyb" rowsep="1">
+                <title>Soft Preflight Checks</title>
+                <tgroup cols="2">
+                    <colspec colname="c1" colnum="1" colwidth="1*"/>
+                    <colspec colname="c3" colnum="2" colwidth="1*"/>
+                    <thead>
+                        <row>
+                            <entry>Preflight Check Name</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>
+                                <p>crpd-prerequisites</p>
+                            </entry>
+                            <entry>
+                                <p>Checks that the prerequisite modules for cRPD are installed.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>k8sversion</p>
+                            </entry>
+                            <entry>
+                                <p>Checks that the Kubernetes version is supported.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>nic</p>
+                            </entry>
+                            <entry>
+                                <p>Checks that the NIC is supported.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>ntp</p>
+                            </entry>
+                            <entry>
+                                <p>Checks that NTP is configured and the NTP server is
+                                    reachable.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>os</p>
+                            </entry>
+                            <entry>
+                                <p>Checks that the OS version is supported.</p>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <p><xref format="dita" href="#xd_7c2748c5bef7692f--1232a976-191fef4bac9--7d4b/table_csv_ylr_tcc"/> lists the hard postflight checks. A hard postflight check stops
+                the installation if the check fails.</p>
+            <table colsep="1" frame="all" id="table_csv_ylr_tcc" rowsep="1">
+                <title>Hard Postflight Checks</title>
+                <tgroup cols="2">
+                    <colspec colname="c1" colnum="1" colwidth="1*"/>
+                    <colspec colname="c3" colnum="2" colwidth="1*"/>
+                    <thead>
+                        <row>
+                            <entry>Postflight Check Name</entry>
+                            <entry>Description</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>
+                                <p>jcnrresources</p>
+                            </entry>
+                            <entry>
+                                <p>Checks the status of various Cloud-Native Router resources.</p>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+    </refbody>
+</reference>

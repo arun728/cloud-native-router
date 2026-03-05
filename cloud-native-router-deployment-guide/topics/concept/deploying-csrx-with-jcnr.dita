@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_9643b326f08ee29f--1f31d707-18b42ca3eb4--7de6" xml:lang="en-US">
+  <title>Deploying Service Chain (cSRX) with JCNR</title>
+  <abstract>Read this section to customize and deploy a security services instance (cSRX) with the
+    Cloud-Native Router.</abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>You can integrate the Juniper Cloud-Native Router (JCNR) with <xref format="html" href="https://www.juniper.net/us/en/products/security/srx-series/csrx-containerized-firewall.html" scope="external">Juniper's containerized SRX (cSRX)</xref> platform to provide
+      security services such as IPsec. Using host-based service chaining, the cloud-native router is
+      chained with a security service instance (cSRX) in the same Kubernetes cluster. The cSRX
+      instance runs as a pod service in L3 mode. The cSRX instance is customized and deployed via a
+      Helm chart. </p>
+    <p>You have the option of deploying Juniper cSRX when you're installing <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>or after you've
+      installed JCNR. See <xref href="../ref/jcnr-sw-download-packages.dita"/> for a
+      description of the available packages.</p>
+    <section>
+      <title>Customize cSRX Helm Chart</title>
+      <p>The cSRX service chaining instance is deployed via a Helm chart, either a standalone Helm
+        chart or a combined Helm chart with JCNR. The deployment consists of two essential
+        components:</p>
+      <ul id="ul_pqb_jl4_hzb">
+        <li>
+          <p>csrx-init: This is an init container that prepares the configuration for the main cSRX
+            application. It extracts the necessary information from the <codeph>values.yaml</codeph>
+            file, processes it, and generates the configuration data for cSRX. This ensures that the
+            main cSRX application starts with a valid, up-to-date configuration. </p>
+        </li>
+        <li>
+          <p>csrx: The csrx is the main application container and the core component of the cSRX
+            deployment. It relies on the configuration provided by the <codeph>csrx-init</codeph>
+            container to function correctly. </p>
+        </li>
+      </ul>
+      <p>You can customize the cSRX deployment by specifying a range of configuration parameters in
+        the <codeph>values.yaml</codeph> file. Key configuration options include:</p>
+      <ul id="ul_qmw_kdx_hzb">
+        <li>
+          <p>interfaceType: This is the type of interface on the cSRX to connect to JCNR. Must be
+            set to <codeph>vhost</codeph> only.</p>
+        </li>
+        <li>
+          <p>interfaceConfigs: This is an array defining the interface IP address, gateway address
+            and optionally routes. The interface IP must match the <codeph>localAddress</codeph>
+            element in the <codeph>ipSecTunnelConfigs</codeph> array. The routes should contain
+            prefixes to steer decrypted traffic to <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>and reachability route for IPSec
+            gateway.</p>
+        </li>
+        <li>
+          <p>ipSecTunnelConfigs: This is an array defining the IPsec configuration details such as
+            ike-phase1, proposal, policy and gateway configuration. Traffic selector should contain
+            traffic that is expected to be encrypted.</p>
+        </li>
+        <li>
+          <p>jcnr_config: This is an array defining the routes to be configured in <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>to steer
+            traffic from <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>to cSRX and to steer IPsec traffic from the remote IPsec gateway to
+            the cSRX to apply the security service chain. </p>
+        </li>
+      </ul>
+      <p>Here is the default <codeph>csrx</codeph> section in <filepath>values.yaml</filepath> for
+        cSRX deployment:</p>
+      <codeblock id="codeblock_a4m_hxm_y1c">csrx:
+  # Default values for cSRX.
+  # This is a YAML-formatted file.
+  # Declare variables to be passed into your templates.
+
+  common:
+    registry: enterprise-hub.juniper.net/
+    repository: jcnr-container-prod/
+
+    csrxInit:
+      image: csrx-init
+      tag: f4tgt33
+      imagePullPolicy: IfNotPresent
+      resources:
+        #limits:
+        #  memory: 1Gi
+        #  cpu: 1
+        #requests:
+        #  memory: 1Gi
+        #  cpu: 1
+
+    csrx:
+      image: csrx
+      tag: 24.1R1.4
+      imagePullPolicy: IfNotPresent
+      resources:
+        limits:
+          hugepages-1Gi: 6Gi
+          memory: 4Gi
+        requests:
+          hugepages-1Gi: 6Gi
+          memory: 4Gi
+
+  # nodeAffinity: Can be used to inject nodeAffinity for cSRX
+  # you may label the nodes where we wish to deploy cSRX and inject affinity accordingly
+  #nodeAffinity:
+  #- key: node-role.kubernetes.io/worker
+  #  operator: Exists
+  #- key: node-role.kubernetes.io/master
+  #  operator: DoesNotExist
+  #- key: kubernetes.io/hostname
+  #  operator: In
+  #  values:
+  #  - example-host-1
+
+  replicas: 1
+
+  interfaceType: "vhost"
+
+  interfaceConfigs:
+    #- name: eth1
+    #  ip: 181.1.1.1/30          # should match ipSecTunnelConfigs localAddress if configured
+    #  gateway: 181.1.1.2        # gateway configuration
+    #  ip6: 181:1:1::1/64        # optional
+    #  ip6Gateway: 181:1:1::2    # optional
+    #  routes:                   # this field is optional
+    #  - "191.1.1.0/24"
+    #  - "200.1.1.0/24"
+    #- name: eth2
+    #  ip: 1.21.1.1/30           # should match ipSecTunnelConfigs localAddress if configured
+    #  gateway: 1.21.1.2         # gateway configuration
+    #  ip6: 181:2:1::1/64                     # optional
+    #  ip6Gateway: 181:2:1::2               # optional
+    #  routes:                   # this field is optional
+    #  - "111.1.1.0/24"
+    #  - "192.1.1.0/24"
+
+  ipSecTunnelConfigs:       # untrust
+    #- interface: eth1       ## section ike-phase1, proposal, policy, gateway
+    #  gateway: 171.1.1.1
+    #  localAddress: 181.1.1.1
+    #  authenticationAlgorithm: sha-256
+    #  encryptionAlgorithm: aes-256-cbc
+    #  preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    #  trafficSelector:
+    #  - name: ts1
+    #    localIP: 111.1.1.0/24 ## IP cannot be 0.0.0.0/0
+    #    remoteIP: 222.1.1.0/24 ## IP cannot be 0.0.0.0/0
+
+  jcnr_config:
+    #- name: eth1
+    #  routes:
+    #    - "121.1.1.0/24"
+
+  csrx_ctrl_cpu: "0x01"
+
+  csrx_data_cpu: "0x04"
+
+</codeblock>
+      <!--<codeblock id="codeblock_jll_fgx_hzb"># Default values for cSRX.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+common:
+  registry: enterprise-hub.juniper.net
+  repository: jcnr-container-prod
+
+  csrxInit:
+    image: junos-csrx-init
+    tag: 23.4R1.9
+    imagePullPolicy: IfNotPresent
+    resources:
+      #limits:
+      #  memory: 1Gi
+      #  cpu: 1
+      #requests:
+      #  memory: 1Gi
+      #  cpu: 1
+
+  csrx:
+    image: junos-csrx
+    tag: 23.4R1.9
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        hugepages-1Gi: 4Gi
+        memory: 4Gi
+      requests:
+        hugepages-1Gi: 4Gi
+        memory: 4Gi
+
+# uncomment below if you are using a private registry that needs authentication
+# registryCredentials - Base64 representation of your Docker registry credentials
+# secretName - Name of the Secret object that will be created
+#imagePullSecret:
+  #registryCredentials: &lt;base64-encoded-credential&gt;
+  #secretName: regcred
+
+# nodeAffinity: Can be used to inject nodeAffinity for cSRX
+# you may label the nodes where we wish to deploy cSRX and inject affinity accordingly
+#nodeAffinity:
+#- key: node-role.kubernetes.io/worker
+#  operator: Exists
+#- key: node-role.kubernetes.io/master
+#  operator: DoesNotExist
+#- key: kubernetes.io/hostname
+#  operator: In
+#  values:
+#  - example-host-1
+
+replicas: 1
+
+interfaceType: "vhost"        
+
+interfaceConfigs:
+  - name: eth1
+    ip: 171.1.1.1/30          # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 171.1.1.2        # gateway configuration
+    #ip6: 171:1:1::1/64        # optional
+    #ip6Gateway: 171:1:1::2    # optional
+    routes:                   # this field is optional
+    - "181.1.1.0/24"
+    #- "200.1.1.0/24"
+  - name: eth2
+    ip: 1.21.1.1/30           # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 1.21.1.2         # gateway configuration
+    #ip6: 181:2:1::1/64                     # optional
+    #ip6Gateway: 181:2:1::2               # optional
+    routes:                   # this field is optional
+    - "222.1.1.0/24"
+    #- "192.1.1.0/24"
+ 
+ipSecTunnelConfigs:       # untrust
+  - interface: eth1       ## section ike-phase1, proposal, policy, gateway
+    gateway: 181.1.1.1
+    localAddress: 171.1.1.1
+    authenticationAlgorithm: sha-256
+    encryptionAlgorithm: aes-256-cbc
+    preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    trafficSelector:
+    - name: ts1
+      localIP: 222.1.1.0/24 ## IP cannot be 0.0.0.0/0
+      remoteIP: 111.1.1.0/24 ## IP cannot be 0.0.0.0/0
+ 
+jcnr_config:
+  - name: eth2
+    routes:
+      - "111.1.1.0/24"
+ 
+csrx_ctrl_cpu: "0x01"
+ 
+csrx_data_cpu: "0x0A"</codeblock>-->
+    </section>
+    <section id="section_nbd_hgx_hzb">
+      <title>Install cSRX</title>
+      <p>Follow this procedure to install the cSRX instance. You can install Juniper cSRX during or
+        after <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation. </p>
+      <p>If you're installing Juniper cSRX at the same time as you're installing JCNR, then use the
+        combination Helm chart. This Helm chart contains both <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>and cSRX configuration.</p>
+      <p>If you're installing Juniper cSRX on an existing <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation, then use the standalone
+        cSRX Helm chart. This Helm chart contains only cSRX configuration.</p>
+      <p>See <xref href="../ref/jcnr-sw-download-packages.dita"/> for a description
+        of the software packages available.</p>
+      <ol>
+        <li><p>Ensure you have the latest software package downloaded and expanded. You must be in
+            the
+              <filepath>Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname></filepath>
+            directory or the <filepath>junos_csrx_<varname>&lt;release&gt;</varname></filepath>
+            directory.</p></li>
+        <li>The cSRX container images are required for deployment. You can skip this step if you're
+          installing Juniper cSRX alongside <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>because you're already done this. If you're
+          installing Juniper cSRX on an existing <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation, then choose one of the following
+            options:<ol id="ol_w1t_zxk_vzb">
+            <li>Download and deploy images from the Juniper
+                repository—<codeph>enterprise-hub.juniper.net</codeph>. Review the <xref format="html" href="https://uat.juniper.net/documentation/test/us/en/software/cloud-native-router/cloud-native-router-deployment-guide/topics/concept/cn-cloud-native-k8s-configure-secrets.html" scope="external">Configure Repository Credentials</xref> topic for
+              instructions on how to configure repository credentials in the deployment helm
+              chart.</li>
+            <li>You can upload the cSRX images either to a local docker or to your own docker
+              respository using the <codeph>docker load</codeph> command. The images are available
+              in the <filepath>images</filepath>
+              directory.<codeblock id="codeblock_w31_dyk_vzb">docker load -i images/csrx-images.tgz</codeblock>
+            </li>
+          </ol></li>
+        <li>Enter the cSRX license into the <codeph>secrets/csrx-secrets.yaml</codeph> file. You
+          must enter the password and license in base64 encoded format. You can view the sample
+          contents of the <codeph>csrx-secrets.yaml</codeph> file
+            below:<codeblock id="codeblock_d4b_n3x_hzb">apiVersion: v1
+kind: Secret
+metadata:
+  name: service-chain-instance
+  namespace: jcnr
+data:
+  csrx_license: |
+    &lt;add your license in base64 format&gt;</codeblock><note id="note_tyl_54c_1bc"><p>If the <codeph>secrets/csrx-secrets.yaml</codeph> file does not exist in your
+              software package, then create it from the sample above.</p></note><p>To encode the
+            license file, copy the license file onto your host server and issue the
+            command:</p><codeblock id="codeblock_txc_t3x_hzb">base64 -w 0 licenseFile</codeblock><p>You
+            must copy the base64 output and paste it into the
+              <codeph>secrets/csrx-secrets.yaml</codeph> file in the appropriate location.</p><note id="note_uzx_x3x_hzb"><p>You must obtain your license file from your account team and
+              install it in the secrets.yaml file as instructed above. The csrx-init container
+              performs a license check and proceeds only if the required secret
+                <codeph>service-chain-instance</codeph> is found. </p></note></li>
+        <li><p>Apply the <codeph>csrx-secrets.yaml</codeph> to the Kubernetes
+          system.</p><codeblock id="codeblock_yj5_cjx_hzb">kubectl apply -f secrets/secrets.yaml
+secret/service-chain-instance created</codeblock></li>
+        <li><p>If you're installing Juniper cSRX on an existing <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation, then ensure all
+            components of <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>are up and running before installing the cSRX instance.</p></li>
+        <li><p>Configure the cSRX Helm chart in the
+                <filepath>junos_csrx_<varname>&lt;release&gt;</varname>/helmchart</filepath> directory
+            or the cSRX section of the combination Helm chart in the
+                <filepath>Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname>/helmchart</filepath>
+            directory. Refer to the cSRX parameter descriptions above to configure cSRX. </p></li>
+        <li>If you're installing Juniper cSRX at the same time that you're installing JCNR, then
+          skip this step. You'll install cSRX when you install the main <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Helm chart. If you're
+          installing Juniper cSRX on an existing <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation, then install the cSRX Helm chart
+          now. Navigate to the
+            <filepath>junos_csrx_<varname>&lt;release&gt;</varname>/helmchart/junos-csrx</filepath>
+          directory and issue the following command to install the cSRX
+          instance.<codeblock id="codeblock_w3c_fhv_jzb">helm install csrx .</codeblock></li>
+      </ol>
+    </section>
+  </conbody>
+  <related-links>
+    <link keyref="cloud-native-router-user.jcnr-and-security-services"/>
+  </related-links>
+</concept>

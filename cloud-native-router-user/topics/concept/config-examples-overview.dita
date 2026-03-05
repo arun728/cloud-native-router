@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7c6d" xml:lang="en-US">
+  <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Use-Cases and Configuration Overview </title>
+  <shortdesc>Read this chapter to review configuration examples for various Juniper Cloud-Native
+    Router use cases when deployed in the container network interface (CNI) mode. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>The Juniper Cloud-Native Router can be deployed as a virtual switch or a transit router,
+      either as a pure container network function (CNF) or as a container network interface (CNI).
+      In the CNF mode, there are no application pods running on the node and the router only
+      performs packeting switching or forwarding through various interfaces on the system. In the
+      CNI mode, application pods using software-based network interfaces such as veth-pairs or DPDK
+      vhost-user based interfaces, attach to the cloud-native router. This chapter provides
+      configuration examples for attaching different workload interface types to the cloud-native
+      router CNI instance. </p>
+    <section id="section_d2r_vvc_yxb"><title>Configuration Example</title>The <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>CNI is deployed
+      as a secondary CNI along with Multus as a primary CNI, to create different types of secondary
+      interfaces for the application pod. Multus uses a network attachment definition (NAD) file to
+      configure a secondary interface for the application pod. The NAD specifies how to create a
+      secondary interface, IP address allocation, network instance and more. A pod can have one or
+      more NADs, typically one per pod interface. The <codeph>config:</codeph> field in the NAD file
+      defines the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>CNI configuration. Here is a generic format of the
+      NAD:<codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: &lt;vrf-name&gt;
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "&lt;vrf-name&gt;",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+           "key1":"value1",
+           "key2","value2",
+           ....		   
+        },
+		"ipam": {
+          "type": "&lt;ipam-type&gt;",
+		  ....
+        },
+		"kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock>While
+      configuring the NAD for the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>plugin type, the following keys are supported:<table colsep="1" frame="all" id="table_g5l_jvw_wxb" rowsep="1">
+        <title id="title_wgs_www_wxb">Supported Keys in NAD</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="2.13*"/>
+          <thead>
+            <row>
+              <entry>Key</entry>
+              <entry>Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>instanceName</entry>
+              <entry>The routing-instance name</entry>
+            </row>
+            <row>
+              <entry>instanceType</entry>
+              <entry>One of:<p>virtual-router—for non-VPN-related applications</p><p>vrf—Layer 3 VPN
+                  implementations</p><p>virtual-switch—Layer 2 implementations</p></entry>
+            </row>
+            <row>
+              <entry>interfaceType</entry>
+              <entry>Either "veth" or "virtio"</entry>
+            </row>
+            <row>
+              <entry>vlanId</entry>
+              <entry>A valid vlan id "1-4095"</entry>
+            </row>
+            <row>
+              <entry>bridgeVlanId</entry>
+              <entry>A valid vlan id "1-4095"</entry>
+            </row>
+            <row>
+              <entry>vlanIdList</entry>
+              <entry>A list of command separated vlan-id, e.g: "1, 5, 7, 10-20"</entry>
+            </row>
+            <row>
+              <entry>parentInterface</entry>
+              <entry>Valid interface name as it should appear in the pod. Child/sub-interfaces have
+                parentInterface as their prefix followed by "." If parentInterface is specified, sub
+                interface must be explicitly specifiied.</entry>
+            </row>
+            <row>
+              <entry>vrfTarget</entry>
+              <entry>The route-target for vrf routing instance</entry>
+            </row>
+            <row>
+              <entry>bridgeDomain</entry>
+              <entry>Bridge Domain under which pod interface should be attached in the
+                virtual-switch instance.</entry>
+            </row>
+            <row>
+              <entry>type (ipam)</entry>
+              <entry>static—assigns same IP to all pods, to assign a unique IP per pod define a
+                unique NAD per pod per interface<p>host-local—unique IP address per pod interface on
+                  the same host. IP addresses are not unique across two different
+                  nodes</p><p>whereabouts—unique IP address per pod across all nodes </p><p>(<xref format="html" href="https://github.com/k8snetworkplumbingwg/whereabouts" scope="external"/>)</p></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>Consider the example NAD for a layer 2 kernel access mode
+      interface:<codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vswitch-pod1-bd100
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "vswitch-pod1-bd100",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "vswitch",
+          "instanceType": "virtual-switch",
+	   "interfaceType": "veth",
+          "bridgeDomain": "bd100",
+          "bridgeVlanId": "100"
+        },
+        "ipam": {
+          "type": "static",
+          "addresses":[
+            {
+              "address":"99.61.0.2/16",
+              "gateway":"99.61.0.1"
+            },
+            {
+              "address":"1234::99.61.0.2/120",
+              "gateway":"1234::99.61.0.1"
+            }
+          ]
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock>The
+      pod attaches to the router instance using the <codeph>k8s.v1.cni.cncf.io/networks</codeph>
+      annotation. For
+      example:<codeblock>apiVersion: v1
+kind: Pod
+metadata:
+  name:   pod1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: vswitch-pod1-bd100
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - kind-worker
+  containers:
+    - name: pod1
+      image: ubuntu:latest
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        privileged: false
+      env:
+        - name: KUBERNETES_POD_UID
+          valueFrom:
+            fieldRef:
+               fieldPath: metadata.uid
+      volumeMounts:
+        - name: dpdk
+          mountPath: /dpdk
+          subPathExpr: $(KUBERNETES_POD_UID)
+  volumes:
+    - name: dpdk
+      hostPath:
+        path: /var/run/jcnr/containers</codeblock>The
+      volume mount host path exposes the UNIX domain socket of the vhost-user port to the DPDK
+      application. The DPDK interface details are stored at
+        <codeph>/dpdk/dpdk-interfaces.json</codeph> inside the application container for the DPDK
+      application to consume. It is also exported into the pod as a pod annotation.<p>When you
+        create a pod for use in the cloud-native router, the Kubernetes component known as
+          <filepath>kubelet</filepath> calls the Multus CNI to set up pod networking and interfaces.
+        Multus reads the annotations section of the <filepath>pod.yaml </filepath>file to refer the
+        corresponding NAD. If a NAD points to <codeph>jcnr</codeph> as the CNI plug in, Multus calls
+        the JCNR-CNI to set up the pod interface. JCNR-CNI creates the interface as specified in the
+        NAD. JCNR-CNI then generates and pushes a configuration into cRPD.</p></section>
+    <section id="section_erm_rvc_yxb">
+      <title>Troubleshooting</title>
+      <p>Pods main fail to come up for various reasons:</p>
+      <ul id="ul_lqr_cwc_yxb">
+        <li>
+          <p>Image not found</p>
+        </li>
+        <li>
+          <p>CNI failed to add interfaces</p>
+        </li>
+        <li>
+          <p>CNI failed to push configuration into cRPD</p>
+        </li>
+        <li>
+          <p>CNI failed to invoke vRouter REST APIs</p>
+        </li>
+        <li>
+          <p>The NAD is invalid or undefined</p>
+        </li>
+      </ul>
+      <p>The following commands will be useful to troubleshooting pod issues:</p>
+      <codeblock> # Check the Pod status​
+ kubectl get pods –A</codeblock>
+      <codeblock> # Check pod state and CNI logs​
+ kubectl describe pod &lt;pod-name&gt;</codeblock>
+      <codeblock> # Check the pod logs​
+ kubectl logs pod &lt;pod-name&gt;</codeblock>
+      <codeblock> # Check the net-attach-def​
+ kubectl get net-attach-def &lt;net-attach-def-name&gt; -o yaml</codeblock>
+      <codeblock> # Check CNI logs​
+ tail –f /var/log/jcnr/jcnr-cni.log</codeblock>
+      <codeblock> # Check the cRPD config added by CNI​ (on the cRPD CLI)
+ cli&gt; show configuration groups cni</codeblock>
+    </section>
+  </conbody>
+</concept>

@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_16e9ffdde92d095d--4c26246f-1898c6bf578--7cae" xml:lang="en-US">
+  <title>Up and Running</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+
+    <section><title>Configure <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>as a CNI</title>
+      <p>We will show you how to configure the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>release 23.2 as a container network interface
+        (CNI) on the worker nodes of an OCP cluster to provide Layer 3 connectivity between customer
+        workloads. The Figure 1 show the topology.</p>
+      <p>Illustration here</p>
+      <ol>
+        <li>
+          <p>Create a workload pod on each worker node. The YAML manifest samples are provided
+            below. Each manifest contains a network attachment definition (NAD) that defines the
+            network name, plugin type and instance type. You must provide the path to the
+              <codeph>kubeconfig</codeph> file in your setup. </p>
+          <data>
+            <title>Podblue.yaml (worker-node-1)</title>
+          </data>
+          <codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: blue
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "blue-net",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "bluenet",
+          "instanceType": "virtual-router"
+        },
+        "kubeConfig":"/var/lib/kubelet/kubeconfig"
+      }
+    ]
+  }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: podblue
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "blue",
+          "interface":"net1",
+          "cni-args": {
+            "interfaceType":"veth",
+            "dataplane":"dpdk",
+            "mac":"aa:bb:cc:dd:ee:10",
+            "ipConfig":{
+              "ipv4":{
+                "address":"10.10.0.10/24",
+                "gateway":"10.10.0.1",
+                "routes":["10.10.0.0/24"]
+              },
+              "ipv6":{
+                "address":"abcd::10.10.0.10/112",
+                "gateway":"abcd::10.10.0.1",
+                "routes":["abcd::10.10.0.0/112"]
+              }
+            }
+          }
+        }
+      ]
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: "worker-node-1"
+  containers:
+  - name: podblue
+    image: ubuntu:latest
+    command: [ "sleep" , "604800"]
+    ports:
+    - containerPort: 80
+    securityContext:
+      privileged: true
+      capabilities:
+        add:
+          - SYS_ADMIN
+          - NET_ADMIN
+          - SYS_NICE
+          - SYSLOG
+          - SYS_PTRACE
+          - SYS_RAWIO</codeblock>
+          <data>
+            <title>Podred.yaml (worker-node-2)</title>
+          </data>
+          <codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: red
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "red-net",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "rednet",
+          "instanceType": "virtual-router"
+        },
+        "kubeConfig":"/var/lib/kubelet/kubeconfig"
+      }
+    ]
+  }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: podred
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "red",
+          "interface":"net1",
+          "cni-args": {
+            "interfaceType":"veth",
+            "dataplane":"dpdk",
+            "mac":"aa:bb:cc:dd:ee:20",
+            "ipConfig":{
+              "ipv4":{
+                "address":"10.20.0.10/24",
+                "gateway":"10.20.0.1",
+                "routes":["10.20.0.0/24"]
+              },
+              "ipv6":{
+                "address":"abcd::10.20.0.10/112",
+                "gateway":"abcd::10.20.0.1",
+                "routes":["abcd::10.20.0.0/112"]
+              }
+            }
+          }
+        }
+      ]
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: "worker-node-2"
+  containers:
+  - name: podred
+    image: ubuntu:latest
+    command: [ "sleep" , "604800"]
+    ports:
+    - containerPort: 80
+    securityContext:
+      privileged: true
+      capabilities:
+        add:
+          - SYS_ADMIN
+          - NET_ADMIN
+          - SYS_NICE
+          - SYSLOG
+          - SYS_PTRACE
+          - SYS_RAWIO</codeblock>
+        </li>
+        <li>
+          <p>Apply the pod YAML manifests.</p>
+          <codeblock>kubectl apply -f podblue.yaml
+pod/podblue created</codeblock>
+          <codeblock>kubectl apply -f podred.yaml
+pod/podred created</codeblock>
+          <codeblock>kubectl get pods -o wide
+NAME      READY   STATUS    RESTARTS   AGE     IP             NODE           NOMINATED NODE   READINESS GATES
+podblue   1/1     Running   0          2m35s   10.128.3.122   ocp-worker1   &lt;none&gt;           &lt;none&gt;
+podred    1/1     Running   0          3m3s    10.130.2.62    ocp-worker2   &lt;none&gt;           &lt;none&gt;</codeblock>
+        </li>
+        <li>
+          <p>Configure the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>via the control plane to enable VRF-lite for communication between
+            the two pods. Note the name of the cRPD pod on the ocp-worker1.</p>
+          <codeblock>kubectl get pods -n jcnr -o wide | grep crpd 
+kube-crpd-worker-sts-0   1/1     Running   0          101m   192.168.10.111   ocp-worker1   &lt;none&gt;           &lt;none&gt; 
+kube-crpd-worker-sts-1   1/1     Running   0          101m   192.168.10.114   ocp-worker2   &lt;none&gt;           &lt;none&gt; </codeblock>
+        </li>
+        <li>
+          <p>Enter the pod shell.</p>
+          <codeblock>kubectl exec -it -n jcnr kube-crpd-worker-sts-0 -- bash</codeblock>
+          <codeblock>Defaulted container "kube-crpd-worker" out of: kube-crpd-worker, jcnr-crpd-config (init), install-cni (init) 
+  
+===&gt; 
+           Containerized Routing Protocols Daemon (CRPD) 
+Copyright (C) 2020-2023, Juniper Networks, Inc. All rights reserved. 
+                                                                      &lt;=== 
+
+root@ocp-worker1:/# </codeblock>
+        </li>
+        <li>
+          <p>Enter the Junos configuration mode and bring up the fabric interface.</p>
+          <codeblock>root@ocp-worker1:/# cli
+root@ocp-worker1:/&gt; edit
+Entering configuration mode
+[edit]
+root@ocp-worker1:/#</codeblock>
+          <codeblock>set interfaces ens1f0 unit 0 family inet address 172.16.0.11/24</codeblock>
+        </li>
+        <li>
+          <p>Configure the BGP protocol</p>
+          <codeblock>set protocols bgp group overlay type internal
+set protocols bgp group overlay local-address 172.16.0.11
+set protocols bgp group overlay local-as 64520
+set protocols bgp group overlay neighbor 172.16.0.12 peer-as 64520</codeblock>
+        </li>
+        <li>
+          <p>Export <codeph>inet</codeph> routes using BGP.</p>
+          <codeblock>set policy-options policy-statement send_direct term 1 from protocol direct
+set policy-options policy-statement send_direct term 1 then accept
+set policy-options policy-statement send_direct term reject then reject
+set protocols bgp group overlay export send_direct</codeblock>
+        </li>
+        <li>
+          <p>Leak the routes from <codeph>blue</codeph> routing instance into
+              <codeph>default</codeph> routing instance.</p>
+          <codeblock>set routing-options rib-groups blue_to_inet import-rib bluenet.inet.0
+set routing-options rib-groups blue_to_inet import-rib inet.0
+set groups cni routing-instances bluenet routing-options interface-routes rib-group inet blue_to_inet</codeblock>
+        </li>
+        <li>Leak only the BGP routes matching prefix <codeph>10.20.0.0</codeph> (podred network)
+          from <codeph>inet.0</codeph> to <codeph>blue</codeph> routing
+          instance<codeblock>set policy-options policy-statement inet_to_blue term from_bgp from instance master
+set policy-options policy-statement inet_to_blue term from_bgp from protocol bgp
+set policy-options policy-statement inet_to_blue term from_bgp from route-filter 10.20.0.0/24 orlonger
+set policy-options policy-statement inet_to_blue term from_bgp then accept
+set policy-options policy-statement inet_to_blue term reject then reject
+set routing-options rib-groups inet_to_blue import-rib inet.0
+set routing-options rib-groups inet_to_blue import-rib bluenet.inet.0
+set routing-options rib-groups inet_to_blue import-policy inet_to_blue
+set groups cni routing-instances bluenet routing-options instance-import inet_to_blue</codeblock></li>
+        <li>
+          <p>Verify and commit the configuration.</p>
+          <codeblock>show | compare  
+[edit groups cni routing-instances bluenet routing-options]
++      interface-routes {
++          rib-group inet blue_to_inet;
++      }
++      instance-import inet_to_blue;
+[edit]
++  interfaces {
++      ens1f0 {
++          unit 0 {
++              family inet {
++                  address 172.16.0.11/24;
++              }
++          }
++      }
++  }
++  policy-options {
++      policy-statement inet_to_blue {
++          term from_bgp {
++              from {
++                  instance master;
++                  protocol bgp;
++                  route-filter 10.20.0.0/24 orlonger;
++              }
++              then accept;
++          }
++          term reject {
++              then reject;
++          }
++      }
++      policy-statement send_direct {
++          term 1 {
++              from protocol direct;
++              then accept;
++          }
++          term reject {
++              then reject;
++          }
++      }
++  }
++  routing-options {
++      rib-groups {
++          blue_to_inet {
++              import-rib [ bluenet.inet.0 inet.0 ];
++          }
++          inet_to_blue {
++              import-rib [ inet.0 bluenet.inet.0 ];
++              import-policy inet_to_blue;
++          }
++      }
++  }
++  protocols {
++      bgp {
++          group overlay {
++              type internal;
++              local-address 172.16.0.11;
++              export send_direct;
++              local-as 64520;
++              neighbor 172.16.0.12 {
++                  peer-as 64520;
++              }
++          }
++      }
++  }
+
+[edit]
+root@ocp-worker1# commit
+commit complete
+
+[edit]
+root@ocp-worker1#</codeblock>
+        </li>
+        <li>Type <codeph>exit</codeph> to exit the pod shell.</li>
+        <li> Similarly, configure the cRPD pod for the ocp-worker2 node. Enter the pod shell.
+          <codeblock>kubectl exec -it -n jcnr kube-crpd-worker-sts-1 -- bash</codeblock><codeblock>Defaulted container "kube-crpd-worker" out of: kube-crpd-worker, jcnr-crpd-config (init), install-cni (init) 
+  
+===&gt; 
+           Containerized Routing Protocols Daemon (CRPD) 
+Copyright (C) 2020-2023, Juniper Networks, Inc. All rights reserved. 
+                                                                      &lt;=== 
+
+root@ocp-worker2:/# </codeblock></li>
+        <li> Enter the Junos configuration mode and bring up the fabric interface.
+          <codeblock>root@ocp-worker2:/# cli
+root@ocp-worker2:/&gt; edit
+Entering configuration mode
+[edit]
+root@ocp-worker2:/#</codeblock><codeblock>set interfaces ens1f0 unit 0 family inet address 172.16.0.12/24</codeblock></li>
+        <li> Configure the BGP protocol
+          <codeblock>set protocols bgp group overlay type internal
+set protocols bgp group overlay local-address 172.16.0.12
+set protocols bgp group overlay local-as 64520
+set protocols bgp group overlay neighbor 172.16.0.11 peer-as 64520</codeblock></li>
+        <li> Export <codeph>inet</codeph> routes using BGP.
+          <codeblock>set policy-options policy-statement send_direct term 1 from protocol direct
+set policy-options policy-statement send_direct term 1 then accept
+set policy-options policy-statement send_direct term reject then reject
+set protocols bgp group overlay export send_direct</codeblock></li>
+        <li> Leak the routes from <codeph>blue</codeph> routing instance into
+            <codeph>default</codeph> routing instance.
+          <codeblock>set routing-options rib-groups red_to_inet import-rib rednet.inet.0
+set routing-options rib-groups red_to_inet import-rib inet.0
+set groups cni routing-instances rednet routing-options interface-routes rib-group inet red_to_inet</codeblock></li>
+        <li>Leak only the BGP routes matching prefix <codeph>10.10.0.0</codeph> (podblue network)
+          from <codeph>inet.0</codeph> to <codeph>red</codeph> routing
+          instance<codeblock>set policy-options policy-statement inet_to_red term from_bgp from instance master
+set policy-options policy-statement inet_to_red term from_bgp from protocol bgp
+set policy-options policy-statement inet_to_red term from_bgp from route-filter 10.10.0.0/24 orlonger
+set policy-options policy-statement inet_to_red term from_bgp then accept
+set policy-options policy-statement inet_to_red term reject then reject
+set routing-options rib-groups inet_to_red import-rib inet.0
+set routing-options rib-groups inet_to_red import-rib rednet.inet.0
+set routing-options rib-groups inet_to_red import-policy inet_to_red
+set groups cni routing-instances rednet routing-options instance-import inet_to_red</codeblock></li>
+        <li> Verify and commit the configuration.
+          <codeblock>show | compare  
+[edit groups cni routing-instances rednet routing-options]
++      interface-routes {
++          rib-group inet red_to_inet;
++      }
++      instance-import inet_to_red;
+[edit]
++  interfaces {
++      ens1f0 {
++          unit 0 {
++              family inet {
++                  address 172.16.0.12/24;
++              }
++          }
++      }
++  }
++  policy-options {
++      policy-statement inet_to_red {
++          term from_bgp {
++              from {
++                  instance master;
++                  protocol bgp;
++                  route-filter 10.10.0.0/24 orlonger;
++              }
++              then accept;
++          }
++          term reject {
++              then reject;
++          }
++      }
++      policy-statement send_direct {
++          term 1 {
++              from protocol direct;
++              then accept;
++          }
++          term reject {
++              then reject;
++          }
++      }
++  }
++  routing-options {
++      rib-groups {
++          red_to_inet {
++              import-rib [ rednet.inet.0 inet.0 ];
++          }
++          inet_to_red {
++              import-rib [ inet.0 rednet.inet.0 ];
++              import-policy inet_to_red;
++          }
++      }
++  }
++  protocols {
++      bgp {
++          group overlay {
++              type internal;
++              local-address 172.16.0.12;
++              export send_direct;
++              local-as 64520;
++              neighbor 172.16.0.11 {
++                  peer-as 64520;
++              }
++          }
++      }
++  }
+
+[edit]
+
+root@ocp-worker2# commit
+commit complete
+
+[edit]
+root@ocp-worker2#</codeblock></li>
+        <li>Type <codeph>exit</codeph> to exit the pod shell.</li>
+        <li>Configure static routes in <codeph>podblue</codeph> to reach
+          <codeph>podred</codeph>.<codeblock># kubectl exec -it podblue -- ip route
+default via 10.130.0.1 dev eth0
+10.10.0.0/24 via 10.10.0.1 dev net1
+10.10.0.1 dev net1 scope link
+10.130.0.0/23 dev eth0 proto kernel scope link src 10.130.0.134</codeblock><codeblock># kubectl exec -it podblue -- ip route add 10.20.0.0/24 via 10.10.0.10 dev net1</codeblock><codeblock># kubectl exec -it podblue -- ip route
+default via 10.130.0.1 dev eth0
+10.10.0.0/24 via 10.10.0.1 dev net1
+10.10.0.1 dev net1 scope link
+10.20.0.0/24 via 10.10.0.1 dev net1
+10.130.0.0/23 dev eth0 proto kernel scope link src 10.130.0.134</codeblock></li>
+        <li>Configure static routes in <codeph>podred</codeph> to reach
+          <codeph>podblue</codeph>.<codeblock># kubectl exec -it podred -- ip route
+default via 10.131.0.1 dev eth0
+10.20.0.0/24 via 10.20.0.1 dev net1
+10.20.0.1 dev net1 scope link
+10.131.0.0/23 dev eth0 proto kernel scope link src 10.131.1.120</codeblock><codeblock># kubectl exec -it podred  -- ip route add 10.10.0.0/24 via 10.20.0.10 dev net1</codeblock><codeblock># kubectl exec -it podred -- ip route
+default via 10.131.0.1 dev eth0
+10.10.0.0/24 via 10.20.0.1 dev net1
+10.20.0.0/24 via 10.20.0.1 dev net1
+10.20.0.1 dev net1 scope link
+10.131.0.0/23 dev eth0 proto kernel scope link src 10.131.1.120</codeblock></li>
+        <li>Verify the communication between the
+          pods.<codeblock># kubectl exec -it podblue -- ping -c 10 10.20.0.10
+PING 10.20.0.10 (10.20.0.10) 56(84) bytes of data.
+64 bytes from 10.20.0.10: icmp_seq=1 ttl=62 time=1.73 ms
+64 bytes from 10.20.0.10: icmp_seq=2 ttl=62 time=0.115 ms
+64 bytes from 10.20.0.10: icmp_seq=3 ttl=62 time=0.107 ms
+64 bytes from 10.20.0.10: icmp_seq=4 ttl=62 time=0.095 ms
+64 bytes from 10.20.0.10: icmp_seq=5 ttl=62 time=0.082 ms
+64 bytes from 10.20.0.10: icmp_seq=6 ttl=62 time=0.105 ms
+64 bytes from 10.20.0.10: icmp_seq=7 ttl=62 time=0.113 ms
+64 bytes from 10.20.0.10: icmp_seq=8 ttl=62 time=0.091 ms
+64 bytes from 10.20.0.10: icmp_seq=9 ttl=62 time=0.107 ms
+64 bytes from 10.20.0.10: icmp_seq=10 ttl=62 time=0.083 ms
+
+--- 10.20.0.10 ping statistics ---
+10 packets transmitted, 10 received, 0% packet loss, time 9214ms
+rtt min/avg/max/mdev = 0.082/0.263/1.734/0.490 ms
+#</codeblock><codeblock># kubectl exec -it podred -- ping -c 10 10.10.0.10
+PING 10.10.0.10 (10.10.0.10) 56(84) bytes of data.
+64 bytes from 10.10.0.10: icmp_seq=1 ttl=62 time=1.00 ms
+64 bytes from 10.10.0.10: icmp_seq=2 ttl=62 time=0.118 ms
+64 bytes from 10.10.0.10: icmp_seq=3 ttl=62 time=0.103 ms
+64 bytes from 10.10.0.10: icmp_seq=4 ttl=62 time=0.095 ms
+64 bytes from 10.10.0.10: icmp_seq=5 ttl=62 time=0.110 ms
+64 bytes from 10.10.0.10: icmp_seq=6 ttl=62 time=0.097 ms
+64 bytes from 10.10.0.10: icmp_seq=7 ttl=62 time=0.104 ms
+64 bytes from 10.10.0.10: icmp_seq=8 ttl=62 time=0.081 ms
+64 bytes from 10.10.0.10: icmp_seq=9 ttl=62 time=0.084 ms
+64 bytes from 10.10.0.10: icmp_seq=10 ttl=62 time=0.086 ms
+
+--- 10.10.0.10 ping statistics ---
+10 packets transmitted, 10 received, 0% packet loss, time 9189ms
+rtt min/avg/max/mdev = 0.081/0.188/1.004/0.272 ms
+#</codeblock></li>
+        <li>Verify the flows in the forwarding plane. We will log in to the
+            <codeph>contrail-vrouter-agent</codeph> shell on ocp-worker1
+          node.<codeblock># kubectl get pods -n contrail -o wide </codeblock><codeblock>contrail                                           contrail-vrouter-nodes-6gwnq                                 3/3     Running            0              4d3h    192.168.10.111   ocp-worker1       &lt;none&gt;           &lt;none&gt;
+contrail                                           contrail-vrouter-nodes-kjchz                                 3/3     Running            0              4d3h    192.168.10.114   ocp-worker2       &lt;none&gt;           &lt;none&gt;</codeblock><codeblock># kubectl exec -it contrail-vrouter-nodes-6gwnq -n contrail -- bash
+Defaulted container "contrail-vrouter-agent" out of: contrail-vrouter-agent, contrail-vrouter-agent-dpdk, 
+contrail-vrouter-telemetry-exporter, contrail-init (init), contrail-vrouter-kernel-init-dpdk (init)
+[root@ocp-worker1 /]# </codeblock><codeblock>[root@ocp-worker1 /]# flow -l
+Flow table(size 161218560, entries 629760)
+
+Entries: Created 31 Added 35 Deleted 62 Changed 75Processed 31 Used Overflow entries 0
+(Created Flows/CPU: 0 0 0 0 0 0 0 0 0 0 23 8)(oflows 0)
+
+Action:F=Forward, D=Drop N=NAT(S=SNAT, D=DNAT, Ps=SPAT, Pd=DPAT, L=Link Local Port)
+ Other:K(nh)=Key_Nexthop, S(nh)=RPF_Nexthop
+ Flags:E=Evicted, Ec=Evict Candidate, N=New Flow, M=Modified Dm=Delete Marked
+TCP(r=reverse):S=SYN, F=FIN, R=RST, C=HalfClose, E=Established, D=Dead
+ Stats:Packets/Bytes
+
+    Index                Source:Port/Destination:Port                      Proto(V)
+-----------------------------------------------------------------------------------
+    95212&lt;=&gt;136076       10.20.0.10:2                                       1 (1)
+                         10.10.0.10:0
+(Gen: 1, K(nh):45, Action:F, Flags:, QOS:-1, S(nh):47,  Stats:10/840,
+ SPort 60688, TTL 0, Sinfo 0.0.0.0)
+
+   136076&lt;=&gt;95212        10.10.0.10:2                                       1 (1)
+                         10.20.0.10:0
+(Gen: 1, K(nh):45, Action:F, Flags:, QOS:-1, S(nh):45,  Stats:10/980,
+ SPort 63543, TTL 0, Sinfo 11.0.0.0)
+
+   144092&lt;=&gt;465408       10.10.0.10:10                                      1 (1)
+                         10.20.0.10:0
+(Gen: 1, K(nh):45, Action:F, Flags:, QOS:-1, S(nh):45,  Stats:10/980,
+ SPort 62949, TTL 0, Sinfo 11.0.0.0)
+
+   465408&lt;=&gt;144092       10.20.0.10:10                                      1 (0)
+                         10.10.0.10:0
+(Gen: 1, K(nh):45, Action:F, Flags:, QOS:-1, S(nh):47,  Stats:10/840,
+ SPort 59923, TTL 0, Sinfo 0.0.0.0)</codeblock></li>
+        <li>Verify the details for the next hop as shown by the <codeph>S(nh)</codeph>
+          output.<codeblock>[root@ocp-worker1 /]# nh --get 45
+Id:45         Type:Encap          Fmly:AF_INET/6  Rid:0  Ref_cnt:4          Vrf:1
+              Flags:Valid, Policy, Etree Root,
+              EncapFmly:0806 Oif:11 Len:14
+              Encap Data: aa bb cc dd ee 10 00 00 5e 00 01 00</codeblock><codeblock>[root@ocp-worker1 /]# nh --get 47
+Id:47         Type:Encap          Fmly:AF_INET/6  Rid:0  Ref_cnt:8          Vrf:0
+              Flags:Valid, Policy, Etree Root,
+              EncapFmly:0806 Oif:1 Len:14
+              Encap Data: 40 a6 b7 a0 f6 c8 40 a6 b7 a0 f0 6c</codeblock></li>
+        <li>Type <codeph>exit</codeph> to exit the pod shell.</li>
+        <li>Verify the flows in the forwarding plane. We will log in to the
+            <codeph>contrail-vrouter-agent</codeph> shell on ocp-worker2
+          node.<codeblock># kubectl exec -it contrail-vrouter-nodes-kjchz -n contrail -- bash
+Defaulted container "contrail-vrouter-agent" out of: contrail-vrouter-agent, contrail-vrouter-agent-dpdk, 
+contrail-vrouter-telemetry-exporter, contrail-init (init), contrail-vrouter-kernel-init-dpdk (init)
+[root@ocp-worker2 /]# </codeblock><codeblock>[root@ocp-worker2 /]# flow -l
+Flow table(size 161218560, entries 629760)
+
+Entries: Created 57798 Added 57798 Deleted 115592 Changed 115594Processed 57798 Used Overflow entries 0
+(Created Flows/CPU: 0 0 0 0 0 0 0 0 0 0 57 57741)(oflows 0)
+
+Action:F=Forward, D=Drop N=NAT(S=SNAT, D=DNAT, Ps=SPAT, Pd=DPAT, L=Link Local Port)
+ Other:K(nh)=Key_Nexthop, S(nh)=RPF_Nexthop
+ Flags:E=Evicted, Ec=Evict Candidate, N=New Flow, M=Modified Dm=Delete Marked
+TCP(r=reverse):S=SYN, F=FIN, R=RST, C=HalfClose, E=Established, D=Dead
+ Stats:Packets/Bytes
+
+    Index                Source:Port/Destination:Port                      Proto(V)
+-----------------------------------------------------------------------------------
+    44248&lt;=&gt;523216       10.10.0.10:2                                       1 (0)
+                         10.20.0.10:0
+(Gen: 1, K(nh):33, Action:F, Flags:, QOS:-1, S(nh):36,  Stats:10/840,
+ SPort 63972, TTL 0, Sinfo 0.0.0.0)
+
+   442712&lt;=&gt;487924       10.20.0.10:10                                      1 (2)
+                         10.10.0.10:0
+(Gen: 1, K(nh):33, Action:F, Flags:, QOS:-1, S(nh):33,  Stats:10/980,
+ SPort 57491, TTL 0, Sinfo 9.0.0.0)
+
+   487924&lt;=&gt;442712       10.10.0.10:10                                      1 (2)
+                         10.20.0.10:0
+(Gen: 1, K(nh):33, Action:F, Flags:, QOS:-1, S(nh):36,  Stats:10/840,
+ SPort 53933, TTL 0, Sinfo 0.0.0.0)
+
+   523216&lt;=&gt;44248        10.20.0.10:2                                       1 (2)
+                         10.10.0.10:0
+(Gen: 1, K(nh):33, Action:F, Flags:, QOS:-1, S(nh):33,  Stats:10/980,
+ SPort 50072, TTL 0, Sinfo 9.0.0.0)</codeblock></li>
+        <li>Verify the details for the next hop as shown by the <codeph>S(nh)</codeph>
+          output.<codeblock>[root@ocp-worker2 /]# nh --get 33
+Id:33         Type:Encap          Fmly:AF_INET/6  Rid:0  Ref_cnt:4          Vrf:2
+              Flags:Valid, Policy, Etree Root,
+              EncapFmly:0806 Oif:9 Len:14
+              Encap Data: aa bb cc dd ee 20 00 00 5e 00 01 00</codeblock><codeblock>[root@ocp-worker2 /]# nh --get 36
+Id:36         Type:Encap          Fmly:AF_INET/6  Rid:0  Ref_cnt:10         Vrf:0
+              Flags:Valid, Policy, Etree Root,
+              EncapFmly:0806 Oif:1 Len:14
+              Encap Data: 40 a6 b7 a0 f0 6c 40 a6 b7 a0 f6 c8</codeblock></li>
+        <li>Type <codeph>exit</codeph> to exit the pod shell.</li>
+      </ol></section>
+  </conbody>
+
+  <related-links/>
+</concept>

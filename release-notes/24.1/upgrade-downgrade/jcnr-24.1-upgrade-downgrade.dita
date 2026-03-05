@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_73c1001ccde8abf9-1ccac70-18dea8feb50--7e62" xml:lang="en-US">
+  <title>Upgrade and Downgrade Options</title>
+  <prolog>
+    <author>dgv</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section provides high-level information about the available upgrade and downgrade
+      options. </p>
+    <section id="section_r1w_gnh_xvb">
+      <title>Upgrade from a Previous Version</title>
+      <p>Upgrade from a previous version to Juniper Cloud-Native Router (JCNR) release 24.1 is
+        supported. To upgrade from an earlier JCNR release to release 24.1 follow the steps provided
+        in <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.3/cloud-native-router-deployment-guide/topics/concept/manage-jcnr.html#xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7c98__section_psv_b13_mxb" format="html" scope="external">Upgrading JCNR</xref>.</p>
+      <!--<p>Upgrade from a previous version to Juniper Cloud-Native Router Release 23.1 is supported.</p><note><p>Juniper Cloud-Native Router 23.1 release supports only L2 deployments. L3 deployments are not supported for this release.</p></note><p>To upgrade from an older version to Juniper Cloud-Native Router Release 23.1, perform the following steps:</p><ol id="ol_tlv_4nn_ywb"><li> <p>Download the tarball, <filepath>Juniper_Cloud_Native_Router_23.1.tgz</filepath>, to the directory of your choice.</p> </li><li> <p>Expand the file <filepath>Juniper_Cloud_Native_Router_23.1.tgz</filepath>.</p> <codeblock>tar xzvf Juniper_Cloud_Native_Router_23.1.tgz</codeblock> </li><li> <p>Change directory to <filepath>Juniper_Cloud_Native_Router_23.1</filepath>.</p> <codeblock>cd Juniper_Cloud_Native_Router_23.1</codeblock> </li><li> <p>Load the JCNR docker images to local docker. The images are available in the <filepath>Juniper_Cloud_Native_Router_<varname>&lt;release-number&gt;</varname>/images</filepath> directory.</p> <codeblock>docker load -i images/jcnr-images.tar.gz</codeblock> </li><li> <p>Edit the <filepath>helmchart/values.yaml</filepath> file. You must edit the values.yaml file to match the current interface configurations on your currently deployed JCNR instance. For example,</p> <codeblock>####################################################################
+  #                            L2 PARAMS                             #
+  ####################################################################
+
+  # fabricInterface: NGDU or tor side interface, expected all types 
+  # of traffic; interface_mode is always trunk for this mode
+  fabricInterface:
+  - bond0:
+      interface_mode: trunk
+      vlan-id-list: [100, 200, 300, 700-705]
+      storm-control-profile: rate_limit_pf1
+
+  # fabricWorkloadInterface: RU side interfaces, expected traffic is only 
+  # management/control traffic; interface mode is always access for this mode
+  fabricWorkloadInterface:
+  - enp59s0f1v0:
+      interface_mode: access
+      vlan-id-list: [700]</codeblock> </li><li> <p>Upgrade the current version of JCNR to release 23.1 by issuing the following command:</p> <codeblock>helm upgrade jcnr helmchart/.</codeblock> </li></ol><note><p>Upgrading from an older release such as Juniper Cloud-Native Router Release 22.4 results in having a redundant pod—<codeph>syslog-ng</codeph>. Delete the older pod manually after the upgrade by using the <codeph>kubectl -n jcnr delete pod <varname>&lt;syslog-ng_pod_name&gt;</varname></codeph> command.</p></note><subsection id="subsection_tkt_hsn_ywb"><title>Verify if Upgrade is Successful</title><p>Issue the command <codeph>kubectl get pods -A</codeph>. The output of the command shows all of the pods in the Kubernetes cluster in all namespaces. A successful upgrade shows that all pods display that they are in the running state. For example,</p><codeblock>kubectl get pods -A
+NAMESPACE         NAME                                      READY   STATUS             RESTARTS         AGE
+contrail-deploy   contrail-k8s-deployer-7749c5657d-7qpxw    1/1     Running            0                47m
+contrail          contrail-vrouter-masters-2nqp6            3/3     Running            0                80m
+jcnr              kube-crpd-worker-ds-vd7jn                 1/1     Running            0                48m
+jcnr              syslog-ng-c4f7b7455-hxvgl                 1/1     Running            0                83m
+kube-system       calico-kube-controllers-5f4fd8666-x2q99   1/1     Running            869 (2m1s ago)   46h
+kube-system       calico-node-28w98                         1/1     Running            1 (20h ago)      46h
+kube-system       coredns-54bf8d85c7-868ts                  1/1     Running            0                46h
+kube-system       dns-autoscaler-7944dc7978-ws9fn           1/1     Running            1 (20h ago)      46h
+kube-system       kube-apiserver-ix-esx-06                  1/1     Running            2 (20h ago)      46h
+kube-system       kube-controller-manager-ix-esx-06         1/1     Running            6 (49m ago)      46h
+kube-system       kube-multus-ds-amd64-jl69w                1/1     Running            1 (20h ago)      46h
+kube-system       kube-proxy-qm5bl                          1/1     Running            1 (20h ago)      46h
+kube-system       kube-scheduler-ix-esx-06                  1/1     Running            7 (49m ago)      46h
+kube-system       nodelocaldns-bntfp                        1/1     Running            1 (20h ago)      46h</codeblock></subsection>-->
+    </section>
+    <section id="section_zmf_mnh_xvb">
+      <title>Downgrade to an Older Version</title>
+      <p>There is no procedure for downgrading to an older version. To change from a current version
+        to an older version, you must uninstall the current version and install an older
+        version.</p>
+    </section>
+  </conbody>
+</concept>

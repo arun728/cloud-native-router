@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_d26aa45954d81d7a--5d5cdde6-1834a3f0056--7c99" xml:lang="en-US">
+  <title>New Features</title>
+  <prolog>
+    <author>probbins</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section describes the new features in the Juniper Cloud-Native Router 22.3 release.</p>
+
+    <section><title>New Features in Juniper Cloud-Native Router Release 22.3</title>
+      <ul>
+        <li>
+          <p><b>Support for Intel XL710 NIC</b>–Juniper Cloud-Native Router supports the Intel XL710
+            NIC as a physical NIC for use in the solution. The XL710 NIC does not support the
+            dynamic device personalization (DDP) feature that is supported on the Inte E810 NIC. </p>
+        </li>
+        <li>
+          <p><b>Localized Notification Timestamps</b>–Juniper Cloud-Native Router now displays
+            logging and notification timestamps in the local system timezone.</p>
+        </li>
+        <li>
+          <p><b>Additional Liveness Probe Configuration Parameters</b>–You can configure additional
+            liveness probe parameters such as timeouts, success thresholds, and failure thresholds
+            in the individual <filepath>values.yaml</filepath> files for vRouter and jcnr-cni.</p>
+        </li>
+      </ul></section>
+  </conbody>
+
+  <related-links/>
+</concept>

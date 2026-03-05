@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b70309db8357b568--181c6ce0-19319865acf--7d53" xml:lang="en-US">
+  <!--Use the Concept template to introduce a new product or functionality. Also use this template to provide high-level explanations, definitions of key concepts, terminology, or general background information. Limit one topic to one theme or subject.-->
+  <!--For <title>, follow these guidelines:
+- Avoid the gerund form and minimize the use of “Understanding.” 
+- Use "[Feature] Overview" if the topic is indeed an overview. 
+- Use the feature name as the topic title for very long feature names. 
+- Use the Who, What, Where, When, Why, or How (not How to) phrase to describe a specific aspect of a product, feature, or user scenario.-->
+  <title>LLDP Overview</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>The Link Layer Discovery Protocol (LLDP) is an industry-standard method to enable networked
+      devices to advertise capabilities, identity, and other information onto a LAN. The Juniper
+      Cloud-Native Router supports LLDP on Layer 3 interfaces. LLDP information is sent at a fixed
+      interval as an Ethernet frame. Each frame contains one LLDP protocol data unit (PDU). Each
+      LLDP PDU is a sequence of type-length-value (TLV) elements. Cloud-Native Router transmits the
+      following mandatory and non-mandatory TLVs:</p>
+    <table frame="all" id="table_gqt_zbh_jdc">
+      <title>Supported TLVs</title>
+      <tgroup cols="2">
+        <colspec colname="c1" colnum="1" colwidth="1*"/>
+        <colspec colname="c2" colnum="2" colwidth="1*"/>
+        <thead>
+          <row>
+            <entry>
+              <p>Mandatory</p>
+            </entry>
+            <entry>
+              <p>Non-Mandatory</p>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>Chassis ID</entry>
+            <entry>
+              <p>Port Description</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>Port ID</p>
+            </entry>
+            <entry>
+              <p>System Name</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>Time to Live (TTL)</p>
+            </entry>
+            <entry>
+              <p>System Description</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>End TLV</p>
+            </entry>
+            <entry>
+              <p>System Capabilities (MAC/PHY configurations and status)</p>
+            </entry>
+          </row>
+          <row>
+            <entry/>
+            <entry>
+              <p>Link Aggregation (Type 3 and Type 7)</p>
+            </entry>
+          </row>
+          <row>
+            <entry/>
+            <entry>
+              <p>Max Frame Size</p>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <note id="note_anm_tdh_jdc">
+      <p>By default Management-address TLV is not supported. The Management-address TLV is sent out
+        only once the management address or management-interface is configured on Cloud-Native
+        Router.</p>
+    </note>
+    <p>You can configure <codeph>tlv-filter</codeph> and <codeph>tlv-select</codeph> to filter or
+      select non-mandatory TLVs. Cloud-Native Router will receive all TLVs support by Junos OS. You
+      can view the received TLVs using the <codeph>show lldp neighbors</codeph> command output.
+      Please review the <xref href="https://www.juniper.net/documentation/us/en/software/junos/multicast-l2/topics/concept/layer-2-services-lldp-overview.html" format="html" scope="external">LLDP Overview</xref> junos documentation for more
+        details.<subsection id="subsection_qvy_tyn_jdc">
+        <title>LLDP Configuration</title>
+        <p>You can configure the following options for the LLDP protocol in the Cloud-Native
+          Router:</p>
+        <codeblock id="codeblock_bmh_hzn_jdc"># set protocols lldp ?
+Possible completions:
+  advertisement-interval  Transmit interval for LLDP messages (5..32768 seconds)
++ apply-groups         Groups from which to inherit configuration data
++ apply-groups-except  Don't inherit configuration data from these groups
+&gt; chassis-id           Chassis-id to be used for Chassis ID TLV generation
+  dest-mac-type        Destination address to be used
+  disable              Disable LLDP
+  fast-rx-processing   Start optimised processing of received pdu
+  hold-multiplier      Hold timer interval for LLDP messages (2..10)
+&gt; interface            Interface configuration
+  lldp-tx-fast-init    Transmission count in fast transmission mode (1..8)
+  management-address   LLDP management address
+  management-interface  Management interface to be used in LLDP PDUs
+  mau-type             Populate mau-type in lldp PDU
+  neighbour-port-info-display  Show lldp neighbors to display port-id or port-description 
+  port-description-type  The Interfaces Group MIB object to be used for Port Description TLV generation
+  port-id-subtype      Sub-type to be used for Port ID TLV generation
+  system-description   System description to be used in system-description TLV
+  system-name          System name to be used in system-name TLV
++ tlv-filter           Filter TLVs to be sent
++ tlv-select           Select TLVs to be sent
+&gt; traceoptions         Trace options for LLDP
+  transmit-delay       Transmit delay time interval for LLDP messages (1..8192 seconds)</codeblock>
+        <p>Please review <xref href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/statement/lldp-edit-protocols.html" format="html" scope="external">edit-protocols-lldp</xref> topic for more details about
+          the configurable options.</p>
+        <p>You must perform LLDP configuration using a Configlet. Review <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">Customize JCNR Configuration</xref> for more details. A sample configlet is provided
+          below:</p>
+        <codeblock id="codeblock_mtv_xyn_jdc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set protocols lldp enable
+    set protocols lldp management-address 192.168.1.10
+    set protocols lldp advertisement-interval 5
+    set protocols lldp transmit-delay 1
+    set protocols lldp hold-multiplier 2
+    set protocols lldp chassis-id chassis-id-type mac-address
+    set protocols lldp chassis-id chassis-id-value 2c:6b:f5:15:6b:c0
+    set protocols lldp interface ens19
+    set protocols lldp system-name jcnr1.ix.juniper.net
+  crpdSelector:
+    matchLabels:
+      node: worker </codeblock>
+      </subsection></p>
+  </conbody>
+</concept>

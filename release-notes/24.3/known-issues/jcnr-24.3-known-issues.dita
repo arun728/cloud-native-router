@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_853cadf3bbccede8--7444e1be-192651e83d1--7fc4" xml:lang="en-US">
+  <title>Known Limitations</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>This section describes issues and limitations present in Juniper Cloud-Native Router (JCNR)
+      release 24.3.</p>
+    <section id="section_zqk_5dh_xvb">
+      <title>Known Issues and Limitations in Juniper Cloud-Native Router Release 24.3</title>
+      <ul id="ul_kdl_krr_xyb">
+        <li>
+          <p><b>JCNR-10074: The maximum number of labels in a label-stack for an interface is
+              limited to three—</b>By default, the maximum number of labels in a label-stack for an
+            interface is three. When the label-stack depth exceeds the maximum number of labels, the
+            backup path for fast re-route (FRR) is unavailable. You cannot increase the number of
+            labels on an interface currently.</p>
+        </li>
+        <li>
+          <p><b>JCNR-9989: Traffic drop at ingress L3 sub-interface with multifield (MF) classifier
+              applied</b>—Traffic drop may be observed when L3 CoS filter with MF classifier is
+            applied on an ingress sub-interface. Restarting the vRouter pod fixes the issue.</p>
+        </li>
+        <li>
+          <p><b>JCNR-8498: JCNR Forwarding plane not fragmentating VLAN-tagged frames with size
+              greater than 8968 bytes</b>— The JCNR forwarding plane does not fragment VLAN-tagged
+            frames with size greater than 8968 bytes. The frames are currently dropped.</p>
+        </li>
+        <li>
+          <p><b>JCNR-6549: SSH login authentication failure to JCNR controller (cRPD) results in
+              zero bytes core files</b>—When accessing cRPD via SSH, login authentication failures
+            result in zero byte core files. </p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

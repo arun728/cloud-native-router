@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_d10b2736d8af3f00--7cdfdef-1847ab4f615--7fbc" xml:lang="en-US">
+  <title>New and Updated Features</title>
+  <prolog>
+    <author>probbins</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section describes the new features in the Juniper Cloud-Native Router 22.4 release.</p>
+
+    <section>
+      <title>New Features in Juniper Cloud-Native Router Release 22.4</title>
+      <ul>
+        <li>
+          <p><b>Support for L2 or L3 Operation</b>–Juniper Cloud-Native Router now supports
+            deployment in either L2 or L3 mode. In L2 mode, cloud-native router operates as a switch
+            while in L3 mode, cloud-native router operates as a router. The deployment mode is a one
+            or the other choice. Cloud-native router does not support simultaneous operation in both
+            L2 and L3 modes.</p>
+        </li>
+        <li>
+          <p><b>Dual Stack Pod Network (IPv4/IPv6)</b>–In L3 mode, the pod network in Juniper
+            Cloud-Native Router is divided into an IPv6 underlay network and an IPv4/IPv6 overlay
+            network. The IPv6 underlay network is used for control plane traffic such as BGP, OSPF,
+            and IS-IS.</p>
+          <p>The IPv4/IPv6 overlay network is used for traffic sent and received by the user pods
+            created in the compute nodes connected to the JCNR-vRouter.</p>
+        </li>
+        <li>
+          <p><b>Support for BGP, OSPF, and IS-IS Routing Protocols</b>–In L3 mode, the cloud-native
+            router control-plane (cRPD) uses an IPv6 underlay network supported, in turn, by the
+            JCNR-vRouter data plane. Control plane traffic such as BGP, OSPF, and IS-IS protocols
+            are routed over this IPv6 underlay network.</p>
+        </li>
+        <li>
+          <p><b>Support for SR-MPLS</b>–In L3 mode, Juniper Cloud-Native Router supports
+            control-plane allocated SR-MPLS (over IPv4 and IPv6) tunnels that the JCNR-vRouter uses
+            to route overlay traffic from user pods.</p>
+        </li>
+        <li>
+          <p><b>L2 Support for QoS Enforcement</b>–In L2 mode, Juniper Cloud-Native Router supports
+            scheduling for near-real time and non-real time CoS using pBits classification, and
+            marking and re-marking for pBits.</p>
+        </li>
+        <li>
+          <p><b>Enhancements to MPLS over UDP Support</b>–In L3 mode, Juniper Cloud-Native Router
+            supports MPLS over the UDP protocol (MPLSoUDP). In this release the we have enhanced
+            MPLSoUDP support for to allow:</p>
+          <ul id="ul_lt4_yyz_wvb">
+            <li>
+              <p>MPLS LSP over a single UDP tunnel</p>
+            </li>
+            <li>
+              <p>Multiple UDP tunnels</p>
+            </li>
+            <li>
+              <p>MPLSoUDP on VLAN tagged and untagged Ethernet interfaces</p>
+            </li>
+            <li>
+              <p>Service L3 VPN</p>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <p><b>BUM Traffic Limiting Enhancements</b>–In addition to existing support for
+            rate-limiting of broadcast and multicast traffic in L2 mode, Juniper Cloud-Native router
+            now supports rate limiting of unknown unicast packets. You control rate limits within
+            the system using storm control profiles. The vrouter cli (purel2 CLI) now shows rate
+            limiting configuration per VLAN or bridge domain.</p>
+        </li>
+        <li>
+          <p><b>L2 API to Force Bond Link Switchover</b>–For bond interface connections on cascaded
+            nodes in L2 mode, cloud-native router now allows you to switch traffic from the active
+            to the standby interface using an API call.</p>
+        </li>
+      </ul></section>
+  </conbody>
+</concept>

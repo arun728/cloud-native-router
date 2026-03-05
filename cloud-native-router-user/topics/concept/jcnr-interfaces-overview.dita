@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7f75" xml:lang="en-US">
+  <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Interfaces Overview</title>
+  <shortdesc>This topic provides information on the network communication interfaces provided by the
+    JCNR-Controller. Fabric interfaces are aggregated interfaces that receive traffic from multiple
+    interfaces. Interfaces to which different workloads are connected are called workload
+    interfaces.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>Read this topic to understand the network communication interfaces provided by the
+      JCNR-Controller. We cover interface names, what they connect to, how they communicate and the
+      services they provide.</p>
+    <section>
+      <title>Juniper Cloud-Native Router Interface Types</title>
+      <p>Juniper Cloud-Native Router supports two types of interfaces:</p>
+      <ul id="ul_xfz_npp_mxb">
+        <li>
+          <p><b>Fabric interfaces</b>—Aggregated interfaces that receive traffic from multiple
+            interfaces. Fabric interfaces are always physical interfaces. They can either be a
+            physical function (PF) or a virtual function (VF). The throughput requirement for these
+            interfaces is higher, hence multiple hardware queues are allocated to them. Each
+            hardware queue is allocated with a dedicated CPU core . The interfaces are configured
+            for the cloud-native router using the appropriate <codeph>values.yaml</codeph> file in
+            the deployer helmcharts. You can view the interface mapping using the <codeph>dpdkinfo
+              -c</codeph> command (View the <xref keyref="cloud-native-router-user.troubleshooting-vrouter"/> topic for more details).
+            You also have fabric workload interfaces that have low throughput requirement. Only one
+            hardware queue is allocated to the interface, thereby saving precious CPU resources.
+            These interfaces can be configured using the appropriate <codeph>values.yaml</codeph>
+            file in the deployer helmcharts. </p>
+        </li>
+        <li>
+          <p><b>Workload interfaces</b>—Interfaces to which different workloads are connected. They
+            can either be software-based or hardware-based interfaces. Software-based interfaces
+            (pod interfaces) are either high-performance interfaces using the Data Plane Development
+            Kit (DPDK) poll mode driver (PMD) or a low-performance interfaces using the kernel
+            driver. Typically the DPDK interfaces are used for data traffic such as the GPRS
+            Tunneling Protocol for user data (GTP-U) traffic and the kernel-based interfaces are
+            used for control plane data traffic such as TCP. The kernel pod interfaces are typically
+            for the operations, administration and maintenance (OAM) traffic or are used by non-DPDK
+            pods. The kernel pod interfaces are configured as a veth-pair, with one end of the
+            interface in the pod and the other end in the Linux kernel on the host. The DPDK native
+            pod interfaces (virtio interfaces) are plumbed as vhost-user interfaces to the DPDK
+            vRouter by the CNI. <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>also supports bonded interfaces via the link bonding PMD. These
+            interfaces can be configured using the appropriate <codeph>values.yaml</codeph> file in
+            the deployer helmcharts. </p>
+          <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports different types of VLAN interfaces including trunk, access and
+            sub-interfaces across fabric and workload interfaces.</p>
+        </li>
+      </ul>
+    </section>
+    <section id="section_yrf_hxk_n1c">
+      <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Interface Details</title>
+      <p>The different <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>interfaces are provided in detail below:</p>
+      <subsection id="subsection_m2q_jxk_n1c">
+        <title>Agent Interface</title>
+        <p>The vRouter has only one agent interface. The agent interface enables communication
+          between the vRouter-agent and the vRouter containers. On the vRouter CLI when you issue
+          the <codeph>vif --list</codeph> command, the agent interface looks like this:</p>
+        <codeblock id="codeblock_wp5_kxk_n1c">vif0/0      Socket: unix
+            Type:<b>Agent</b> HWaddr:00:00:5e:00:01:00
+            Vrf:65535 Flags:L2 QOS:-1 Ref:3
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:650  bytes:99307 errors:0
+            Drops:0</codeblock>
+      </subsection>
+      <subsection id="subsection_e5x_lxk_n1c">
+        <title>L3 Fabric Interface (DPDK)</title>
+        <p>A layer-3 fabric interface bound to the DPDK. </p>
+        <p>L3 fabric interface in cRPD can be reviewed on the cRPD shell using the junos
+            <codeph>show interfaces</codeph> command:</p>
+        <codeblock id="codeblock_nm5_txk_n1c">show interfaces routing ens2f2​
+Interface        State Addresses​
+ens2f2           Up    MPLS  enabled​
+                       ISO   enabled​
+                       INET  192.21.2.4​
+                       INET6 2001:192:21:2::4​
+                       INET6 fe80::c5da:7e9c:e168:56d7​
+                       INET6 fe80::a0be:69ff:fe59:8b58</codeblock>
+        <p>The corresponding physical and tap interfaces can be seen on the vRouter using the
+            <codeph>vif --list</codeph> command on the vRouter shell.</p>
+        <codeblock id="codeblock_tmb_nxk_n1c">vif0/1      PCI: 0000:17:01.1 (Speed 25000, Duplex 1) NH: 7 MTU: 9000 <b>&lt;- PCI Address</b>                                              ​
+            <b>Type:Physical</b> HWaddr:d6:93:87:91:45:6c IPaddr: 192.21.2.4 <b>&lt;- Physical interface​</b>
+            IP6addr:2001:192:21:2::4 &lt;- IPv6 address​
+            DDP: OFF SwLB: ON​
+            Vrf:2 Mcast Vrf:2 Flags:L3L2Vof QOS:0 Ref:16 <b>&lt;- L3 (only) interface</b>
+            RX port   packets:423168341 errors:0​
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0​
+            Fabric Interface: 0000:17:01.1  Status: UP  Driver: net_iavf​
+            RX packets:423168341  bytes:29123418594 errors:0​
+            TX packets:417508247  bytes:417226216530 errors:0​
+            Drops:8​
+            TX port   packets:417508247 errors:0​</codeblock>
+        <codeblock id="codeblock_xsr_nxk_n1c">vif0/2      <b>PMD</b>: ens2f2 NH: 12 MTU: 9000 <b>&lt;- Tap interface name as seen by cRPD​</b>
+            Type:Host HWaddr:d6:93:87:91:45:6c IPaddr: 192.21.2.4 <b>&lt;- Tap interface type​</b>
+            IP6addr:2001:192:21:2::4​
+            DDP: OFF SwLB: ON​
+            Vrf:2 Mcast Vrf:65535 Flags:L3DProxyEr QOS:-1 Ref:15 TxXVif:1  <b>&lt;-cross-connected to vif 1​</b>
+            RX device packets:306995  bytes:25719830 errors:0​
+            RX queue  packets:306995 errors:0​
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0​
+            RX packets:306995  bytes:25719830 errors:0​
+            TX packets:307489  bytes:25880250 errors:0​
+            Drops:0​
+            TX queue  packets:307489 errors:0​
+            TX device packets:307489  bytes:25880250 errors:0</codeblock>
+      </subsection>
+      <subsection id="subsection_tmr_11l_n1c">
+        <title>L3 Bond Interface (DPDK)</title>
+        <p>A layer 3 bond interface bound to DPDK.</p>
+        <codeblock id="codeblock_p21_g1l_n1c">show interfaces routing bond34​
+Interface        State Addresses​
+bond34           Up    INET6 2001:192:7:7::4​
+                       ISO   enabled​
+                       INET  192.7.7.4​
+                       INET6 fe80::527c:6fff:fe48:7574​</codeblock>
+        <codeblock id="codeblock_c1j_c1l_n1c">vif0/3      PCI: 0000:00:00.0 (Speed 25000, Duplex 1) NH: 6 MTU: 1514 <b>&lt;- Bond interface (PCI id 0)​</b>
+            <b>Type:Physical</b> HWaddr:50:7c:6f:48:75:74 IPaddr:192.7.7.4 <b>&lt;- Physical interface​</b>
+            IP6addr:2001:192:7:7::4​
+            DDP: OFF SwLB: ON​
+            Vrf:1 Mcast Vrf:1 Flags:TcL3L2Vof QOS:0 Ref:18​
+            RX port   packets:402183888 errors:0​
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0​
+            Fabric Interface: eth_bond_bond34  Status: UP  Driver: net_bonding <b>&lt;- Bonded master​</b>
+            Slave Interface(0): 0000:5e:00.0  Status: UP  Driver: net_ice <b>&lt;- Bond slave - 1​</b>
+            Slave Interface(1): 0000:af:00.0  Status: UP  Driver: net_ice <b>&lt;- Bond slave - 2​</b>
+            RX packets:402183888  bytes:49519387070 errors:0​
+            TX packets:79226  bytes:7330912 errors:0​
+            Drops:1393​
+            TX port   packets:79226 errors:0​</codeblock>
+        <codeblock id="codeblock_qll_21l_n1c">vif0/4      <b>PMD</b>: bond34 NH: 11 MTU: 9000​
+            Type:Host HWaddr:50:7c:6f:48:75:74 IPaddr:192.7.7.4 <b>&lt;- Tap interface​</b>
+            IP6addr:2001:192:7:7::4​
+            DDP: OFF SwLB: ON​
+            Vrf:1 Mcast Vrf:65535 Flags:L3DProxyEr QOS:-1 Ref:15 TxXVif:3 <b>&lt;- Tap interface for bond​</b>
+            RX device packets:76357  bytes:7101918 errors:0​
+            RX queue  packets:76357 errors:0​
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0​
+            RX packets:76357  bytes:7101918 errors:0​
+            TX packets:75349  bytes:6946908 errors:0​
+            Drops:0​
+            TX queue  packets:75349 errors:0​
+            TX device packets:75349  bytes:6946908 errors:0​</codeblock>
+      </subsection>
+      <subsection id="subsection_zqs_qhl_n1c">
+        <title>L3 Pod VLAN Sub-Interface (DPDK)</title>
+        <p>Starting in Juniper Cloud-Native Router Release 23.2, the cloud-native router supports
+          the use of VLAN sub-interfaces in L3 mode, bound to DPDK.</p>
+        <p>Corresponding interface state in cRPD:</p>
+        <codeblock id="codeblock_bwm_rhl_n1c">show interfaces routing ens1f0v1.201
+Interface          State Addresses
+ens1f0v1.201       Up    MPLS  enabled
+                   ISO   enabled
+                   INET6 fe80::b89c:fff:feab:e2c9</codeblock>
+        <codeblock id="codeblock_xvm_rhl_n1c">vif0/2      PCI: 0000:17:01.1 (Speed 25000, Duplex 1) NH: 7 MTU: 9000                    
+            <b>Type:Physical</b> HWaddr:d6:93:87:91:45:6c IPaddr:0.0.0.0
+            IP6addr:fe80::d493:87ff:fe91:456c &lt;- IPv6 address
+            DDP: OFF SwLB: ON
+            Vrf:2 Mcast Vrf:2 Flags:L3L2Vof QOS:0 Ref:16 <b>&lt;- L3 (only) interface</b>
+            RX port   packets:423168341 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:17:01.1  Status: UP  Driver: net_iavf
+            RX packets:423168341  bytes:29123418594 errors:0
+            TX packets:417508247  bytes:417226216530 errors:0
+            Drops:8
+            TX port   packets:417508247 errors:0</codeblock>
+        <codeblock id="codeblock_yvm_rhl_n1c">vif0/5      <b>PMD</b>: ens1f0v1 NH: 12 MTU: 9000
+            Type:Host HWaddr:d6:93:87:91:45:6c IPaddr:0.0.0.0
+            IP6addr:fe80::d493:87ff:fe91:456c
+            DDP: OFF SwLB: ON
+            Vrf:2 Mcast Vrf:65535 Flags:L3DProxyEr QOS:-1 Ref:15 TxXVif:2 <b>&lt;- L3 (only) tap interface</b>
+            RX device packets:306995  bytes:25719830 errors:0
+            RX queue  packets:306995 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:306995  bytes:25719830 errors:0
+            TX packets:307489  bytes:25880250 errors:0                                                                                                     
+            Drops:0
+            TX queue  packets:307489 errors:0
+            TX device packets:307489  bytes:25880250 errors:0</codeblock>
+        <codeblock id="codeblock_zvm_rhl_n1c">vif0/9      Virtual: ens1f0v1.201 Vlan(o/i)(,S): 201/201 Parent:vif0/2 NH: 36 MTU: 1514 <b>&lt;- VLAN fabric sub-intf with parent as vif 2 and VLAN tag as 201</b>
+            Type:Virtual(Vlan) HWaddr:d6:93:87:91:45:6c IPaddr:103.1.1.2
+            IP6addr:fe80::d493:87ff:fe91:456c
+            DDP: OFF SwLB: ON
+            Vrf:1 Mcast Vrf:1 Flags:L3DProxyEr QOS:-1 Ref:4
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0</codeblock>
+        <codeblock id="codeblock_awm_rhl_n1c">vif0/10     Virtual: ens1f0v1.201 Vlan(o/i)(,S): 201/201 Parent:vif0/5 NH: 21 MTU: 9000
+            Type:Virtual(Vlan) HWaddr:d6:93:87:91:45:6c IPaddr:103.1.1.2
+            IP6addr:fe80::d493:87ff:fe91:456c
+            DDP: OFF SwLB: ON
+            Vrf:1 Mcast Vrf:65535 Flags:L3DProxyEr QOS:-1 Ref:4 TxXVif:9 <b>&lt;- VLAN tap sub-intf cross connected to fabric sub-intf vif 9 and parent as tap intf vif 5</b>
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0</codeblock>
+        <codeblock id="codeblock_k11_sxv_q1c">vif0/50     <b>PMD: vhostnet1-9403fd77-648a-47</b> NH: 177 MTU: 9160                     <b>---&gt; pod interface
+</b>            Type:Virtual HWaddr:00:00:5e:00:01:00 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:65535 Mcast Vrf:65535 Flags:L3DProxyEr QOS:-1 Ref:20
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+</codeblock>
+        <codeblock id="codeblock_fxh_5xv_q1c">vif0/51     <b>Virtual: vhostnet1-9403fd77-648a-47.201</b> Vlan(o/i)(,S): 201/201 NH: 17 MTU: 1514
+            Parent:vif0/50                                                        <b>----&gt;L3 pod sub-interface, parent is the pod interface
+</b>            Type:Virtual(Vlan) HWaddr:00:00:5e:00:01:00 IPaddr:99.62.0.2
+            IP6addr:1234::633e:2
+            DDP: OFF SwLB: ON
+            Vrf:2 Mcast Vrf:2 Flags:PL3DProxyEr QOS:-1 Ref:4
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0</codeblock>
+      </subsection>
+      <subsection id="subsection_u5v_m1l_n1c">
+        <title>L3 Pod Kernel Interface</title>
+        <p>These are non-DPDK L3 pod interfaces. Interface state in the cRPD:</p>
+        <codeblock id="codeblock_yfl_n1l_n1c">show interfaces routing jvknet1-0af476e​
+Interface        State Addresses​
+jvknet1-0af476e  Up    INET6 enabled​
+                       INET6 abcd:2:51:1::4​
+                       ISO   enabled​
+                       INET  enabled​
+                       INET  2.51.1.4</codeblock>
+        <codeblock id="codeblock_nwk_41l_n1c">vif0/13     <b>Ethernet: jvknet1-0af476e</b> NH: 35 MTU: 9160 <b>&lt;- Kernel interface (jvk) of CNF​</b>
+            Type:Virtual HWaddr:00:00:5e:00:01:00 IPaddr:2.51.1.4 <b>&lt;- pod/ workload​</b>
+            IP6addr:abcd:2:51:1::4​
+            DDP: OFF SwLB: ON​
+            Vrf:1 Mcast Vrf:1 Flags:PL3DVofProxyEr QOS:-1 Ref:11​
+            RX port   packets:47 errors:0​
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0​
+            RX packets:47  bytes:13012 errors:0​
+            TX packets:0  bytes:0 errors:0​
+            Drops:47​</codeblock>
+      </subsection>
+      <subsection id="subsection_myg_fbl_n1c">
+        <title>L2 Fabric Interface (DPDK, Physical Trunk)</title>
+        <p>DPDK L2 fabric interfaces, which are associated with the physical network interface card
+          (NIC) on the host server, accept traffic from multiple VLANs. The trunk interfaces accept
+          only tagged packets. Any untagged packets are dropped. These interfaces can accept a VLAN
+          filter to allow only specific VLAN packets. A trunk interface can be a part of multiple
+          bridge-domains (BD). A bridge domain is a set of logical ports that share the same
+          flooding or broadcast characteristics. Like a VLAN, a bridge domain spans one or more
+          ports of multiple devices. </p>
+        <p>The cRPD interface configuration using the <codeph>show configuration</codeph> command
+          looks like this (the output is trimmed for brevity):</p>
+        <codeblock id="codeblock_klz_fbl_n1c">interfaces {
+    ens786f0v0 {
+        unit 0 {
+            family bridge {
+                interface-mode trunk;                     
+                vlan-id-list 1001-1100;                    
+            }
+        }
+    }
+}   </codeblock>
+        <p>On the vRouter CLI when you issue the <codeph>vif --list</codeph> command, the DPDK VF
+          fabric interface looks like this: </p>
+        <codeblock id="codeblock_llz_fbl_n1c">
+vif0/1    PCI: 0000:31:01.0 (Speed 10000, Duplex 1)    
+          <b>Type:Physical</b> HWaddr:d6:22:c5:42:de:c3
+          Vrf:65535 Flags:L2Vof QOS:-1 Ref:12
+          RX queue packets:11813 errors:1
+          RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 1 0
+          Fabric Interface: 0000:31:01.0 Status: UP Driver: net_iavf
+          <b>Vlan Mode: Trunk</b> <b>Vlan: 1001-1100</b>
+          RX packets:0 bytes:0 errors:49962
+          TX packets:18188356 bytes:2037400554 errors:0
+          Drops:49963 </codeblock>
+      </subsection>
+      <subsection id="subsection_jb3_gcl_n1c">
+        <title>DPDK L2 Bond Interface (Active-Standby, Trunk)</title>
+        <p>Layer-2 Bond interfaces accept traffic from multiple VLANs. A bond interface runs in the
+          active or standby mode (mode 0). You define the bond interface in the helm chart
+          configuration as follows:</p>
+        <codeblock id="codeblock_pbp_hcl_n1c">bondInterfaceConfigs:
+- name: "bond0"
+  mode: 1          # ACTIVE_BACKUP MODE
+  slaveInterfaces:
+  - "ens2f0v1"
+  - "ens2f1v1"</codeblock>
+        <codeblock id="codeblock_qbp_hcl_n1c"> - bond0:
+      ddp: "auto" 
+      interface_mode: trunk
+      vlan-id-list: [1001-1100]
+      storm-control-profile: rate_limit_pf1
+      native-vlan-id: 1001
+      no-local-switching: true</codeblock>
+        <p>The cRPD interface configuration using the <codeph>show configuration</codeph> command
+          looks like this (the output is trimmed for brevity):</p>
+        <codeblock id="codeblock_rbp_hcl_n1c">interfaces {
+    bond0 {
+         unit 0 {
+             family bridge
+             interface-mode trunk;
+             vlan-id-list 1001-1100;                    
+         }
+    }
+}</codeblock>
+        <p>On the vRouter CLI when you issue the <codeph>vif --list</codeph> command, the bond
+          interface looks like this: </p>
+        <codeblock id="codeblock_sbp_hcl_n1c">vif0/2      PCI: 0000:00:00.0 (Speed 10000, Duplex 1)
+            <b>Type:Physical</b> HWaddr:32:f8:ad:8c:d3:bc
+            Vrf:65535 Flags:L2Vof QOS:-1 Ref:8
+            RX queue  packets:1882 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0
+            <b>Fabric Interface: eth_bond_bond0  Status: UP  Driver: net_bonding
+            Slave Interface(0): 0000:81:01.0  Status: UP  Driver: net_iavf
+            Slave Interface(1): 0000:81:03.0  Status: UP  Driver: net_iavf</b>
+            <b>Vlan Mode: Trunk</b>  <b>Vlan: 1001-1100</b>
+            RX packets:8108366000  bytes:486501960000 errors:4234
+            TX packets:65083776  bytes:4949969408 errors:0
+            Drops:8108370394</codeblock>
+      </subsection>
+      <subsection id="subsection_rtf_ncl_n1c">
+        <title>DPDK L2 Pod Interface (Virtio Trunk)</title>
+        <p>The trunk interfaces accept only tagged packets. Any untagged packets are dropped. These
+          interfaces can accept a VLAN filter to allow only specific VLAN packets. A trunk interface
+          can be a part of multiple bridge-domains (BD). A bridge domain is a set of logical ports
+          that share the same flooding or broadcast characteristics. Like a VLAN, a bridge domain
+          spans one or more ports of multiple devices. Virtio interfaces are associated with pod
+          interfaces that use virtio on the DPDK data plane. </p>
+        <p>The cRPD interface configuration using the <codeph>show configuration</codeph> command
+          looks like this (the output is trimmed for brevity):</p>
+        <codeblock id="codeblock_wkx_ncl_n1c">interfaces {
+    vhost242ip-93883f16-9ebb-4acf-b {
+         unit 0 {
+             family bridge {
+                 interface-mode trunk;                    
+                 vlan-id-list 1001-1003;
+             }
+         }
+    }
+}</codeblock>
+        <p>On the vRouter CLI when you issue the <codeph>vif --list</codeph> command, the virtio
+          with DPDK data plane interface looks like this: </p>
+        <codeblock id="codeblock_xkx_ncl_n1c">vif0/3    <b>PMD: vhost242ip-93883f16-9ebb-4acf-b</b>
+          Type:Virtual HWaddr:00:16:3e:7e:84:a3
+          Vrf:65535 Flags:L2 QOS:-1 Ref:13
+          RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+          <b>Vlan Mode: Trunk</b><b> Vlan: 1001-1003</b>
+          RX packets:0 bytes:0 errors:0
+          TX packets:10604432 bytes:1314930908 errors:0
+          Drops:0
+          TX port packets:0 errors:10604432 </codeblock>
+      </subsection>
+      <subsection id="subsection_pfw_vgl_n1c">
+        <title>L2 Pod Kernel Interface (Access)</title>
+        <p>The access interfaces accept both tagged and untagged packets. Untagged packets are
+          tagged with the access VLAN or access BD. Any tagged packets other than the ones with
+          access VLAN are dropped. The access interfaces is a part of a single bridge-domain. It
+          does not have any parent interface. </p>
+        <p>The cRPD interface configuration using the <codeph>show configuration</codeph> command
+          looks like this (the output is trimmed for brevity):</p>
+        <codeblock id="codeblock_xgn_wgl_n1c">routing-instances {
+    switch {
+         instance-type virtual-switch;
+         bridge-domains {                                                                                                                                       
+             bd1001 {
+                 vlan-id 1001;                            
+                 interface jvknet1-eed79ff;
+             }
+         }
+    }
+}</codeblock>
+        <p>On the vRouter CLI when you issue the <codeph>vif --list</codeph> command, the veth pair
+          interface looks like this: </p>
+        <codeblock id="codeblock_ygn_wgl_n1c">vif0/4      <b>Ethernet: jvknet1-88c44c3 </b>   
+            Type:Virtual HWaddr:02:00:00:3a:8f:73
+            Vrf:0 Flags:L2Vof QOS:-1 Ref:10
+            RX queue packets:524 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+           <b> Vlan Mode: </b><b>Access</b> <b>Vlan Id: 1001 OVlan Id: 1001</b>
+            RX packets:9 bytes:802 errors:515
+            TX packets:0 bytes:0 errors:0
+            Drops: 525</codeblock>
+      </subsection>
+      <subsection id="subsection_tq3_bhl_n1c">
+        <title>L2 Pod VLAN Sub-interface (DPDK)</title>
+        <p>You can configure a user pod with a Layer 2 VLAN sub-interface and attach it to the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>instance. VLAN sub-interfaces are like logical interfaces on a physical switch or router.
+          They access only tagged packets that match the configured VLAN tag. A sub-interface has a
+          parent interface. A parent interface can have multiple sub-interfaces, each with a VLAN
+          ID. When you run the cloud-native router, you must associate each sub-interface with a
+          specific VLAN. </p>
+        <p>The cRPD interface configuration viewed using the <codeph>show configuration</codeph>
+          command is as shown below (the output is trimmed for brevity).</p>
+        <p>For <b>L2</b>:</p>
+        <codeblock id="codeblock_mcl_chl_n1c">routing-instances {
+    switch {
+         instance-type virtual-switch;
+         bridge-domains {                                                                                                                                       
+             bd3003 {
+                 vlan-id 3003;
+                 interface <b>vhostnet1-71cd7db1-1a5e-49.3003;</b>
+             }
+         }
+     }
+}</codeblock>
+        <p>On the vRouter, a VLAN sub-interface configuration is as shown below:</p>
+        <codeblock id="codeblock_ncl_chl_n1c">vif0/4      PMD: vhostnet1-71cd7db1-1a5e-49 MTU: 9160
+            Type:Virtual HWaddr:02:00:00:84:dc:42
+            DDP: OFF SwLB: ON
+            Vrf:65535 Flags:L2 QOS:-1 Ref:14
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+            TX port   packets:0 errors:293
+
+vif0/5      Virtual: vhostnet1-71cd7db1-1a5e-49.3003 Vlan(o/i)(,S): 3003/3003 <b>Parent:vif0/4
+</b>            <b>Type:Virtual(Vlan)</b> HWaddr:00:99:99:99:33:09
+            Vrf:0 Flags:L2 QOS:-1 Ref:3
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0</codeblock>
+      </subsection>
+    </section>
+  </conbody>
+  <related-links>
+    <link keyref="cloud-native-router-user.config-examples-overview"/>
+  </related-links>
+</concept>

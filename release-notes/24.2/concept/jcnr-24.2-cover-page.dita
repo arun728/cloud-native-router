@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_4a0a09aed70b77da--50508d9c-19014de23ff--7fac" xml:lang="en-US" outputclass="coverpage">
+  <!--Make sure that the concept element for the release notes cover page topic has the outputclass=coverpage attribute.  -->
+  <title>Juniper Cloud-Native Router 24.2 Cover Page</title>
+  <prolog>
+    <author>tkaur</author>
+  </prolog>
+  <conbody>
+    <!--Use sections (with titles in capital letters) to document the highlights of the release. Only the sections in this topic will be included in the HTML and PDF output. 
+    Use a bulleted list in each section to document the release highlights. The text in each list item must link to the location where it is documented in detail in the release notes as shown in the XML sample below:
+    <li><p> <xref href="routing-protocols.dita#ti-lfa-srlg">TI-LFA SRLG protection for IS-IS (MX Series and PTX Series)</xref> </p></li>-->
+    <section id="section_hbq_n3h_trb">
+      <title>INTRODUCTION</title>
+      <p>The Juniper Cloud-Native Router provides the service providers the flexibility to roll out
+        the expansion requirements for 5G rollouts, reducing both the CapEx and OpEx. Juniper
+        Cloud-Native Router (JCNR) is a containerized implementation of control and forwarding
+        planes. The JCNR consists of modular components including a control plane (JCNR-Controller),
+        forwarding plane (JCNR-vRouter), and JCNR-CNI. The control plane provides a Junos-based
+        management framework, while the JCNR-vRouter, a DPDK-based or eBPF XDP-based forwarding
+        plane, decouples forwarding from the Linux kernel, thus allowing faster forwarding and more
+        scalability. JCNR-CNI provides the network interfaces in software that allow JCNR to network
+        with other containers, VMs, and physical devices. Together, these elements provide
+        flexibility, programmability, and scalability for the coming generations of 5G
+        installations.</p>
+    </section>
+    <section id="section_aff_2ty_dsb">
+      <title>SUPPORTED ON</title>
+      <ul id="ul_th2_zw1_yrb">
+        <li>
+          <p>Baremetal servers—RHEL 8.4, 8.5, or 8.6, and Rocky Linux 8.6, 8.7, 8.8, 8.9</p>
+        </li>
+        <li>
+          <p>Red Hat OpenShift 4.12</p>
+        </li>
+        <li>
+          <p>Amazon Elastic Kubernetes Service (EKS) 1.26.3, 1.28.x</p>
+        </li>
+        <li>
+          <p>Google Cloud Platform (Rocky Linux 8.8)</p>
+        </li>
+        <li>
+          <p>Wind River Cloud Platform 22.12</p>
+        </li>
+        <li>
+          <p>Microsoft Azure Cloud Platform (Rocky Linux 8.7)</p>
+        </li>
+        <li>
+          <p>VMWare Tanzu—RHEL 8.4, 8.5, or 8.6, and Rocky Linux 8.6, 8.7, 8.8, 8.9</p>
+        </li>
+      </ul>
+      <!--<p>You can install the cloud-native router on VMs or BMS that run the operating systems shown above. Each server must have one or more Intel Columbiaville (E810), Intel Fortville (XL710), or Intel Ethernet Network Adapter XXV710 NICs installed for proper operation.</p>-->
+    </section>
+  </conbody>
+</concept>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "/SysSchema/dita13/dtd/technicalContent/dtd/map.dtd">
+<map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" xml:lang="en-US">
+    <title>key-23.2-user-guide-updates</title>
+    <!--For each guide, create a keymap file to define keydefs to support cross-book links (links to topics in your guide from topics in other guides). Define a keydef for every topic to which you want to insert a cross-book link, The keys attribute value for a keydef must be the filename for the topic. For example, the keydef to a topic file named my-topic.dita must have my-topic as the keys attribute value. The keymap file must be placed in the folder for the guide and mapref'd into the ditamap file for the guide and in the ditamap file for every other guide that has cross-book links to topics in your guide. --></map>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_609e26bb69c88a11--68ca4e59-17d503edd14--76cb" xml:lang="en-US">
+  <title>Known-Limitations</title>
+  <prolog>
+    <author/>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Learn about known limitations in this release.</p>
+
+    <section><title>IPv6</title>
+      <ul>
+        <li>When vhost0 and vrouter pods exist, JCNR-vRouter responds with duplicate ping
+          packets.</li>
+        <!--JCNR931-->
+        <li>If you specify the global vhost IPv6 address when you deploy vrouter, the vrouter does
+          not populate IPv6 next hops.</li>
+        <!--JCNR901-->
+      </ul></section>
+    <section id="section_tyz_lsl_5rb">
+      <title>Security Group</title>
+      <ul id="ul_ycw_45l_5rb">
+        <li>Security Group rules with multiple matching protocols do not work.</li>
+        <!--JCNR675-->
+      </ul>
+    </section>
+    <section id="section_wlq_1tl_5rb">
+      <title>cRPD and JCNR-vRouter Interaction</title>
+      <ul id="ul_omf_htl_5rb">
+        <li>JCNR-vRouter-Agent could crash as a result of JCNR-vRouter restart.</li>
+        <!--JCNR678-->
+        <li>JCNR-vRouter can crash when running in a VMWare Tanzu environment and using multiple
+          master nodes.</li>
+        <!--JCNR561-->
+        <li>If you deactivate the protocol-type for the vrouter channel with the command:
+            <codeph>deactivate routing-options forwarding-table channel vrouter
+            protocol-type</codeph>, the channel does not go down.</li>
+        <!--JCNR921-->
+      </ul>
+    </section>
+  </conbody>
+</concept>

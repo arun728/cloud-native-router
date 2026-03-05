@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "/SysSchema/dita13/dtd/technicalContent/dtd/map.dtd">
+<map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" outputclass="quick-start-guide" xml:lang="en-US">
+    <!--Use the quick-start-guide template (based on the map structure) to create short documents such as Quick Start Guides, Day One+ Guides, and so on.
+    Make sure that the map element for a quick start ditamap has the outputclass=quick-start-guide attribute.-->
+    <title>quick-start-with-ocp</title>
+    <topicmeta>
+        <author>tkaur</author>
+        <data name="series-title">Quick Start</data>
+        <data name="release-date"/>
+        <data name="doc-revision"/>
+        <data name="eco-part-number"/>
+        <data name="qr-code"><image><?oxy-placeholder content="Specify path to QR code image if available"?></image></data>
+        <data name="bar-code"><image><?oxy-placeholder content="Specify path to bar code image if available"?></image></data>
+    </topicmeta>
+    <topicref><?oxy-placeholder content="Use topicref elements to link to topics."?></topicref>
+</map>

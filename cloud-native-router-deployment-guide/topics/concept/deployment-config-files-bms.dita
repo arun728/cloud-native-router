@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_97ca4427c072890e-38403db6-189f3ce8904--7ce0" xml:lang="en-US">
+  <title>Customize Cloud-Native Router Helm Chart for Bare Metal Servers</title>
+  <abstract>
+    <shortdesc>Read this topic to learn about the deployment configuration available for the Juniper
+      Cloud-Native Router on bare metal servers. </shortdesc>
+  </abstract>
+  <prolog>
+    <author>dgv</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>You can deploy and operate Juniper Cloud-Native Router in the L2, L3, or L2-L3 mode on a bare
+      metal server. You configure the deployment mode by editing the appropriate attributes in the
+        <codeph>values.yaml</codeph> file prior to deployment. </p>
+    <note>
+      <ul id="ul_r5b_kww_wxb">
+        <li>
+          <p>In the <codeph>fabricInterface</codeph> key of the <codeph>values.yaml</codeph>
+            file:</p>
+          <ul id="ul_y21_qzx_5xb">
+            <li>
+              <p>When all the interfaces have an <codeph>interface_mode</codeph> key configured,
+                then the mode of deployment would be L2. </p>
+            </li>
+            <li>
+              <p>When one or more interfaces have an <codeph>interface_mode</codeph> key configured
+                along with the rest of the interfaces not having the <codeph>interface_mode</codeph>
+                key, then the mode of deployment would be L2-L3. </p>
+            </li>
+            <li>
+              <p>When none of the interfaces have the <codeph>interface_mode</codeph> key
+                configured, then the mode of deployment would be L3.</p>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </note>
+    <section conref="../ref/jcnr-helm-chart-container.dita#xd_aa1b6500adc67cb2-c89f836-18ff470b581--7fff/section_rhz_3dx_qbc" id="section_d22_12x_qbc"><title/><p/></section>
+  </conbody>
+</concept><?oxy_options track_changes="on"?>

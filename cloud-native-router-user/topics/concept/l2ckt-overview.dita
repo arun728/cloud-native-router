@@ -1,0 +1,583 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_908141cb4c130a4a-3ef7289c-1958a82f1fd--7fae" xml:lang="en-US">
+  <!--Use the Concept template to introduce a new product or functionality. Also use this template to provide high-level explanations, definitions of key concepts, terminology, or general background information. Limit one topic to one theme or subject.-->
+  <!--For <title>, follow these guidelines:
+- Avoid the gerund form and minimize the use of “Understanding.” 
+- Use "[Feature] Overview" if the topic is indeed an overview. 
+- Use the feature name as the topic title for very long feature names. 
+- Use the Who, What, Where, When, Why, or How (not How to) phrase to describe a specific aspect of a product, feature, or user scenario.-->
+  <title>Layer 2 Circuit </title>
+  <shortdesc>Juniper-Cloud Native Router supports Layer 2 circuits over an IP/MPLS-based service
+    provider's network. This topic provides configuration and verification details. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  
+  <conbody>
+    <p>Juniper Cloud-Native Router supports Layer 2 circuits for a point-to-point Layer 2 connection
+      over an IP/MPLS-based service provider's network. To establish the Layer 2 circuit, it uses
+      Label Distribution Protocol (LDP) as the signaling protocol to advertise the ingress label to
+      the remote PE routers. A targeted LDP session is established between the loopback addresses of
+      the two PEs to exchange VPN labels. For more information on L2 circuits, please review <xref href="https://www.juniper.net/documentation/us/en/software/junos/vpn-l2/topics/concept/vpn-layer-2-circuit-overview.html" format="html" scope="external">Layer 2 Circuit Overview</xref>. </p>
+    <p>The following Layer-2 circuit features are supported by the Cloud-Native Router:</p>
+    <ul id="ul_yzw_3pw_q2c">
+      <li>
+        <p>Enable <codeph>l2circuit</codeph> protocol on Physical (PF/VF), VLAN sub-interface, bond
+          interface (towards core), and pod interfaces</p>
+      </li>
+      <li>Ethernet CCC encapsulations— <codeph>ethernet-ccc</codeph> and <codeph>vlan-ccc</codeph>
+      </li>
+      <li>
+        <p>Local interface switching</p>
+      </li>
+      <li>
+        <p>Control word</p>
+      </li>
+      <li>
+        <p>Protect Interface for CE redundancy</p>
+      </li>
+      <li>Backup Neighbor for Core redundancy</li>
+      <li>
+        <p>Pseudowire cold and hot-standby</p>
+      </li>
+      <li>
+        <p>Support L2 circuit with BGP-Labeled Unicast (BGP-LU)</p>
+      </li>
+      <li>
+        <p>Support for dual VLAN tagging</p>
+      </li>
+      <li>
+        <p>Interoperability with other Junos devices</p>
+      </li>
+    </ul>
+    <section id="section_m33_d5w_q2c">
+      <title>Configuration</title>
+      <p>You can configure Layer 2 circuits in Juniper Cloud-Native Router using <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">configlets</xref>. Multiple configlet samples are provided in this section based on the
+        following topology:<image href="../../images/jn-001335.png" id="image_zrj_4xs_w2c"/></p>
+      <p>For Layer 2 circuit configuration, you configure the Ethernet-based CE-facing interface
+        with the CCC encapsulation type of your choice—<codeph>ethernet-ccc</codeph> or
+          <codeph>vlan-ccc</codeph>. The Layer 2 circuit configuration such as the remote PE
+        neighbour (usually the loopback address), the interface connected to the CE-router, and a
+        virtual circuit identifier for the virtual circuit (VC) is performed under the <codeph>edit
+          protocols l2circuit</codeph> statement. Eventually, you configure MPLS, LDP and an IGP to
+        enable signaling for your Layer 2 circuit. Please review <xref href="https://www.juniper.net/documentation/us/en/software/nce/nce-078-layer-2-circuits/topics/example/layer-two-circuits-ethernet-configuring-detailed-solutions.html" format="html" scope="external">Example: Enternet-based Layer 2 Circuit
+          Configuration</xref> for a end-to-end Junos configuration example.</p>
+      <subsection id="subsection_hjq_45w_q2c">
+        <title>Layer 2 Circuit with ethernet-ccc</title>
+      </subsection>
+      <p>Configure Ethernet CCC encapsulation on CE-facing Ethernet interfaces on PE-1 (JCNR) that
+        must accept packets carrying standard Tag Protocol ID (TPID) values.</p>
+      <codeblock id="codeblock_ehp_xww_q2c">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-l2-ckt-pe1
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces enp13s0f2 unit 0 family inet address 172.16.25.1/24
+    set interfaces enp13s0f0 description "to CE-1 7/4"
+    set interfaces enp13s0f0 unit 0 encapsulation ethernet-ccc
+    set interfaces lo0 unit 0 family inet address 192.168.1.11/32
+    set routing-options router-id 192.168.1.11
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0 virtual-circuit-id 100
+    set protocols ldp interface enp13s0f2
+    set protocols ldp interface lo0.0
+    set protocols mpls interface enp13s0f2.0
+    set protocols ospf area 0.0.0.0 interface lo0.0
+    set protocols ospf area 0.0.0.0 interface enp13s0f2
+  crpdSelector:
+    matchLabels:
+      kubernetes.io/hostname: node-1</codeblock>
+      <subsection id="subsection_jcp_2xw_q2c">
+        <title>Layer 2 Circuits with vlan-ccc</title>
+        <p>Configure VLAN CCC encapsulation on CE-facing Ethernet interfaces on PE-1 (JCNR) with
+          VLAN tagging enabled. </p>
+        <codeblock id="codeblock_knn_3xw_q2c">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-l2-ckt-pe1
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces enp13s0f2 unit 0 family inet address 172.16.25.1/24
+    set interfaces enp13s0f0 description "to CE-1 7/4"
+    set interfaces enp13s0f0 unit 102 vlan-id 102
+    set interfaces enp13s0f0 unit 102 encapsulation vlan-ccc
+    set interfaces enp13s0f0 unit 104 vlan-id 104
+    set interfaces enp13s0f0 unit 104 encapsulation vlan-ccc
+    set interfaces enp13s0f0 unit 106 vlan-id 106
+    set interfaces enp13s0f0 unit 106 encapsulation vlan-ccc
+    set interfaces lo0 unit 0 family inet address 192.168.1.11/32
+    set routing-options router-id 192.168.1.11
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.102 virtual-circuit-id 102
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.104 virtual-circuit-id 104
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.106 virtual-circuit-id 106
+    set protocols ldp interface enp13s0f2
+    set protocols ldp interface lo0.0
+    set protocols mpls interface enp13s0f2.0
+    set protocols ospf area 0.0.0.0 interface lo0.0
+    set protocols ospf area 0.0.0.0 interface enp13s0f2
+  crpdSelector:
+    matchLabels:
+      kubernetes.io/hostname: node-1</codeblock>
+      </subsection>
+      <subsection id="subsection_e5b_gcn_s2c">
+        <title>Layer 2 Circuit with Local Switching </title>
+        <p>You can configure Layer 2 circuit with local switching. Optionally, configure
+            <codeph>protect-interface</codeph> for local or remote end to ensure traffic switch over
+          when the primary interface goes down. Protect interfaces act as backups for their
+          associated interfaces that link a virtual circuit to its destination. The primary
+          interface has priority over the protect interface and carries network traffic as long as
+          it is functional. If the primary interface fails, the protect interface is activated.
+          Optionally, configure <codeph>no-revert</codeph> to prevent switch back to primary when
+          primary interface is back up.</p>
+        <codeblock id="codeblock_jpx_gcn_s2c">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-l2-ckt-pe1
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces enp13s0f2 unit 0 family inet address 172.16.25.1/24
+    set interfaces enp13s0f0 description "to CE-1 7/4"
+    set interfaces enp13s0f0 unit 0 encapsulation ethernet-ccc
+    set interfaces lo0 unit 0 family inet address 192.168.1.11/32
+    set routing-options router-id 192.168.1.11
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0 virtual-circuit-id 100
+    set protocols l2circuit local-switching interface enp13s0f0 no-revert protect-interface enp13s0f1 end-interface interface enp13s0f3 no-revert protect-interface enp13s0f8
+    set protocols ldp interface enp13s0f2
+    set protocols ldp interface lo0.0
+    set protocols mpls interface enp13s0f2.0
+    set protocols ospf area 0.0.0.0 interface lo0.0
+    set protocols ospf area 0.0.0.0 interface enp13s0f2
+  crpdSelector:
+    matchLabels:
+      kubernetes.io/hostname: node-1</codeblock>
+      </subsection>
+      <subsection id="subsection_vzs_ndn_s2c">
+        <title>Layer 2 Circuit with Ignore Mismatch</title>
+        <p>You can configure the Layer 2 circuit to establish even though the MTU
+            (<codeph>ignore-mtu-mismatch</codeph>), encapsulation
+            (<codeph>ignore-encapsulation-mismatch</codeph>) or VLAN ID
+            (<codeph>no-vlan-id-validate</codeph>) configured on the CE device interface does not
+          match the setting configured on the Layer 2 circuit interface. </p>
+        <codeblock id="codeblock_jsl_1fn_s2c">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-l2-ckt-pe1
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces enp13s0f2 unit 0 family inet address 172.16.25.1/24
+    set interfaces enp13s0f0 description "to CE-1 7/4"
+    set interfaces enp13s0f0 unit 0 encapsulation ethernet-ccc
+    set interfaces lo0 unit 0 family inet address 192.168.1.11/32
+    set routing-options router-id 192.168.1.11
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0 virtual-circuit-id 100 ignore-encapsulation-mismatch ignore-mtu-mismatch no-vlan-id-validate
+    set protocols ldp interface enp13s0f2
+    set protocols ldp interface lo0.0
+    set protocols mpls interface enp13s0f2.0
+    set protocols ospf area 0.0.0.0 interface lo0.0
+    set protocols ospf area 0.0.0.0 interface enp13s0f2
+  crpdSelector:
+    matchLabels:
+      kubernetes.io/hostname: node-1</codeblock>
+      </subsection>
+      <subsection id="subsection_xh5_4yw_q2c">
+        <title>Static Layer 2 Circuits </title>
+        <p>Configure <xref href="https://www.juniper.net/documentation/us/en/software/junos/vpn-l2/topics/concept/vpns-configuring-static-layer-2-circuits.html" format="html" scope="external">static Layer 2 circuit</xref> pseudowires for networks
+          that do not support LDP or do not have LDP enabled. Static pseudowires require you to
+          configure static values for the in and out labels that enable a pseudowire connection. </p>
+        <codeblock id="codeblock_mvh_zyw_q2c">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-l2-ckt-pe1
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces enp13s0f2 unit 0 family inet address 172.16.25.1/24
+    set interfaces enp13s0f0 description "to CE-1 7/4"
+    set interfaces enp13s0f0 unit 102 vlan-id 102
+    set interfaces enp13s0f0 unit 102 encapsulation vlan-ccc
+    set interfaces enp13s0f0 unit 104 vlan-id 104
+    set interfaces enp13s0f0 unit 104 encapsulation vlan-ccc
+    set interfaces enp13s0f0 unit 106 vlan-id 106
+    set interfaces enp13s0f0 unit 106 encapsulation vlan-ccc
+    set interfaces lo0 unit 0 family inet address 192.168.1.11/32
+    set routing-options router-id 192.168.1.11
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.102 static incoming-label 103
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.102 static outgoing-label 102
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.102 virtual-circuit-id 102
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.104 static incoming-label 105
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.104 static outgoing-label 104
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.104 virtual-circuit-id 104
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.106 static incoming-label 107
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.106 static outgoing-label 106
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.106 virtual-circuit-id 106
+    set protocols ldp interface enp13s0f2
+    set protocols mpls label-range static-label-range 16 200
+    set protocols mpls interface enp13s0f2.0
+    set protocols ospf area 0.0.0.0 interface lo0.0
+    set protocols ospf area 0.0.0.0 interface enp13s0f2
+  crpdSelector:
+    matchLabels:
+      kubernetes.io/hostname: node-1</codeblock>
+      </subsection>
+      <subsection id="subsection_xhn_hzw_q2c">
+        <title>Layer 2 Circuit with BGP-LU</title>
+        <p>Enable Layer 2 circuit over <xref href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/statement/labeled-unicast-edit-protocols-bgp.html" format="html" scope="external">BGP-Labeled Unicast (BGP-LU)</xref>. BGP-LU advertises
+          the ingress label to its peer PE routers.</p>
+        <codeblock id="codeblock_t4f_x2y_r2c">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-l2-ckt-pe1
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces enp13s0f2 unit 0 family inet address 172.16.25.1/24
+    set interfaces enp13s0f0 description "to CE-1 7/4"
+    set interfaces enp13s0f0 unit 102 vlan-id 102
+    set interfaces enp13s0f0 unit 102 encapsulation vlan-ccc
+    set interfaces enp13s0f0 unit 104 vlan-id 104
+    set interfaces enp13s0f0 unit 104 encapsulation vlan-ccc
+    set interfaces enp13s0f0 unit 106 vlan-id 106
+    set interfaces enp13s0f0 unit 106 encapsulation vlan-ccc
+    set interfaces lo0 unit 0 family inet address 192.168.1.11/32
+    set policy-options policy-statement local-prefixes from protocol direct
+    set policy-options policy-statement local-prefixes from prefix-list local-prefixes
+    set policy-options policy-statement local-prefixes then accept
+    set policy-options policy-statement send-pe from route-filter 192.168.1.11/32 exact
+    set policy-options policy-statement send-pe then accept
+    set policy-options prefix-list local-prefixes 192.168.1.11/32
+    set routing-options router-id 192.168.1.11
+    set routing-options autonomous-system 65001
+    set routing-options rib-groups INET0_to_INET3 import-rib inet.0
+    set routing-options rib-groups INET0_to_INET3 import-rib inet.3
+    set protocols bgp group external type external
+    set protocols bgp group external local-address 172.16.25.1
+    set protocols bgp group external family inet labeled-unicast rib inet.3
+    set protocols bgp group external family inet unicast rib-group INET0_to_INET3
+    set protocols bgp group external export local-prefixes
+    set protocols bgp group external neighbor 172.16.30.11 peer-as 65002
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.102 virtual-circuit-id 102
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.104 virtual-circuit-id 104
+    set protocols l2circuit neighbor 192.168.3.33 interface enp13s0f0.106 virtual-circuit-id 106
+    set protocols ldp interface lo0.0
+    set protocols mpls interface enp13s0f2    
+  crpdSelector:
+    matchLabels:
+      kubernetes.io/hostname: node-1</codeblock>
+      </subsection>
+      <subsection id="subsection_o4d_dlm_s2c">
+        <title>Configuring via JCNR-CNI (Pod Configuration)</title>
+        <p>When using the Cloud-Native Router in CNI mode, you can configure cRPD with layer 2
+          circuit configuration using the JCNR-CNI. Here is an example pod configuration:</p>
+        <codeblock id="codeblock_xhz_smm_s2c">---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jcnr-l2vpn-tests
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: l2ckt-pod1-nad
+  namespace: jcnr-l2vpn-tests
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "l2ckt-pod1-nad",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: l2ckt-pod1-nad
+  namespace: jcnr-l2vpn-tests
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "l2ckt-pod1-nad",
+          "interface": "net1",
+          "cni-args": {
+            "l2CktNbr": "192.168.3.33",
+            "l2CktVcid": "10"            
+          }  
+        }
+      ]
+spec:
+  containers:
+... &lt;trimmed&gt;</codeblock>
+      </subsection>
+    </section>
+    <section id="section_qgz_wkc_r2c">
+      <title>Verification</title>
+      <p>You can verify the Layer 2 circuit configuration and statistics on the <xref href="accessing-crpd-cli.dita">cRPD shell</xref> and <xref href="accessing-vrouter-cli.dita">vRouter shell</xref>. <subsection id="subsection_wws_2f2_r2c">
+          <title>Verify L2 circuit Connections</title>
+          <p>Display status information about Layer 2 virtual circuits from the Cloud-Native Router
+            to its neighbors using <codeph><xref href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/command/show-l2circuit-connections.html" format="html" scope="external">show l2circuit connections</xref> command on the
+              cRPD</codeph>.</p>
+          <codeblock id="codeblock_s14_mf2_r2c">user@host&gt; show l2circuit connections 
+Layer-2 Circuit Connections:
+
+Legend for connection status (St)   
+EI -- encapsulation invalid      NP -- interface h/w not present   
+MM -- mtu mismatch               Dn -- down                       
+EM -- encapsulation mismatch     VC-Dn -- Virtual circuit Down    
+CM -- control-word mismatch      Up -- operational                
+VM -- vlan id mismatch	    CF -- Call admission control failure
+OL -- no outgoing label          IB -- TDM incompatible bitrate 
+NC -- intf encaps not CCC/TCC    TM -- TDM misconfiguration 
+BK -- Backup Connection          ST -- Standby Connection
+CB -- rcvd cell-bundle size bad  SP -- Static Pseudowire
+LD -- local site signaled down   RS -- remote site standby
+RD -- remote site signaled down  HS -- Hot-standby Connection
+XX -- unknown
+
+Legend for interface status  
+Up -- operational            
+Dn -- down                   
+Neighbor: 192.168.3.33 
+    Interface                 Type  St     Time last up          # Up trans
+    enp13s0f0.102(vc 102)     rmt   Up     Mar 12 15:45:20 2025           2
+      Remote PE: 192.168.3.33, Negotiated control-word: Yes (Null)
+      Incoming label: 17, Outgoing label: 16
+      Negotiated PW status TLV: No
+      Local interface: enp13s0f0.102, Status: Up, Encapsulation: VLAN
+      Flow Label Transmit: No, Flow Label Receive: No
+    enp13s0f0.104(vc 104)     rmt   Up     Mar 12 15:45:24 2025           1
+      Remote PE: 192.168.3.33, Negotiated control-word: Yes (Null)
+      Incoming label: 18, Outgoing label: 17
+      Negotiated PW status TLV: No
+      Local interface: enp13s0f0.104, Status: Up, Encapsulation: VLAN
+      Flow Label Transmit: No, Flow Label Receive: No
+    enp13s0f0.106(vc 106)     rmt   Up     Mar 12 15:45:24 2025           1
+      Remote PE: 192.168.3.33, Negotiated control-word: Yes (Null)
+      Incoming label: 19, Outgoing label: 18
+      Negotiated PW status TLV: No
+      Local interface: enp13s0f0.106, Status: Up, Encapsulation: VLAN
+      Flow Label Transmit: No, Flow Label Receive: No</codeblock>
+        </subsection><subsection id="subsection_ahz_1g2_r2c">
+          <title>Verify the LDP sessions</title>
+          <p>Display information about LDP sessions using the <codeph><xref href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/command/show-ldp-session.html" format="html" scope="external">show ldp session</xref></codeph> command on the
+            cRPD.</p>
+        </subsection><subsection id="subsection_mvy_1g2_r2c">
+          <codeblock id="codeblock_nvy_1g2_r2c">user@root&gt; show ldp session extensive    
+Address: 192.168.3.33, State: Operational, Connection: Open, Hold time: 23
+  Session ID: 192.168.1.11:0--192.168.3.33:0
+  Next keepalive in 3 seconds
+  Passive, Maximum PDU: 4096, Hold time: 30, Neighbor count: 1
+  Neighbor types: configured-layer2
+  Keepalive interval: 10, Connect retry interval: 1
+  Local address: 192.168.1.11, Remote address: 192.168.3.33
+  Up for 01:13:18
+  Capabilities advertised: none
+  Capabilities received: none
+  Protection: disabled
+  Session flags: none
+  Local - Restart: disabled, Helper mode: enabled
+  Remote - Restart: disabled, Helper mode: enabled
+  Local maximum neighbor reconnect time: 120000 msec
+  Local maximum neighbor recovery time: 240000 msec
+  Local Label Advertisement mode: Downstream unsolicited
+  Remote Label Advertisement mode: Downstream unsolicited
+  Negotiated Label Advertisement mode: Downstream unsolicited
+  MTU discovery: disabled
+  Nonstop routing state: Not in sync
+  Next-hop addresses received:
+    192.168.3.33
+  Queue depth: 0
+Message type		   Total		     Last 5 seconds
+		       Sent	 Received	   Sent	     Received
+Initialization            1             1             0	            0
+Keepalive               439           439             1	            1
+Notification              0             0             0	            0
+Address                   1             1             0	            0
+Address withdraw          0             0             0	            0
+Label mapping             7             7             0	            0
+Label request             0             0             0	            0
+Label withdraw            3             3             0	            0
+Label release             3             3             0	            0
+Label abort               0             0             0	            0</codeblock>
+        </subsection><subsection id="subsection_zzz_rfn_s2c">
+          <title>Verify LDP Database</title>
+        </subsection><subsection id="subsection_jsy_rfn_s2c">
+          <codeblock id="codeblock_lsy_rfn_s2c">user@root&gt; show ldp database   
+Input label database, 192.168.1.11:0--192.168.3.33:0
+Labels received: 14
+  Label     Prefix
+     27      L2CKT CtrlWord ETHERNET VC 9
+     28      L2CKT CtrlWord ETHERNET VC 10
+Output label database, 111.1.1.1:0--133.3.3.3:0
+Labels advertised: 14
+  Label     Prefix
+     36      L2CKT CtrlWord ETHERNET VC 9
+     37      L2CKT CtrlWord ETHERNET VC 10
+</codeblock>
+        </subsection><subsection id="subsection_hdh_vg2_r2c">
+          <title>Verify vRouter Interfaces</title>
+          <p>Verify the vRouter interfaces for CE-facing interfaces.</p>
+          <codeblock id="codeblock_xcn_3py_r2c">bash-5.1# vif --list
+Vrouter Interface Table
+
+Flags: P=Policy, X=Cross Connect, S=Service Chain, Mr=Receive Mirror
+       Mt=Transmit Mirror, Tc=Transmit Checksum Offload, L3=Layer 3, L2=Layer 2
+       D=DHCP, Vp=Vhost Physical, Pr=Promiscuous, Vnt=Native Vlan Tagged
+       Mnp=No MAC Proxy, Dpdk=DPDK PMD Interface, Rfl=Receive Filtering Offload, Mon=Interface is Monitored
+       Uuf=Unknown Unicast Flood, Vof=VLAN insert/strip offload, Df=Drop New Flows, L=MAC Learning Enabled
+       Proxy=MAC Requests Proxied Always, Er=Etree Root, Mn=Mirror without Vlan Tag, HbsL=HBS Left Intf
+       HbsR=HBS Right Intf, Ig=Igmp Trap Enabled, Ml=MAC-IP Learning Enabled, Me=Multicast Enabled
+       LsDp=Link down in DP only, Ccc=CCC Enabled, HwTs=Hardware support for Timestamp
+...&lt;trimmed&gt;
+            
+vif0/2      PCI: 0000:0d:00.0 (Speed 10000, Duplex 1) NH: 7 MTU: 9000
+            Type:Physical HWaddr:40:a6:b7:c4:23:f4 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:TcL3Vof QOS:0 Ref:18
+            RX port   packets:899840301 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:0d:00.0  Status: UP  Driver: net_ice
+            RX packets:899840302  bytes:4080744017446 errors:0
+            TX packets:896126245  bytes:4059828585689 errors:0
+            Drops:1315423
+            TX port   packets:896126245 errors:0
+
+vif0/9      PMD: enp13s0f0 NH: 21 MTU: 9000
+            Type:Host HWaddr:40:a6:b7:c4:23:f4 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:65535 Flags:L3ProxyEr QOS:-1 Ref:17 TxXVif:2 
+            RX device packets:70  bytes:6064 errors:0
+            RX queue  packets:70 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:70  bytes:6064 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0            
+            
+vif0/16     Virtual: enp13s0f0.102 Vlan(o/i)(,S): 102/102
+            Parent:vif0/9  Sub-type:  Host-tap
+            Type:Virtual(Vlan) HWaddr:40:a6:b7:c4:23:f4 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:65535 Flags:L3ProxyEr QOS:-1 Ref:1 TxXVif:17 
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:8  bytes:592 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+            
+vif0/17     Virtual: enp13s0f0.102 Vlan(o/i)(,S): 102/102 NH: 44
+            Parent:vif0/2  Sub-type:  physical-tap
+            Type:Virtual(Vlan) HWaddr:40:a6:b7:c4:23:f4 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:Ccc QOS:-1 Ref:5
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:299403723  bytes:1357784724696 errors:0
+            TX packets:298673909  bytes:1351924185670 errors:0
+            Drops:612067
+            
+vif0/18     Virtual: enp13s0f0.104 Vlan(o/i)(,S): 104/104
+            Parent:vif0/9  Sub-type:  Host-tap
+            Type:Virtual(Vlan) HWaddr:40:a6:b7:c4:23:f4 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:65535 Flags:L3ProxyEr QOS:-1 Ref:1 TxXVif:19 
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:9  bytes:666 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+            
+vif0/19     Virtual: enp13s0f0.104 Vlan(o/i)(,S): 104/104 NH: 48
+            Parent:vif0/2  Sub-type:  physical-tap
+            Type:Virtual(Vlan) HWaddr:40:a6:b7:c4:23:f4 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:Ccc QOS:-1 Ref:5
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:299381730  bytes:1357688891917 errors:0
+            TX packets:298673939  bytes:1351924259113 errors:0
+            Drops:593380
+            
+vif0/20     Virtual: enp13s0f0.106 Vlan(o/i)(,S): 106/106
+            Parent:vif0/9  Sub-type:  Host-tap
+            Type:Virtual(Vlan) HWaddr:40:a6:b7:c4:23:f4 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:65535 Flags:L3ProxyEr QOS:-1 Ref:1 TxXVif:21 
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:8  bytes:592 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+            
+vif0/21     Virtual: enp13s0f0.106 Vlan(o/i)(,S): 106/106 NH: 56
+            Parent:vif0/2  Sub-type:  physical-tap
+            Type:Virtual(Vlan) HWaddr:40:a6:b7:c4:23:f4 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:Ccc QOS:-1 Ref:5
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:299359992  bytes:1357592722594 errors:0
+            TX packets:298673884  bytes:1351924089886 errors:0
+            Drops:571666
+</codeblock>
+        </subsection><subsection id="subsection_vq2_yqy_r2c">
+          <title>Verify Interface Rate Statistics</title>
+          <p>Verify the interface statistics inclusing received and transmitted packets and
+            errors.</p>
+          <codeblock id="codeblock_zpb_3sy_r2c">bash-5.1# vif —list —rate
+
+Interface rate statistics
+-------------------------
+
+Interface name                                                                  VIF ID                        RX                            TX                            
+                                                                                                        Errors   Packets              Errors   Packets
+
+Agent: unix                                                                     vif0/0                  0        0                    0        0               
+Physical: eth_bond_bond0                                                        vif0/1                  0        397296               0        402976          
+Physical: 0000:0d:00.0                                                          vif0/2                  0        201471               0        197687          
+Physical: 0000:0d:00.1                                                          vif0/3                  0        0                    0        0               
+Physical: 0000:0d:00.2                                                          vif0/4                  0        200853               0        199410          
+Physical: 0000:0d:00.3                                                          vif0/5                  0        0                    0        0               
+Physical: 0000:b5:00.2                                                          vif0/6                  0        0                    0        0               
+Physical: 0000:b5:00.3                                                          vif0/7                  0        0                    0        0               
+Host: bond0                                                                     vif0/8                  0        0                    0        0               
+Host: enp13s0f0                                                                 vif0/9                  0        0                    0        0               
+Host: enp13s0f1                                                                 vif0/10                 0        0                    0        0               
+Host: enp13s0f2                                                                 vif0/11                 0        0                    0        0               
+Host: enp13s0f3                                                                 vif0/12                 0        0                    0        0               
+Host: enp181s0f2                                                                vif0/13                 0        0                    0        0               
+Host: enp181s0f3                                                                vif0/14                 0        0                    0        0               
+<b>Virtual(Vlan): enp13s0f0.102                                                    vif0/16                 0        0                    0        0</b>               
+
+Key 'q' for quit, key 'k' for previous page, key 'j' for next page.
+2025-03-12 16:58:44 +0000 </codeblock>
+        </subsection><subsection id="subsection_rpr_zsy_r2c">
+          <title>Verify Routes and Nexthops </title>
+          <p>Verify the routes and nexthops for interfaces with Ethernet CCC encapsulation
+            enabled.</p>
+          <codeblock id="codeblock_z5x_krz_r2c">bash-5.1# rt --dump 0 --family ccc
+Flags: L=Label Valid, L2c=L2 Control Word
+vRouter ccc table 0/0
+Interface Id               Flags           Label/VNID      Nexthop           Stats
+       21                 LL2c                   18           61               0
+       19                 LL2c                   17           61               0
+        4                 LL2c                  110           40               0
+       17                 LL2c                   16           61               0</codeblock>
+          <codeblock id="codeblock_wnv_mrz_r2c">bash-5.1# nh --get 61
+Id:61         Type:Tunnel         Fmly: AF_MPLS  Rid:0  Ref_cnt:4          Vrf:0
+              Flags:Valid, Etree Root, MPLS,
+              Oif:1 Len:14 Data:36 d0 5b f4 f3 ef a2 2a 5f 77 e7 8b 88 47 Number of Transport Labels:1 Transport Labels:31, </codeblock>
+          <codeblock id="codeblock_qlr_4rz_r2c">bash-5.1# nh --get 40
+Id:40         Type:Tunnel         Fmly: AF_MPLS  Rid:0  Ref_cnt:2          Vrf:0
+              Flags:Valid, Etree Root, MPLS,
+              Oif:1 Len:14 Data:36 d0 5b f4 f3 ef a2 2a 5f 77 e7 8b 88 47 Number of Transport Labels:1 Transport Labels:18,</codeblock>
+        </subsection></p>
+    </section>
+  </conbody>
+  
+  <related-links/>
+</concept>

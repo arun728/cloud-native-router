@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7daa" xml:lang="en-US">
+  <title>Customize <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Helm Chart for OpenShift Deployment</title>
+  <abstract>
+    <shortdesc>Read this topic to learn about the deployment configuration available for the Juniper
+      Cloud-Native Router. </shortdesc>
+  </abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>You can deploy and operate Juniper Cloud-Native Router in the L2, L3, or L2-L3 mode. You
+      configure the deployment mode by editing the appropriate attributes in the
+        <codeph>values.yaml</codeph> file prior to deployment. </p>
+    <note>
+      <ul id="ul_r5b_kww_wxb">
+        <li>
+          <p>In the <codeph>fabricInterface</codeph> key of the <codeph>values.yaml</codeph>
+            file:</p>
+          <ul id="ul_y21_qzx_5xb">
+            <li>
+              <p>When all the interfaces have an <codeph>interface_mode</codeph> key configured,
+                then the mode of deployment would be L2. </p>
+            </li>
+            <li>
+              <p>When one or more interfaces have an <codeph>interface_mode</codeph> key configured
+                along with the rest of the interfaces not having the <codeph>interface_mode</codeph>
+                key, then the mode of deployment would be L2-L3. </p>
+            </li>
+            <li>
+              <p>When none of the interfaces have the <codeph>interface_mode</codeph> key
+                configured, then the mode of deployment would be L3.</p>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </note>
+    <p>Customize the helm charts using the
+          <codeph>Juniper_Cloud_Native_Router_<varname>release-number</varname>/helmchart/values.yaml</codeph>
+      file. The configuration keys of the helm chart are shown in the table below. </p>
+    <section conref="../ref/jcnr-helm-chart-container.dita#xd_aa1b6500adc67cb2-c89f836-18ff470b581--7fff/section_qkx_2wn_sbc" id="section_fjw_t14_sbc"><title/><p/></section>
+  </conbody>
+</concept>

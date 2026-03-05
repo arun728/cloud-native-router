@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7ea0" xml:lang="en-US">
+  <title>Juniper Cloud-Native Router Components</title>
+  <shortdesc>The Juniper Cloud-Native Router solution consists of several components including the
+    Cloud-Native Router controller, the Data Plane Development Kit (DPDK) or extended Berkley Packet
+    Filter (eBPF) eXpress Data Path (XDP) datapath based Cloud-Native Router vRouter and the
+    JCNR-CNI. This topic provides a brief overview of the components of the Juniper Cloud-Native
+    Router. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+
+    <section>
+      <title>Cloud-Native Router Components</title>
+      <p>The Juniper Cloud-Native Router has primarily three components—the Cloud-Native Router
+        Controller control plane, the Cloud-Native Router vRouter forwarding plane, and the JCNR-CNI
+        for Kubernetes integration. All Cloud-Native Router components are deployed as
+        containers.</p>
+      <p><xref format="dita" href="#xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7ea0/fig_hkg_wlz_bsb">Figure 1</xref> shows the components of the Juniper Cloud-Native Router inside a
+        Kubernetes cluster when implemented with DPDK based vRouter.</p>
+      <fig id="fig_hkg_wlz_bsb">
+        <title>Components of Juniper Cloud-Native Router (DPDK Datapath)</title>
+        <image href="../../images/jn-000834.png" id="image_mv2_rg3_t1c"/>
+      </fig>
+      <p><xref format="dita" href="#xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7ea0/fig_pwg_rln_51c">Figure 2</xref> shows the components of the Juniper Cloud-Native Router inside a
+        Kubernetes cluster when implemented with eBPF XDP based vRouter.</p>
+      <fig id="fig_pwg_rln_51c">
+        <title>Components of Juniper Cloud-Native Router (eBPF XDP Datapath)</title>
+        <image href="../../images/jn-000844.png" id="image_zz5_fcx_sbc"/>
+      </fig>
+    </section>
+    <section id="section_vhr_1sj_gxb">
+      <title>Cloud-Native Router Controller </title>
+      <p>The Cloud-Native Router Controller is the control-plane of the cloud-native router solution
+        that runs the Junos containerized routing protocol Daemon (cRPD). It is implemented as a
+        statefulset. The controller communicates with the other elements of the cloud-native router.
+        Configuration, policies, and rules that you set on the controller at deployment time are
+        communicated to the Cloud-Native Router vRouter and other components for implementation.</p>
+      <p>For example, firewall filters (ACLs) configured on the controller are sent to the
+        Cloud-Native Router vRouter (through the vRouter agent).</p>
+      <p><b>Juniper Cloud-Native Router Controller Functionality:</b></p>
+      <ul id="ul_oq5_dm2_gxb">
+        <li>
+          <p>Exposes Junos OS compatible CLI configuration and operation commands that are
+            accessible to external automation and orchestration systems using the NETCONF
+            protocol.</p>
+        </li>
+        <li>
+          <p>Supports vRouter as the high-speed forwarding plane. This enables applications that are
+            built using the DPDK framework to send and receive packets directly to the application
+            and the vRouter without passing through the kernel.</p>
+        </li>
+        <li>
+          <p>Supports configuration of VLAN-tagged sub-interfaces on physical function (PF), virtual
+            function (VF), virtio, access, and trunk interfaces managed by the DPDK-enabled
+            vRouter.</p>
+        </li>
+        <li>
+          <p>Supports configuration of bridge domains, VLANs, and virtual-switches.</p>
+        </li>
+        <li>
+          <p>Advertises DPDK application reachability to core network using routing protocols
+            primarily with BGP, IS-IS and OSPF.</p>
+        </li>
+        <li>
+          <p>Distributes L3 network reachability information of the pods inside and outside a
+            cluster.</p>
+        </li>
+        <li>
+          <p>Maintains configuration for L2 firewall.</p>
+        </li>
+        <li>
+          <p>Passes configuration information to the vRouter through the vRouter-agent.</p>
+        </li>
+        <li>
+          <p>Stores license key information.</p>
+        </li>
+        <li>
+          <p>Works as a BGP Speaker, establishing peer relationships with other BGP speakers to
+            exchange routing information.</p>
+        </li>
+        <li>
+          <p>Exports control plane telemetry data to Prometheus and gNMI.</p>
+        </li>
+      </ul>
+      <p><b>Configuration Options</b></p>
+      <p>Use the <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">configlet
+          resource</xref> to configure the cRPD pods.</p>
+    </section>
+    <section id="section_lgw_dtj_gxb"><title>Cloud-Native Router vRouter</title><p>The Cloud-Native
+        Router vRouter is a high-performance datapath component. It is an alternative to the Linux
+        bridge or the Open vSwitch (OVS) module in the Linux kernel. It runs as a user-space
+        process. The vRouter functionality is implemented in two pods, one for the vrouter-agent and
+        the vrouter-telemetry-exporter, and the other for the vrouter-agent-dpdk. This split gives
+        you the flexibility to tailor CPU resources to the different vRouter components as
+        needed.</p><p>The vRouter supports both Data Plane Development Kit (DPDK) and extended
+        Berkley Packet Filter (eBPF) eXpress Data Path (XDP) datapath. </p><note id="note_xhk_c2m_s1c">
+        <p>Cloud-Native Router eBPF XDP Datapath is a <xref keyref="cloud-native-router-user.juniper-jcnr-tech-preview">Juniper Technology Preview
+            (Tech Preview)</xref> feature. Limited features are supported. See <xref keyref="cloud-native-router-deployment-guide.jcnr-datapath"/> for more details.</p>
+      </note><p><b>Cloud-Native Router vRouter Functionality:</b></p><ul id="ul_khk_lmh_2qb">
+        <li>
+          <p>Performs routing with Layer 3 virtual private networks.</p>
+        </li>
+        <li>
+          <p>Performs L2 forwarding.</p>
+        </li>
+        <li>
+          <p>Supports high-performance DPDK-based forwarding.</p>
+        </li>
+        <li>
+          <p>Supports high performance eBPF XDP datapath based forwarding.</p>
+        </li>
+        <li>
+          <p>Exports data plane telemetry data to Prometheus and gNMI.</p>
+        </li>
+      </ul><b>Benefits of vRouter:</b>
+      <ul id="ul_smg_mz1_h5b">
+        <li>
+          <p>High-performance packet processing.</p>
+        </li>
+        <li>
+          <p>Forwarding plane provides faster forwarding capabilities than kernel-based
+            forwarding.</p>
+        </li>
+        <li>
+          <p>Forwarding plane is more scalable than kernel-based forwarding.</p>
+        </li>
+        <li>
+          <p>Support for the following NICs:</p>
+          <ul id="ul_mp5_rv5_j5b">
+            <li>
+              <p>Intel E810 (Columbiaville) family
+                <!--with Intel Adapter Virtual Function (IAVF) and Dynamic Device Personalization (DDP)--></p>
+            </li>
+            <li>Intel XL710 (Fortville) family
+              <!--with Intel Adapter Virtual Function (IAVF)--></li>
+            <li>
+              <p>NVIDIA Mellanox ConnectX-6 and ConnectX-7</p>
+            </li>
+          </ul>
+        </li>
+      </ul></section>
+    <section id="section_qqs_yvj_gxb">
+      <title>JCNR-CNI</title>
+      <p>JCNR-CNI is a new container network interface (CNI) developed by Juniper. JCNR-CNI is a
+        Kubernetes CNI plugin installed on each node to provision network interfaces for application
+        pods and KubeVirt-based Virtual Machines (VMs). During pod creation, Kubernetes delegates
+        pod interface creation and configuration to JCNR-CNI. JCNR-CNI interacts with Cloud-Native
+        Router controller and the vRouter to setup DPDK interfaces. When a pod is removed, JCNR-CNI
+        is invoked to de-provision the pod interface, configuration, and associated state in
+        Kubernetes and cloud-native router components. JCNR-CNI works as a secondary CNI, along with
+        the Multus CNI to add and configure pod interfaces.</p>
+      <p><b>JCNR-CNI Functionality:</b></p>
+      <ul id="ul_amn_mnx_dsb">
+        <li>
+          <p>Manages the networking tasks in Kubernetes pods such as:</p>
+          <ul id="ul_bdh_yrm_yxb">
+            <li>
+              <p>assigning IP addresses.</p>
+            </li>
+            <li>
+              <p>allocating MAC addresses.</p>
+            </li>
+            <li>
+              <p>setting up untagged, access, and other interfaces between the pod and vRouter in a
+                Kubernetes cluster.</p>
+            </li>
+            <li>
+              <p>creating VLAN sub-interfaces.</p>
+            </li>
+            <li>
+              <p>creating L3 interfaces.</p>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <p>Acts on pod events such as add and delete.</p>
+        </li>
+        <li>
+          <p>Generates cRPD configuration.</p>
+        </li>
+      </ul>
+      <p>The JCNR-CNI manages the secondary interfaces that the pods use. It creates the required
+        interfaces based on the configuration in YAML-formatted network attachment definition (NAD)
+        files. The JCNR-CNI configures some interfaces before passing them to their final location
+        or connection point and provides an API for further interface configuration options such
+        as:</p>
+      <ul id="ul_swy_ftw_cwb">
+        <li>
+          <p>Instantiating different kinds of pod interfaces.</p>
+        </li>
+        <li>
+          <p>Creating virtio-based high performance interfaces for pods that leverage the DPDK data
+            plane.</p>
+        </li>
+        <li>
+          <p>Creating veth pair interfaces that allow pods to communicate using the Linux Kernel
+            networking stack.</p>
+        </li>
+        <li>
+          <p>Creating pod interfaces in access or trunk mode.</p>
+        </li>
+        <li>
+          <p>Attaching pod interfaces to bridge domains and virtual routers.</p>
+        </li>
+        <li>
+          <p>Supporting IPAM plug-in for Dynamic IP address allocation.</p>
+        </li>
+        <li>
+          <p>Allocating unique socket interfaces for virtio interfaces.</p>
+        </li>
+        <li>
+          <p>Managing the networking tasks in pods such as assigning IP addresses and setting up of
+            interfaces between the pod and vRouter in a Kubernetes cluster.</p>
+        </li>
+        <li>
+          <p>Connecting pod interface to a network including pod-to-pod and pod-to-network.</p>
+        </li>
+        <li>
+          <p>Integrating with the vRouter for offloading packet processing.</p>
+        </li>
+      </ul>
+      <p><b>Benefits of JCNR-CNI:</b></p>
+      <ul>
+        <li>
+          <p>Improved pod interface management</p>
+        </li>
+        <li>
+          <p>Customizable administrative and monitoring capabilities</p>
+        </li>
+        <li>
+          <p>Increased performance through tight integration with the controller and vRouter
+            components</p>
+        </li>
+      </ul>
+      <p><b>The Role of JCNR-CNI in Pod Creation:</b></p>
+      <p>When you create a pod for use in the Cloud-Native Router, the Kubernetes component known as
+          <filepath>kubelet</filepath> calls the Multus CNI to set up pod networking and interfaces.
+        Multus reads the annotations section of the pod manifest to find the NADs. If a NAD points
+        to JCNR-CNI as the CNI plug in, Multus calls the JCNR-CNI to set up the pod interface.
+        JCNR-CNI creates the interface as specified in the NAD. JCNR-CNI then generates and pushes a
+        configuration into the controller.</p>
+    </section>
+    <section id="section_yyt_qzj_gxb">
+      <title>Syslog-NG</title>
+      <p>Juniper Cloud-Native Router uses a syslog-ng pod to gather event logs from cRPD and vRouter
+        and transform the logs into JSON-based notifications. The notifications are logged to a
+        file. Syslog-ng runs as a daemonset. </p>
+    </section>
+  </conbody>
+</concept>

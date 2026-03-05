@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE reference PUBLIC "-//Juniper//DTD DITA 1.3 Reference//EN" "/SysSchema/dita13/dtd/subsection/dtd/reference.dtd">
+<reference xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="routing-options-flow-security-group-statement" xml:lang="en-US">
+   <title>security-group</title>
+   <titlealts>
+      <navtitle>security-group</navtitle>
+   </titlealts>
+   <prolog>
+      <author>kodalip</author>
+      <data>
+         <draft-comment>This topic was generated using the Starter Topic Generator. Links have not been validated and some links may be pointing to the wrong version of a topic. Be sure to validate all links before publishing any of them.</draft-comment>
+      </data><!--Product values from Junos build: crpd-->
+   </prolog>
+   <refbody>
+      <section>
+         <title>Syntax</title>
+         <codeblock>
+ security-group <varname>name</varname> {
+  rule <varname>name</varname> {<!--mandatory-->
+   match&lt;destination <varname>destination</varname>&gt;&lt;destination-port(afs | bgp | biff | bootpc | bootps | cmd | cvspserver | dhcp | domain | eklogin | ekshell | exec | expression | finger | ftp | ftp-data | http | https | ident | imap | kerberos-sec | klogin | kpasswd | krb-prop | krbupdate | kshell | ldap | ldp | login | mobileip-agent | mobilip-mn | msdp | netbios-dgm | netbios-ns | netbios-ssn | nfsd | nntp | ntalk | ntp | pop3 | pptp | printer | radacct | radius | rip | rkinit | smtp | snmp | snmptrap | snpp | socks | ssh | sunrpc | syslog | tacacs | tacacs-ds | talk | telnet | tftp | timed | who | xdmcp | zephyr-clt | zephyr-hm | zephyr-srv)&gt;&lt;port(afs | bgp | biff | bootpc | bootps | cmd | cvspserver | dhcp | domain | eklogin | ekshell | exec | expression | finger | ftp | ftp-data | http | https | ident | imap | kerberos-sec | klogin | kpasswd | krb-prop | krbupdate | kshell | ldap | ldp | login | mobileip-agent | mobilip-mn | msdp | netbios-dgm | netbios-ns | netbios-ssn | nfsd | nntp | ntalk | ntp | pop3 | pptp | printer | radacct | radius | rip | rkinit | smtp | snmp | snmptrap | snpp | socks | ssh | sunrpc | syslog | tacacs | tacacs-ds | talk | telnet | tftp | timed | who | xdmcp | zephyr-clt | zephyr-hm | zephyr-srv)&gt;&lt;protocol(ah | egp | esp | expression | gre | icmp | icmp6 | igmp | ipip | ospf | pim | rsvp | sctp | tcp | udp)&gt;&lt;source <varname>source</varname>&gt;&lt;source-port(afs | bgp | biff | bootpc | bootps | cmd | cvspserver | dhcp | domain | eklogin | ekshell | exec | expression | finger | ftp | ftp-data | http | https | ident | imap | kerberos-sec | klogin | kpasswd | krb-prop | krbupdate | kshell | ldap | ldp | login | mobileip-agent | mobilip-mn | msdp | netbios-dgm | netbios-ns | netbios-ssn | nfsd | nntp | ntalk | ntp | pop3 | pptp | printer | radacct | radius | rip | rkinit | smtp | snmp | snmptrap | snpp | socks | ssh | sunrpc | syslog | tacacs | tacacs-ds | talk | telnet | tftp | timed | who | xdmcp | zephyr-clt | zephyr-hm | zephyr-srv)&gt;;
+   no-install;
+   then(accept | discard | rate-limit <varname>rate-limit</varname>);<!--mandatory-->
+  }
+ }</codeblock>
+      </section>
+      <section>
+         <title>Hierarchy Level</title>
+         <codeblock>
+[edit <xref href="/Content/logical-systems-edit.dita">logical-systems</xref> <varname>name</varname> routing-instances <varname>name</varname> <xref href="/Content/routing-options-jdm-node-slicing.dita">routing-options</xref> <xref href="/Content/flow-edit-routing-options.dita">flow</xref>],
+[edit <xref href="/Content/logical-systems-edit.dita">logical-systems</xref> <varname>name</varname> <xref href="/Content/routing-options-jdm-node-slicing.dita">routing-options</xref> <xref href="/Content/flow-edit-routing-options.dita">flow</xref>],
+[edit <xref href="/Content/logical-systems-edit.dita">logical-systems</xref> <varname>name</varname> tenants <varname>name</varname> routing-instances <varname>name</varname> <xref href="/Content/routing-options-jdm-node-slicing.dita">routing-options</xref> <xref href="/Content/flow-edit-routing-options.dita">flow</xref>],
+[edit <xref href="/Content/routing-instances-edit-sv.dita">routing-instances</xref> <varname>name</varname> <xref href="/Content/routing-options-jdm-node-slicing.dita">routing-options</xref> <xref href="/Content/flow-edit-routing-options.dita">flow</xref>],
+[edit <xref href="/Content/routing-options-jdm-node-slicing.dita">routing-options</xref> <xref href="/Content/flow-edit-routing-options.dita">flow</xref>],
+[edit tenants <varname>name</varname> routing-instances <varname>name</varname> <xref href="/Content/routing-options-jdm-node-slicing.dita">routing-options</xref> <xref href="/Content/flow-edit-routing-options.dita">flow</xref>]
+  </codeblock>
+      </section>
+      <section>
+         <title>Release Information</title>
+         <p><!--Statement introduced in Junos OS Release (X)--></p>
+      </section>
+      <section>
+         <title>Description</title>
+         <p>Security groups</p>
+      </section>
+      <section>
+         <title>Options</title>
+         <dl>
+            <dlentry>
+               <dt>name</dt>
+               <dd>
+                  <p>Name of the security group</p>
+               </dd>
+            </dlentry>
+<!--Non-leaf sub-statement should be documented separately, not listed in Options: rule
+	 -			-->
+         </dl>
+         <p>The remaining statements are explained separately. See <xref scope="external" format="html" href="https://apps.juniper.net/cli-explorer/">CLI Explorer</xref>.</p>
+      </section>
+      <section>
+         <title>Required Privilege Level</title>
+         <p>routing</p>
+      </section>
+   </refbody>
+   <related-links><!--insert related topic links--></related-links>
+</reference>

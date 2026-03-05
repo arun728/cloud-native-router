@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_1a8e069a06657f97--7cd600da-188de57988f--7c8e" xml:lang="en-US">
+    <title>Deploy L3 Pod with VPN Interface</title>
+    <shortdesc>Read this topic to learn how to add a user pod with a <codeph>virtio</codeph> and
+            <codeph>kernel</codeph> interfaces attached to an L3 VPN instance on the cloud-native
+        router.</shortdesc>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <concept id="xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1" xml:lang="en-US">
+        <title>Overview</title>
+        <conbody>
+            <p>You can configure a user pod with a <codeph>virtio</codeph> and
+                    <codeph>kernel</codeph> interfaces to an L3 VPN instance on the cloud-native
+                router. The Juniper Cloud-Native Router must have an L3 interface configured at the
+                time of deployment. Your high-level tasks are:</p>
+            <ul>
+                <li>
+                    <p>Define and apply a network attachment definition (NAD)—The NAD file defines
+                        the required configuration for Multus to invoke the JCNR-CNI and create a
+                        network to attach the pod interface to.</p>
+                </li>
+                <li>
+                    <p>Define and apply a pod YAML file to your cloud-native router cluster—The pod
+                        YAML contains the pod specifications and an annotation to the network
+                        created by the JCNR-CNI.</p>
+                    <note>
+                        <p>Please review the <xref href="../concept/config-examples-overview.dita"/> topic
+                            for more information on NAD and pod YAML files. </p>
+                    </note>
+                </li>
+            </ul>
+        </conbody>
+    </concept>
+    <task id="task_e15_krd_qjb">
+        <title>Configuration Example</title>
+        <abstract>
+            <ol id="ol_ehd_jrx_wxb">
+                <li>Here is an example NAD to create a <codeph>virtio</codeph> interface attached to
+                    an L3 VPN instance:
+                    <codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vrf100
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "vrf100",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "vrf100",
+          "instanceType": "vrf",
+          "vrfTarget":"100:1"
+        },
+        "ipam": {
+          "type": "static",
+          "addresses":[
+            {
+              "address":"99.61.0.2/16",
+              "gateway":"99.61.0.1"
+            },
+            {
+              "address":"1234::99.61.0.2/120",
+              "gateway":"1234::99.61.0.1"
+            }
+          ]
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock>The
+                    NAD defines a virtual routing and forwarding (VRF) instance
+                        <codeph>vrf100</codeph> to which the pod's virtio interface will be
+                    attached. You must use the <codeph>vrf</codeph> instance type for Layer 3 VPN
+                    implementations. The NAD also defines a static IP address to be assigned to the
+                    pod interface.</li>
+                <li>Apply the NAD manifest to create the network.
+                    <codeblock>kubectl apply -f nad_virtio_L3vpn.yaml 
+networkattachmentdefinition.k8s.cni.cncf.io/vrf100 created</codeblock></li>
+                <li> Here is an example NAD to create a <codeph>kernel</codeph> interface attached
+                    to an L3VPN instance:
+                        <codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vrf200
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "vrf200",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "vrf200",
+          "instanceType": "vrf",
+	   "interfaceType": "veth",
+          "vrfTarget":"200:1"
+        },
+        "ipam": {
+          "type": "static",
+          "addresses":[
+            {
+              "address":"99.62.0.2/16",
+              "gateway":"99.62.0.1"
+            },
+            {
+              "address":"1234::99.62.0.2/120",
+              "gateway":"1234::99.62.0.1"
+            }
+          ]
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock><p>The
+                        NAD defines a virtual routing and forwarding (VRF) instance
+                            <codeph>vrf200</codeph> with a <codeph>veth</codeph> interface type to
+                        which the pod's kernel interface will be attached.</p> It also defines a
+                    static IP address to be assigned to the pod interface.</li>
+                <li>Apply the NAD manifest to create the network.
+                    <codeblock>kubectl apply -f nad_kernel_L3vpn.yaml 
+networkattachmentdefinition.k8s.cni.cncf.io/vrf200 created</codeblock></li>
+                <li> Verify the NADs are created.
+                    <codeblock>[root@jcnr-01]# kubectl get net-attach-def
+NAME                 AGE
+vrf100               8m40s
+vrf200               55s</codeblock></li>
+                <li>
+                    <p>Here is an example yaml to create a pod attached to the
+                            <codeph>vrf100</codeph> and <codeph>vrf200</codeph> networks: </p>
+                    <codeblock>apiVersion: v1
+kind: Pod
+metadata:
+  name:   pod1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: vrf100, vrf200
+spec:
+  containers:
+    - name: pod1
+      image: ubuntu:latest
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        privileged: false
+      env:
+        - name: KUBERNETES_POD_UID
+          valueFrom:
+            fieldRef:
+               fieldPath: metadata.uid
+      volumeMounts:
+        - name: dpdk
+          mountPath: /dpdk
+          subPathExpr: $(KUBERNETES_POD_UID)
+  volumes:
+    - name: dpdk
+      hostPath:
+        path: /var/run/jcnr/containers</codeblock>
+                    <p>The pod attaches to the router instance using the
+                            <codeph>k8s.v1.cni.cncf.io/networks</codeph> annotation.</p>
+                </li>
+                <li>
+                    <p>Apply the pod manifest.</p>
+                    <codeblock>[root@jcnr-01]# kubectl apply -f pod_access_mode.yaml 
+pod/pod1 created</codeblock>
+                </li>
+                <li>
+                    <p>Verify the pod is running.</p>
+                    <codeblock>[root@jcnr-01 ~]# kubectl get pods 
+NAME   READY   STATUS    RESTARTS   AGE
+pod1   1/1     Running   0          2m38s</codeblock>
+                </li>
+                <li>Describe the pod to verify two secondary interface are created and attached to
+                    the <codeph>vrf100</codeph> and <codeph>vrf200</codeph> networks. (The output is
+                    trimmed for
+                    brevity).<codeblock>[root@jcnr-01 ~]# kubectl describe pod pod1
+Name:         pod1
+Namespace:    default
+Priority:     0
+Node:         jcnr-01/10.100.20.25
+Start Time:   Mon, 26 Jun 2023 09:53:31 -0400
+Labels:       &lt;none&gt;
+Annotations:  cni.projectcalico.org/containerID: 6705c204abca5aeaa0241c1791ea911d57bd972336d969ac5d6a482c96348d95
+              cni.projectcalico.org/podIP: 10.233.91.100/32
+              cni.projectcalico.org/podIPs: 10.233.91.100/32
+             <b> jcnr.juniper.net/dpdk-interfaces:
+                [
+                    {
+                        "name": "net1",
+                        "vhost-adaptor-path": "/dpdk/vhost-net1.sock",
+                        "vhost-adaptor-mode": "client",
+                        "ipv4-address": "99.61.0.2/16",
+                        "ipv6-address": "1234::633d:2/120",
+                        "mac-address": "02:00:00:A9:B3:23"
+                    }
+                ]</b>
+              k8s.v1.cni.cncf.io/network-status:
+                [{
+                    "name": "k8s-pod-network",
+                    "ips": [
+                        "10.233.91.100"
+                    ],
+                    "default": true,
+                    "dns": {}
+                },<b>{
+                    "name": "default/vrf100",
+                    "interface": "net1",
+                    "ips": [
+                        "99.61.0.2",
+                        "1234::633d:2"
+                    ],
+                    "mac": "02:00:00:A9:B3:23",
+                    "dns": {}
+                },{
+                    "name": "default/vrf200",
+                    "interface": "net2",
+                    "ips": [
+                        "99.62.0.2",
+                        "1234::633e:2"
+                    ],
+                    "mac": "02:00:00:E0:AC:59",
+                    "dns": {}
+                }] </b>         
+...</codeblock></li>
+                <li>Verify the vRouter has the corresponding interface created. <xref href="../concept/accessing-vrouter-cli.dita">Access the vRouter CLI</xref>
+                    and issue the <codeph>vif --list</codeph>
+                    command.<codeblock>vif0/5      PMD: vhostnet1-2464783d-1ddd-4bf5-b7 NH: 16 MTU: 9160
+            <b>Type:Virtual</b> HWaddr:00:00:5e:00:01:00 <b>IPaddr:99.61.0.2</b>
+            IP6addr:1234::633d:2
+            <b>DDP: OFF SwLB: ON</b>
+            <b>Vrf:1 Mcast Vrf:1 Flags:PL3DProxyEr</b> QOS:-1 Ref:14
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+
+vif0/6      Ethernet: jvknet2-2464783 NH: 19 MTU: 9160
+            <b>Type:Virtual</b> HWaddr:00:00:5e:00:01:00 <b>IPaddr:99.62.0.2</b>
+            IP6addr:1234::633e:2
+            <b>DDP: OFF SwLB: ON</b>
+            <b>Vrf:2 Mcast Vrf:2 Flags:PL3DVofProxyEr</b> QOS:-1 Ref:11
+            RX port   packets:28 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:28  bytes:13612 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:28</codeblock>Note
+                    that the interface type is <codeph>Virtual</codeph> and the type of interface is
+                    L3. You can see the IP addresses assigned to the interfaces for the
+                    corresponding valid VRF numbers. </li>
+            </ol>
+        </abstract>
+    </task>
+</topic-map>

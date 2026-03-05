@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE task PUBLIC "-//Juniper//DTD DITA 1.3 General Task//EN" "/SysSchema/dita13/dtd/subsection/dtd/generalTask.dtd">
+<task xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_73c1001ccde8abf9-1ccac70-18dea8feb50--7fd4" xml:lang="en-US">
+ <title>Uninstalling JCNR</title>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+ <taskbody>
+  <context>
+      <p>Use this procedure to uninstall JCNR. </p>
+      <p>Uninstalling <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>restores interfaces to their original state by unbinding from DPDK and
+        binding back to the original driver. It also deletes contents of <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>directories, deletes
+        cRPD created interfaces, and removes any Kubernetes objects created for JCNR.</p>
+      <note id="note_fgs_zdp_41c">
+        <p>The <codeph>jcnr</codeph> namespace is not deleted as a part of the helm uninstallation
+          and must be deleted manually.</p>
+      </note>
+    </context>
+<steps>
+ <step>
+        <cmd>Uninstall JCNR.</cmd>
+        <info><codeblock id="codeblock_hrd_tdp_41c">helm uninstall jcnr</codeblock>Wait for all
+          Kubernetes resources to be fully deleted before attempting a reinstallation. Premature
+          reinstallation might lead to installation issues and require manual steps for recovery.
+        </info>
+      </step>
+      <step>
+        <cmd>If the uninstallation fails, then use one or more of the following commands to remove
+          lingering <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>components.</cmd>
+        <info>
+          <codeblock id="codeblock_rnn_j2p_41c">helm uninstall jcnr --no-hooks​</codeblock>
+          <codeblock id="codeblock_yhm_q2p_41c">kubectl delete &lt;ds/name&gt;​</codeblock>
+          <codeblock id="codeblock_qph_r2p_41c">kubectl delete &lt;job/jobname&gt;​</codeblock>
+          <codeblock id="codeblock_a1x_r2p_41c">kubectl delete ns jcnrops</codeblock>
+        </info>
+      </step>
+</steps>
+</taskbody>
+</task>

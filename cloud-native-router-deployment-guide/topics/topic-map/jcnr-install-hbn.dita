@@ -1,0 +1,1560 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_924c6b34c1336fee--74e7d995-193807b83fe--7d0c" xml:lang="en-US">
+    
+   <title>Cloud-Native Router Operator Service Module: Host-Based Routing</title>
+    
+   <shortdesc>The Cloud-Native Router Operator Service Module is an operator framework that we use
+        to develop cRPD applications and solutions. This section describes how to use the Service
+        Module to implement a host-based routing solution for your Kubernetes cluster.</shortdesc>
+    
+   <prolog>
+        
+      <author>bfong</author>
+        
+      <data name="cli-help-filename"/>
+        
+      <data name="cli-help-text"/>
+        
+      <data name="jweb-help-filename"/>
+    
+   </prolog>
+    
+   <concept id="concept_dtq_pwl_pdc">
+        
+      <title>Overview</title>
+        
+      <conbody>
+            
+         <p>We provide the Cloud-Native Router Operator Service Module to implement a cRPD
+                host-based routing solution for your Kubernetes cluster. Host-based routing, also
+                known as host-based networking, refers to using the host's network namespace instead
+                of the Kubernetes default namespace for the pod network. In the context of
+                Cloud-Native Router, this means that pod-to-pod traffic traverses an external (to
+                the cluster) network provided by cRPD.</p>
+            
+         <p>The Kubernetes CNI exposes container network endpoints through BGP to a co-located
+                (but independent) cRPD instance acting as a BGP peer. Packets between pods are
+                routed by the Kubernetes CNI to this cRPD instance. This cRPD instance, in turn,
+                routes the packets to the cRPD instance on the destination node for hand-off to the
+                destination Kubernetes CNI for delivery to the destination pod.</p>
+            
+         <p>By taking this approach to Kubernetes host networking, we are leveraging Cloud-Native
+                Router to provide a more fulsome pod networking implementation that supports common
+                data center protocols such as EVPN-VXLAN and MPLS over UDP.</p>
+            
+         <p>
+            <xref format="dita" href="#concept_dtq_pwl_pdc/fig_fcq_zhh_sdc"/> shows a Kubernetes
+                cluster leveraging cRPD for host-based routing. The Calico BGP speaker in the
+                cluster connects through a virtual Ethernet (veth) interface to a co-located cRPD
+                instance attached to the IP fabric interconnecting cluster nodes.</p>
+            
+         <fig id="fig_fcq_zhh_sdc">
+                
+            <title>Host-Based Routing</title>
+                
+            <image href="../../images/jn-001220.png" id="image_r4z_b3h_sdc"><!-- alt text added by DocEng-Team on 2025-06-29 10:39:52-->
+               <alt>Kubernetes network architecture with cluster nodes, pods, Calico BGP speaker, cRPD, and IP fabric for dynamic routing.</alt>
+            </image>
+            
+         </fig>
+            
+         <p>To facilitate the installation of this host-based routing solution, we provide a Helm
+                chart that you can install and we show you how to configure and customize cRPD and
+                the underlying network infrastructure to support a 5-node cluster (3 control plane
+                nodes and 2 worker nodes).</p>
+        
+      </conbody>
+    
+   </concept>
+    
+   <task id="task_l2w_yhw_qdc">
+        
+      <title>Install Host-Based Routing</title>
+        
+      <taskbody>
+            
+         <context id="context_jlj_jls_ydc">This is the main procedure. Start here.</context>
+            
+         <steps id="steps_x11_b3w_qdc">
+                
+            <step>
+                    
+               <cmd>
+                  <xref format="dita" href="#task_mvv_n1t_pdc"/>.</cmd>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>
+                  <xref format="dita" href="#task_jbf_vhw_qdc"/>.</cmd>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Pick one of the control plane nodes as the installation host and install
+                        Helm on it. The installation host is where you'll install the Helm
+                        chart.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_kkt_1sw_qdc">curl -sL https://get.helm.sh/helm-v3.9.4-linux-amd64.tar.gz</codeblock>
+                        
+                  <codeblock id="codeblock_kqr_dsw_qdc">tar -xvzf helm-v3.9.4-linux-amd64.tar.gz</codeblock>
+                        
+                  <codeblock id="codeblock_lmr_2sw_qdc">sudo mv linux-amd64/helm /usr/local/bin/helm</codeblock>
+                        
+                  <codeblock id="codeblock_op2_gsw_qdc">rm -rf linux-amd64</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Install cRPD on all nodes.</cmd>
+                    
+               <info>
+                        
+                  <p>For convenience, we provide an example script (<xref href="../example/jcnr-hbr-config-files.dita#reference_egd_bsn_5dc/section_cyh_fln_2yb"/>) that installs cRPD on a node. Run the script with the respective
+                            configuration file on each node.</p>
+                        
+                  <codeblock id="codeblock_mdy_fvc_sdc">./install-crpd.sh</codeblock>
+                        
+                  <p>For more information on how to install cRPD, see <xref format="html" href="https://www.juniper.net/documentation/us/en/software/crpd/crpd-deployment/index.html" scope="external"/>.</p>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Verify that the <codeph>veth-crpd</codeph> interface is reachable from the
+                        local host.</cmd>
+                    
+               <info>For
+                        example:<codeblock id="codeblock_trb_5sm_rdc">ping 10.1.1.2</codeblock>
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Verify that BGP sessions are established between cRPDs and check the
+                        routing table.</cmd>
+                    
+               <substeps id="substeps_fdg_ctm_rdc">
+                        
+                  <substep>
+                            
+                     <cmd>Exec into the cRPD container on the local node.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_pf1_xsm_rdc">sudo podman exec -it <varname>&lt;crpd-container&gt;</varname> bash</codeblock>
+                                where <varname>&lt;crpd-container&gt;</varname> is the name of the
+                                cRPD container running on the local node.</info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Enter CLI mode.</cmd>
+                            
+                     <info>
+                                
+                        <codeblock id="codeblock_p2k_ftm_rdc">cli</codeblock>
+                            
+                     </info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Check that BGP sessions have been established.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_lkk_gtm_rdc">show bgp summary</codeblock>If
+                                you're on a control plane node, then you'll see BGP sessions
+                                established between the local cRPD instance and the cRPD instances
+                                on all other nodes. If you're on a worker node, then you'll see BGP
+                                sessions established between the local cRPD instance and the cRPD
+                                instances on all the control plane nodes.</info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Check that <codeph>veth-k8s</codeph> routes are in the routing
+                                table.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_lt2_ttm_rdc">show route table master-calico-ri.inet.0</codeblock>Make
+                                sure that the <codeph>veth-k8s</codeph> routes (for example,
+                                10.1.1.1, 10.1.2.1, 10.1.3.1, 10.1.4.1, 10.1.5.1) are in the routing
+                                table.</info>
+                        
+                  </substep>
+                    
+               </substeps>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Verify that <codeph>veth-k8s</codeph> interfaces are reachable from each
+                        node to all other nodes. </cmd>
+                    
+               <info>For
+                        example:<codeblock id="codeblock_xbp_45m_rdc">ping 10.1.5.1</codeblock>
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Configure the kubelet on all nodes to use the local
+                            <codeph>veth-k8s</codeph> IPv4 address as the node IP.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_x3l_5vm_rdc">echo "KUBELET_EXTRA_ARGS=--node-ip=<varname>&lt;veth-k8s-ip&gt;</varname>" | sudo tee /etc/default/kubelet &gt; /dev/null</codeblock>where
+                            <varname>&lt;veth-k8s-ip&gt;</varname> is the
+                            <codeph>&lt;veth-k8s&gt;</codeph> IPv4 address as shown in <xref format="dita" href="#task_jbf_vhw_qdc/table_azz_qyx_qdc"/> (minus the
+                        /30 subnet qualifier).
+                        <codeblock id="codeblock_mmh_wvm_rdc">sudo systemctl restart kubelet</codeblock>Perform
+                        this step on all nodes, but use the respective
+                            <codeph>&lt;veth-k8s&gt;</codeph> IPv4 addresses.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Create the first control plane node in the Kubernetes cluster.</cmd>
+                    
+               <info>Log in to one of the control plane nodes and create the
+                            cluster.<codeblock id="codeblock_xyt_dxm_rdc">sudo kubeadm init --pod-network-cidr=<varname>&lt;pod-cidr&gt;</varname> --apiserver-advertise-address=<varname>&lt;veth-k8s-ip&gt;</varname> --control-plane-endpoint=<varname>&lt;veth-k8s-ip&gt;</varname> --upload-certs</codeblock>
+                  <p>where
+                                <varname>&lt;pod-cidr&gt;</varname> is
+                                <codeph>192.168.0.0/24</codeph> in our example (or if running dual
+                            stack <codeph>192.168.0.0/24,2001:db8:42:0::56</codeph>),</p>
+                  <p>and
+                                <varname>&lt;veth-k8s-ip&gt;</varname> is the
+                                <codeph>&lt;veth-k8s&gt;</codeph> IPv4 address of the local control
+                            plane node.</p>
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Log in to each of the other two control plane nodes and join each to the
+                        cluster.</cmd>
+                    
+               <info>For
+                        example:<codeblock id="codeblock_xjq_tym_rdc">kubeadm join 10.1.1.1:6443 <varname>&lt;options&gt;</varname> --control-plane</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Log in to each of the two worker nodes and join each to the cluster.</cmd>
+                    
+               <info>For
+                        example:<codeblock id="codeblock_tvp_zyg_sdc">kubeadm join 10.1.1.1:6443 <varname>&lt;options&gt;</varname>
+                  </codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Verify that all nodes are now part of the cluster.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_sxl_czm_rdc">kubectl get nodes</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Untaint all control plane nodes so that all pods can run on them.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_v5g_vzm_rdc">kubectl taint nodes --all node-role.kubernetes.io/control-plane-</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Install Calico.</cmd>
+                    
+               <info>See <xref format="html" href="https://docs.tigera.io/calico/latest/getting-started/kubernetes/quickstart#install-calico" scope="external"/>.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Configure Calico.</cmd>
+                    
+               <substeps id="substeps_vqq_rzs_rdc">
+                        
+                  <substep>
+                            
+                     <cmd>Disable nodeMesh and set the AS number and listen port.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_hmm_s1t_rdc">kubectl apply -f bgpconfig.yaml</codeblock>
+                                See <xref href="../example/jcnr-hbr-config-files.dita#reference_bzb_wzg_sdc/section_pgh_b1h_sdc"/>.</info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Configure the IPv4 address pool with no IP-IP or VxLAN
+                                encapsulation.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_dlf_y1t_rdc">kubectl apply -f ippool-v4.yaml</codeblock>
+                                See <xref href="../example/jcnr-hbr-config-files.dita#reference_bzb_wzg_sdc/section_xcz_q1h_sdc"/>.</info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>(Optional) If you're running a dual stack setup, then configure the
+                                IPv6 address pool.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_jsx_smh_ydc">kubectl apply -f ippool-v6.yaml</codeblock>
+                                See <xref href="../example/jcnr-hbr-config-files.dita#reference_bzb_wzg_sdc/section_xcz_q1h_sdc"/>.</info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Configure the IPv4 BGP peering relationships.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_tmt_qbt_rdc">kubectl apply -f bgppeers-v4.yaml</codeblock>
+                                See <xref href="../example/jcnr-hbr-config-files.dita#reference_bzb_wzg_sdc/section_wmw_t1h_sdc"/>.</info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>(Optional) If you're running a dual stack setup, then configure the
+                                IPv6 BGP peering relationships.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_o4l_shk_ydc">kubectl apply -f bgppeers-v6.yaml</codeblock>
+                                See <xref href="../example/jcnr-hbr-config-files.dita#reference_bzb_wzg_sdc/section_wmw_t1h_sdc"/>.</info>
+                        
+                  </substep>
+                    
+               </substeps>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Verify that BGP sessions are established between the Calico CNI and the
+                        co-located cRPD.</cmd>
+                    
+               <substeps id="substeps_h3h_ddt_rdc">
+                        
+                  <substep>
+                            
+                     <cmd>Exec into the cRPD container on the local node.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_i3h_ddt_rdc">sudo podman exec -it <varname>&lt;crpd-container&gt;</varname> bash</codeblock>
+                                where <varname>&lt;crpd-container&gt;</varname> is the name of the
+                                cRPD container running on the local node.</info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Enter CLI mode.</cmd>
+                            
+                     <info>
+                                
+                        <codeblock id="codeblock_j3h_ddt_rdc">cli</codeblock>
+                            
+                     </info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Check that BGP sessions have been established.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_k3h_ddt_rdc">show bgp summary</codeblock>In
+                                addition to the BGP sessions that you saw earlier between cRPDs,
+                                you'll see a BGP session established between the local cRPD and the
+                                Calico CNI.</info>
+                        
+                  </substep>
+                    
+               </substeps>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>
+                  <xref format="dita" href="#task_klq_cwd_rdc"/>.</cmd>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>(Optional) If you want to set up a secondary CNI that also uses cRPD, then
+                        see <xref format="dita" href="#task_hb1_3y1_sdc"/>.</cmd>
+                
+            </step>
+            
+         </steps>
+        
+      </taskbody>
+    
+   </task>
+    
+   <task id="task_mvv_n1t_pdc">
+        
+      <title>Prepare the Nodes</title>
+        
+      <taskbody>
+            
+         <context id="context_hvf_nbw_qdc">Perform the following steps on all the nodes (VMs or
+                bare metal servers) that you want to be in your cluster. All nodes should have at
+                least 2 interfaces:<ul id="ul_lxz_sbw_qdc">
+                    
+               <li>
+                        
+                  <p>one interface for regular management access (for example, SSH)</p>
+                    
+               </li>
+                    
+               <li>
+                        
+                  <p>one interface for cRPD to connect to the IP fabric</p>
+                    
+               </li>
+                
+            </ul>
+         </context>
+            
+         <steps id="steps_hzj_p1t_pdc">
+                
+            <step>
+                    
+               <cmd>Install a fresh OS.</cmd>
+                    
+               <info>We tested our host-based routing solution on the following combination:<ul id="ul_crc_hcw_qdc">
+                            
+                     <li>
+                                
+                        <p>Ubuntu 22.04</p>
+                            
+                     </li>
+                            
+                     <li>
+                                
+                        <p>Linux kernel 5.15.0-88-generic</p>
+                            
+                     </li>
+                        
+                  </ul>
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Update the repository list and install podman.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_jyq_qwd_rdc">sudo apt update</codeblock>
+                        
+                  <codeblock id="codeblock_utb_swd_rdc">sudo install -y podman</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Install the required kernel modules on all nodes in the cluster.</cmd>
+                    
+               <info>Create <filepath>/etc/modules-load.d/jcnr.conf</filepath> and populate it
+                        with the following list of kernel
+                        modules:<codeblock id="codeblock_t1x_vcw_qdc">overlay
+br_netfilter
+8021q
+uio_pci_generic
+vfio-pci
+tun
+fou
+fou6
+ipip
+ip_tunnel
+ip6_tunnel
+mpls_gso
+mpls_router
+mpls_iptunnel
+vrf
+vxlan</codeblock>
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Enable IP forwarding and iptables on the underlay Linux bridges.</cmd>
+                    
+               <info>Create <filepath>/etc/sysctl.d/99-kubernetes-cri.conf</filepath> and
+                        populate it with the following
+                        configuration:<codeblock id="codeblock_rbh_jdw_qdc">net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv6.conf.all.forwarding = 1
+net.ipv6.conf.default.addr_gen_mode = 0
+net.ipv6.conf.all.addr_gen_mode = 0
+net.ipv6.conf.default.autoconf = 0
+net.ipv6.conf.all.autoconf = 0</codeblock>Additionally, set the following in
+                            <filepath>/etc/sysctl.conf</filepath>:<codeblock id="codeblock_twf_vjn_5dc">net.ipv4.ip_forward = 1
+net.ipv6.conf.all.forwarding = 1</codeblock>
+                  <note id="note_uwl_rkn_5dc">
+                            
+                     <p>The above enables IP forwarding and iptables for both IPv4 and IPv6.
+                                If you're only running IPv4, then omit the IPv6 settings.</p>
+                        
+                  </note>
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Set the MAC address policy.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_aln_ndw_qdc">sudo sed -i 's/MACAddressPolicy=.*/MACAddressPolicy=none/' /usr/lib/systemd/network/99-default.link</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Install kubeadm, kubelet, and kubectl. See <xref format="html" href="https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/" scope="external"/>.</cmd>
+                    
+               <info> We tested our host-based routing solution on Kubernetes version
+                        1.28.15.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Reboot.</cmd>
+                
+            </step>
+            
+         </steps>
+        
+      </taskbody>
+    
+   </task>
+    
+   <task id="task_jbf_vhw_qdc">
+        
+      <title>Create Virtual Ethernet Interface (VETH) Pairs and Configure Static Routes</title>
+        
+      <taskbody>
+            
+         <context id="context_dhq_msw_qdc">
+                
+            <p>Before we bring up the Kubenetes cluster and cRPD, we'll create the veth
+                    interfaces that connect them together and configure static routes to direct
+                    traffic to the cRPD instance.</p>
+                
+            <p>On each node, we'll run the Kubernetes cluster (including the Calico BGP speaker)
+                    in the Kubernetes default namespace and we'll run cRPD in a namespace that we'll
+                    call <codeph>crpd</codeph>. We'll create a veth pair that connects the two
+                    namespaces, from <codeph>veth-k8s</codeph> in the default namespace to
+                        <codeph>veth-crpd</codeph> in the <codeph>crpd</codeph> namespace.</p>
+                
+            <p>This is shown in <xref format="dita" href="#task_jbf_vhw_qdc/table_azz_qyx_qdc"/>
+                    along with the IP address assignments we'll use in our example. This includes
+                    both IPv4 and IPv6 addresses for a dual stack deployment. If you're only running
+                    IPv4, then ignore the IPv6 settings.</p>
+                
+            <table colsep="1" frame="all" id="table_azz_qyx_qdc" rowsep="1">
+                    
+               <title>Namespace and Interface Configuration (Example)</title>
+                    
+               <tgroup cols="4">
+                        
+                  <colspec colname="c1" colnum="1" colwidth="1*"/>
+                        
+                  <colspec colname="c2" colnum="2" colwidth="1*"/>
+                        
+                  <colspec colname="c3" colnum="3" colwidth="1*"/>
+                        
+                  <colspec colname="newCol4" colnum="4" colwidth="1*"/>
+                        
+                  <thead>
+                            
+                     <row>
+                                
+                        <entry>
+                                    
+                           <p>Node</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>Namespace</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>Interface</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>IP Address</p>
+                                
+                        </entry>
+                            
+                     </row>
+                        
+                  </thead>
+                        
+                  <tbody>
+                            
+                     <row>
+                                
+                        <entry morerows="2">
+                                    
+                           <p>Node 1 (control plane)</p>
+                                    
+                           <p/>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>default</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>veth-k8s</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>10.1.1.1/30</p>
+                                    
+                           <p>2001:db8:1::1/126</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry morerows="1">
+                                    
+                           <p>crpd</p>
+                                    
+                           <p/>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>veth-crpd</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>10.1.1.2/30</p>
+                                    
+                           <p>2001:db8:1::2/126</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry>
+                                    
+                           <p>ens4<sup>1</sup>
+                           </p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>192.168.1.101/24</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry morerows="2">
+                                    
+                           <p>Node 2 (control plane)</p>
+                                    
+                           <p/>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>default</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>veth-k8s</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>10.1.2.1/30</p>
+                                    
+                           <p>2001:db8:2::1/126</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry morerows="1">
+                                    
+                           <p>crpd</p>
+                                    
+                           <p/>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>veth-crpd</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>10.1.2.2/30</p>
+                                    
+                           <p>2001:db8:2::2/126</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry>
+                                    
+                           <p>ens4<sup>1</sup>
+                           </p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>192.168.1.102/24</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry morerows="2">
+                                    
+                           <p>Node 3 (control plane)</p>
+                                    
+                           <p/>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>default</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>veth-k8s</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>10.1.3.1/30</p>
+                                    
+                           <p>2001:db8:3::1/126</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry morerows="1">
+                                    
+                           <p>crpd</p>
+                                    
+                           <p/>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>veth-crpd</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>10.1.3.2/30</p>
+                                    
+                           <p>2001:db8:2::2/126</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry>
+                                    
+                           <p>ens4<sup>1</sup>
+                           </p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>192.168.1.103/24</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry morerows="2">
+                                    
+                           <p>Node 4 (worker)</p>
+                                    
+                           <p/>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>default</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>veth-k8s</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>10.1.4.1/30</p>
+                                    
+                           <p>2001:db8:4::1/126</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry morerows="1">
+                                    
+                           <p>crpd</p>
+                                    
+                           <p/>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>veth-crpd</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>10.1.4.2/30</p>
+                                    
+                           <p>2001:db8:4::2/126</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry>
+                                    
+                           <p>ens4<sup>1</sup>
+                           </p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>192.168.1.104</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry morerows="2">
+                                    
+                           <p>Node 5 (worker)</p>
+                                    
+                           <p/>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>default</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>veth-k8s</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>10.1.5.1/30</p>
+                                    
+                           <p>2001:db8:5::1/126</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry morerows="1">
+                                    
+                           <p>crpd</p>
+                                    
+                           <p/>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>veth-crpd</p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>10.1.5.2/30</p>
+                                    
+                           <p>2001:db8:5::2/126</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry>
+                                    
+                           <p>ens4<sup>1</sup>
+                           </p>
+                                
+                        </entry>
+                                
+                        <entry>
+                                    
+                           <p>192.168.1.105/24</p>
+                                
+                        </entry>
+                            
+                     </row>
+                            
+                     <row>
+                                
+                        <entry nameend="newCol4" namest="c1">
+                                    
+                           <p>
+                              <sup>1</sup> This is the physical underlay interface
+                                        connecting cRPD to the IP fabric. The interface name in your
+                                        setup may differ.</p>
+                                
+                        </entry>
+                            
+                     </row>
+                        
+                  </tbody>
+                    
+               </tgroup>
+                
+            </table>
+                
+            <p>Perform the following steps on all nodes in the cluster. Remember to set the IP
+                    addresses for the different nodes as shown in <xref format="dita" href="#task_jbf_vhw_qdc/table_azz_qyx_qdc"/>.</p>
+            
+         </context>
+            
+         <steps id="steps_mtp_xhw_qdc">
+                
+            <step id="step_ywr_nvd_rdc">
+                    
+               <cmd>Create <codeph>veth-k8s</codeph> and <codeph>veth-crpd</codeph> and pair
+                        them together.</cmd>
+                    
+               <substeps id="substeps_kl3_rsw_qdc">
+                        
+                  <substep>
+                            
+                     <cmd>Create the veth interface pair. </cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_qhy_4sw_qdc">sudo ip link add dev veth-k8s type veth peer name veth-crpd</codeblock>By
+                                default, both interfaces are in the default namespace. We'll move
+                                    <codeph>veth-crpd</codeph> to the <codeph>crpd</codeph>
+                                namespace in a later step.</info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Enable these 2 veth interfaces.</cmd>
+                            
+                     <info>
+                                
+                        <codeblock id="codeblock_p3w_ysw_qdc">sudo ip link set dev veth-k8s up</codeblock>
+                                
+                        <codeblock id="codeblock_jnq_zsw_qdc">sudo ip link set dev veth-crpd up</codeblock>
+                            
+                     </info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Configure the IP address on the <codeph>veth-k8s</codeph>
+                                interface.</cmd>
+                            
+                     <info>
+                                
+                        <codeblock id="codeblock_n3y_gtw_qdc">sudo ip addr add 10.1.1.1/30 dev veth-k8s</codeblock>
+                                
+                        <p>We'll configure the IP address for the <codeph>veth-crpd</codeph>
+                                    interface in a later step.</p>
+                            
+                     </info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>(Optional) If you want to run a dual IPv4/IPv6 stack setup, then
+                                configure the IPv6 address on the same <codeph>veth-k8s</codeph>
+                                interface.</cmd>
+                            
+                     <info>
+                                
+                        <codeblock id="codeblock_bhr_jmn_5dc">sudo ip addr add 2001:db8:1::1/126 dev veth-k8s</codeblock>
+                                
+                        <p>We'll configure the IPv6 address for the
+                                        <codeph>veth-crpd</codeph> interface in a later step.</p>
+                            
+                     </info>
+                        
+                  </substep>
+                    
+               </substeps>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Create the <codeph>crpd</codeph> namespace for cRPD.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_qfk_m2x_qdc">sudo ip netns add crpd</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Move <codeph>veth-crpd</codeph> to the <codeph>crpd</codeph>
+                        namespace.</cmd>
+                    
+               <substeps id="substeps_xlv_x2x_qdc">
+                        
+                  <substep>
+                            
+                     <cmd>Assign the physical underlay interface to the <codeph>crpd</codeph>
+                                namespace. This is the interface that connects cRPD to the IP
+                                fabric.</cmd>
+                            
+                     <info>For
+                                example:<codeblock id="codeblock_smq_w2x_qdc">sudo ip link set ens4 netns crpd</codeblock>where
+                                    <codeph>ens4</codeph> is the physical interface (in our example)
+                                that connects to the IP fabric.</info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Configure the IP address for the <codeph>ens4</codeph>
+                                interface.</cmd>
+                            
+                     <info>
+                        <codeblock id="codeblock_dpx_vmx_qdc">sudo ip netns exec crpd ifconfig ens4 192.168.1.101/24 up</codeblock>where
+                                    <codeph>192.168.1.0/24</codeph> is the underlay subnet
+                                connecting to the IP fabric.</info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Assign the <codeph>veth-crpd</codeph> interface to the
+                                    <codeph>crpd</codeph> namespace.</cmd>
+                            
+                     <info>
+                                
+                        <codeblock id="codeblock_o2d_3nx_qdc">sudo ip link set veth-crpd netns crpd</codeblock>
+                            
+                     </info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Configure the IP address for the <codeph>veth-crpd</codeph>
+                                interface.</cmd>
+                            
+                     <info>
+                                
+                        <codeblock id="codeblock_tpg_pnx_qdc">sudo ip netns exec crpd ifconfig veth-crpd 10.1.1.2/30 up</codeblock>
+                            
+                     </info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>(Optional) If you want to run a dual IPv4/IPv6 stack setup, then
+                                configure the IPv6 address for the <codeph>veth-crpd</codeph>
+                                interface.</cmd>
+                            
+                     <info>
+                                
+                        <codeblock id="codeblock_oqp_gnn_5dc">sudo ip netns exec crpd ip addr add 2001:db8:1::2/126 dev veth-crpd</codeblock>
+                            
+                     </info>
+                        
+                  </substep>
+                    
+               </substeps>
+                
+            </step>
+                
+            <step id="step_xwg_nvd_rdc">
+                    
+               <cmd>In the default namespace, configure a route to all cRPD interfaces.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_lqh_55x_qdc">sudo ip route add 10.1.0.0/16 via 10.1.1.2</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Repeat step <xref format="dita" href="#task_jbf_vhw_qdc/step_ywr_nvd_rdc">
+                            1</xref> through step <xref format="dita" href="#task_jbf_vhw_qdc/step_xwg_nvd_rdc"/> for Nodes 2 through 5 according to <xref format="dita" href="#task_jbf_vhw_qdc/table_azz_qyx_qdc"/>.</cmd>
+                
+            </step>
+            
+         </steps>
+        
+      </taskbody>
+    
+   </task>
+    
+   <task id="task_klq_cwd_rdc">
+        
+      <title>Install the Operator Service Module</title>
+        
+      <taskbody>
+            
+         <context id="context_uj3_2ch_sdc">Run these steps on the nodes indicated. The
+                installation host is the control plane node where you installed Helm
+                earlier.</context>
+            
+         <steps id="steps_txt_pft_rdc">
+                
+            <step>
+                    
+               <cmd>On the installation host, create the <codeph>jcnr</codeph> namespace.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_a1k_vgt_rdc">kubectl create ns jcnr</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>On the installation host, create and apply the JCNR secret.</cmd>
+                    
+               <info>Create a <filepath>jcnr-secrets.yaml</filepath> file with the below
+                            contents.<codeblock id="codeblock_qbx_pgt_rdc">apiVersion: v1
+kind: Secret
+metadata:
+  name: jcnr-secrets
+  namespace: jcnr
+type: Opaque
+data:
+  root-password: <varname>&lt;password&gt;</varname>
+  crpd-license: <varname>&lt;crpd-license&gt;</varname>
+                  </codeblock>
+                  <p>where
+                                <varname>&lt;password&gt;</varname> is the base64-encoded string of
+                            the root password and <varname>&lt;crpd-license&gt;</varname> is the
+                            base64-encoded cRPD license. For more information on installing your
+                            cRPD license, see <xref href="jcnr-licensing.dita#task_tk3_jgp_41c"/>.</p>
+                  <p>Apply the
+                        secret.</p>
+                  <codeblock id="codeblock_dyp_mht_rdc">kubectl apply -f jcnr-secrets.yaml</codeblock>
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>On all nodes, create <filepath>/etc/crpd/crpd_conf.yaml</filepath> with the
+                        content below.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_wfc_plt_rdc">management_ip: <varname>&lt;veth-crpd-ip&gt;</varname>
+                  </codeblock>where
+                            <varname>&lt;veth-crpd-ip&gt;</varname> is the IPv4 address of the
+                            <codeph>&lt;veth-crpd&gt;</codeph> interface on the local node.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>On the installation host, download the Cloud-Native Router Operator Service
+                        Module package.</cmd>
+                    
+               <info>
+                        
+                  <p>You can download the Service Module package from the Juniper Networks
+                            software download site. See <xref href="../ref/jcnr-sw-download-packages.dita"/>.</p>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Gunzip and untar the software package.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_f33_crz_ydc">tar -xzvf Juniper_Cloud_Native_Router_Service_Module_<varname>&lt;release&gt;</varname>.tar.gz</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Load the provided images on all nodes in the cluster. The images are
+                        located in the downloaded package.</cmd>
+                    
+               <info>See <xref href="../task/jcnr-deploy-prepackaged-images.dita"/>.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>On the installation host, extract the Cloud-Native Operator Service Module
+                        Helm chart.</cmd>
+                    
+               <substeps id="substeps_cyf_lpt_rdc">
+                        
+                  <substep>
+                            
+                     <cmd>Navigate to the Helm chart directory.</cmd>
+                            
+                     <info>
+                                
+                        <codeblock id="codeblock_nkk_mpt_rdc">cd Juniper_Cloud_Native_Router_Service_Module_<varname>&lt;release&gt;</varname>/helmchart</codeblock>
+                            
+                     </info>
+                        
+                  </substep>
+                        
+                  <substep>
+                            
+                     <cmd>Extract the Helm chart.</cmd>
+                            
+                     <info>
+                                
+                        <codeblock id="codeblock_pll_ppt_rdc">tar -xzvf jcnr-gwsvc-<varname>&lt;release&gt;</varname>.tgz</codeblock>
+                            
+                     </info>
+                        
+                  </substep>
+                    
+               </substeps>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Apply the Helm chart.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_ydw_spt_rdc">cd jcnr-gwsvc</codeblock>
+                  <codeblock id="codeblock_bwp_5pt_rdc">helm upgrade --install --wait svc . --set controller.nodeAffinity[0].operator=Exists,controller.nodeAffinity[0].key=node-role.kubernetes.io/control-plane,global.hostBasedNetworking=true,replicaCount=3,controller.image.pullPolicy=IfNotPresent,crd_loader.pullPolicy=IfNotPresent</codeblock>Set
+                        the <codeph>replicaCount</codeph> to the number of control plane nodes in
+                        the cluster.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>After a few minutes, verify that the cluster is up and running.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_pnh_bqt_rdc">kubectl get pods -A</codeblock>
+                        
+                  <codeblock id="codeblock_v15_bqt_rdc">helm ls</codeblock>
+                    
+               </info>
+                
+            </step>
+            
+         </steps>
+        
+      </taskbody>
+    
+   </task>
+    
+   <task id="task_hb1_3y1_sdc">
+        
+      <title>Set Up Secondary CNI for Host-Based Routing</title>
+        
+      <taskbody>
+            
+         <context id="context_jnm_l2h_sdc">This procedure shows an example of how to set up a
+                secondary MACVLAN CNI and a secondary IPVLAN CNI for host-based routing.</context>
+            
+         <steps id="steps_utp_py1_sdc">
+                
+            <step>
+                    
+               <cmd>On the installation host, install multus.</cmd>
+                    
+               <info>See <xref format="html" href="https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/docs/quickstart.md" scope="external"/>.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>On all nodes, create the veth interface pairs for MACVLAN.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_n4k_nbb_sdc">sudo ip link add dev host-end type veth peer name vrf-end
+sudo ip link set dev host-end up
+sudo ip link set dev vrf-end up
+sudo ip link set vrf-end netns crpd</codeblock> where <codeph>host-end</codeph>
+                        is the veth endpoint on the Kubernetes cluster and <codeph>vrf-end</codeph>
+                        is the veth endpoint on cRPD.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>On all nodes, create the veth interface pairs for IPVLAN.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_hbn_ccb_sdc">sudo ip link add dev ipvlan-host type veth peer name ipvlan-vrf
+sudo ip link set dev ipvlan-host up
+sudo ip link set dev ipvlan-vrf up
+sudo ip link set ipvlan-vrf netns crpd</codeblock> where
+                            <codeph>ipvlan-host</codeph> is the veth endpoint on the Kubernetes
+                        cluster and <codeph>ipvlan-vrf</codeph> is the veth endpoint on cRPD.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>For IPVLAN, on all nodes, enable proxy ARP on
+                        <codeph>ipvlan-vrf</codeph>.</cmd>
+                    
+               <info>
+                        
+                  <codeblock id="codeblock_dly_jcb_sdc">sudo ip netns exec crpd bash
+echo "1" &gt; /proc/sys/net/ipv4/conf/ipvlan-vrf/proxy_arp
+exit</codeblock>
+                    
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Check the interfaces on all nodes.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_q3y_rcb_sdc">sudo ip netns exec crpd ifconfig</codeblock>
+                        If, for some reason, the interfaces are not up, set them up from cRPD as
+                        follows:<codeblock id="codeblock_yvw_vcb_sdc">sudo ip netns exec crpd ip link set dev vrf-end up</codeblock>
+                  <codeblock id="codeblock_smz_wcb_sdc">sudo ip netns exec crpd ip link set dev ipvlan-vrf up</codeblock>
+               </info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>On the installation host, create and apply the default VxLAN and route
+                        target pools.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_zr5_hdb_sdc">kubectl apply -f vxlan-pool.yaml</codeblock>
+                  <codeblock id="codeblock_dkj_pyb_sdc">kubectl apply -f rt-pool.yaml</codeblock>
+                        See <xref href="../example/jcnr-hbr-config-files.dita#reference_en1_1yb_sdc"/>.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Label all the nodes.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_ddc_yyb_sdc">kubectl label nodes <varname>&lt;cp-nodename&gt;</varname> master=""
+kubectl label nodes <varname>&lt;worker-nodename&gt;</varname> worker=""</codeblock>where
+                            <varname>&lt;cp-nodename&gt;</varname> and
+                            <varname>&lt;worker-nodename&gt;</varname> are the node names of the
+                        control plane and worker nodes respectively.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Configure JCNR.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_o5n_52c_sdc">kubectl create ns hbn</codeblock>
+                  <codeblock id="codeblock_vwc_v2c_sdc">kubectl apply -f jcnr-config.yaml</codeblock>See
+                            <xref href="../example/jcnr-hbr-config-files.dita#reference_vv2_g2c_sdc/section_jxb_k2c_sdc"/>.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Apply the MACVLAN custom resource.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_hct_1fc_sdc">kubectl apply -f macvlan-cr.yaml</codeblock>See
+                            <xref href="../example/jcnr-hbr-config-files.dita#reference_v1w_g3v_sdc/section_qrn_v2b_sdc"/>.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Create MACVLAN pods.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_lf1_2fc_sdc">kubectl apply -f macvlan-pods.yaml</codeblock>See
+                            <xref href="../example/jcnr-hbr-config-files.dita#reference_v1w_g3v_sdc/section_l14_kfc_sdc"/>.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Apply the IPVLAN custom resource.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_mb3_1lc_sdc">kubectl apply -f ipvlan-cr.yaml</codeblock>See
+                            <xref href="../example/jcnr-hbr-config-files.dita#reference_v1w_g3v_sdc/section_gn4_4wb_sdc"/>.</info>
+                
+            </step>
+                
+            <step>
+                    
+               <cmd>Create IPVLAN pods.</cmd>
+                    
+               <info>
+                  <codeblock id="codeblock_d1v_1lc_sdc">kubectl apply -f ipvlan-pods.yaml</codeblock>See
+                            <xref href="../example/jcnr-hbr-config-files.dita#reference_v1w_g3v_sdc/section_xwk_rkc_sdc"/>.</info>
+                
+            </step>
+            
+         </steps>
+        
+      </taskbody>
+    
+   </task>
+
+</topic-map>

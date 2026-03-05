@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_1a8e069a06657f97--7cd600da-188de57988f--7c78" xml:lang="en-US">
+    <title>Deploy L3 Pod with VLAN Sub-Interface </title>
+    <shortdesc>Read this topic to learn how to add a user pod with a Layer 3 VLAN sub-interface to
+        an instance of the cloud-native router.</shortdesc>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <concept id="xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1" xml:lang="en-US">
+        <title>Overview</title>
+        <conbody>
+            <p>You can configure a user pod with a Layer 3 VLAN sub-interface and attach it to the
+                <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>instance. The Juniper Cloud-Native Router must have an L3 interface configured
+                at the time of deployment. The cRPD must be configured with the valid VLAN
+                configuration for the fabric interface. For example:</p>
+            <codeblock>set interfaces ens1f1v1 unit 201 vlan-id 201
+set interfaces ens1f1v1 unit 201 family inet address 192.168.123.1/24
+set interfaces ens1f1v1 unit 201 family inet6 address abcd:192:168:123::1/64
+set routing-instance blue interface ens1f1v1.201</codeblock>
+            <p>Your high-level tasks are:</p>
+            <ul>
+                <li>
+                    <p>Define and apply a network attachment definition (NAD)—The NAD file defines
+                        the required configuration for Multus to invoke the JCNR-CNI and create a
+                        network to attach the pod interface to.</p>
+                </li>
+                <li>
+                    <p>Define and apply a pod YAML file to your cloud-native router cluster—The pod
+                        YAML contains the pod specifications and an annotation to the network
+                        created by the JCNR-CNI</p>
+                    <note>
+                        <p>Please review the <xref href="../concept/config-examples-overview.dita"/> topic
+                            for more information on NAD and pod YAML files. </p>
+                    </note>
+                </li>
+            </ul>
+        </conbody>
+    </concept>
+    <task id="task_e15_krd_qjb">
+        <title>Configuration Example</title>
+        <abstract>
+            <ol id="ol_ehd_jrx_wxb">
+                <li>Here are example NADs to create a Layer 3 VLAN
+          sub-interface:<codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vrf201
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "vrf201",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "vrf201",
+          "instanceType": "virtual-router",
+          "parentInterface":"net1",
+          "vlanId": "201"
+        },
+        "ipam": {
+          "type": "static",
+          "addresses":[
+            {
+              "address":"99.61.0.2/16",
+              "gateway":"99.61.0.1"
+            },
+            {
+              "address":"1234::99.61.0.2/120",
+              "gateway":"1234::99.61.0.1"
+            }
+          ]
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock>The
+          NAD defines virtual-router instances <codeph>vrf201</codeph> with the parent interface
+            <codeph>net1</codeph> and VLAN ID <codeph>201</codeph>. A
+            <codeph>virtual-router</codeph> instance type is similar to a VPN routing and forwarding
+          instance type, but used for non-VPN-related applications. There are no virtual routing and
+          forwarding (VRF) import, VRF export, VRF target, or route distinguisher requirements for
+          this instance type. The pod VLAN sub-interface is attached to <codeph>vrf201</codeph>
+          instance. The NAD also defines static IP addresses to be assigned to the pod
+          interface.</li>
+                <li>Apply the NAD manifests to create the networks.
+          <codeblock>kubectl apply -f nad_l3_vlan_subinterface_201.yaml
+networkattachmentdefinition.k8s.cni.cncf.io/vrf201 created</codeblock></li>
+                <li> Verify the NADs are created.
+          <codeblock>kubectl get net-attach-def
+NAME      AGE
+vrf201    30s</codeblock></li>
+                <li>Here is an example yaml to create a pod attached to the <codeph>vrf201</codeph>
+          and <codeph>vrf202</codeph> networks:
+          <codeblock>apiVersion: v1
+kind: Pod
+metadata:
+  name:   pod1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "vrf201",
+          "interface":"net1.201"
+        }
+      ]
+spec:
+  containers:
+    - name: pod1
+      image: ubuntu:latest
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        privileged: false
+      env:
+        - name: KUBERNETES_POD_UID
+          valueFrom:
+            fieldRef:
+               fieldPath: metadata.uid
+      volumeMounts:
+        - name: dpdk
+          mountPath: /dpdk
+          subPathExpr: $(KUBERNETES_POD_UID)
+  volumes:
+    - name: dpdk
+      hostPath:
+        path: /var/run/jcnr/containers</codeblock>The
+          pod attaches to the router instances using the
+            <codeph>k8s.v1.cni.cncf.io/networks</codeph> annotation. </li>
+                <li> Apply the pod manifest.
+          <codeblock>[root@jcnr-01]# kubectl apply -f pod_l3_subinterface.yaml 
+pod/pod1 created</codeblock></li>
+                <li> Verify the pod is running.
+          <codeblock>[root@jcnr-01 ~]# kubectl get pods 
+NAME   READY   STATUS    RESTARTS   AGE
+pod1   1/1     Running   0          38s</codeblock></li>
+                <li>Describe the pod to verify a secondary interface is created and attached to the
+            <codeph>vrf201</codeph> network. (The output is trimmed for
+          brevity).<codeblock>[root@jcnr-01 ~]# kubectl describe pod pod1
+Name:         pod1
+Namespace:    default
+Priority:     0
+Node:         jcnr-01/10.100.20.25
+Start Time:   Mon, 26 Jun 2023 09:53:31 -0400
+Labels:       &lt;none&gt;
+Annotations:  cni.projectcalico.org/containerID: 90de252886b3e0a97526ac175544078fb03debf05650946d759e2de0d5179c17
+              cni.projectcalico.org/podIP: 10.233.91.126/32
+              cni.projectcalico.org/podIPs: 10.233.91.126/32
+              jcnr.juniper.net/dpdk-interfaces:
+               <b> [
+                    {
+                        "name": "net1.201",
+                        "vhost-adaptor-path": "/dpdk/vhost-net1.sock",
+                        "vhost-adaptor-mode": "client",
+                        "ipv4-address": "99.61.0.2/16",
+                        "ipv6-address": "1234::633d:2/120",
+                        "mac-address": "02:00:00:8C:97:A2",
+                        "vlan-id": "201"
+                    }
+                ]</b>
+              k8s.v1.cni.cncf.io/network-status:
+                [{
+                    "name": "k8s-pod-network",
+                    "ips": [
+                        "10.233.91.126"
+                    ],
+                    "default": true,
+                    "dns": {}
+                },<b>{
+                    "name": "default/vrf201",
+                    "interface": "net1.201",
+                    "ips": [
+                        "99.61.0.2",
+                        "1234::633d:2"
+                    ],
+                    "mac": "02:00:00:8C:97:A2",
+                    "dns": {}
+                }]</b>
+...</codeblock></li>
+                <li>Verify the vRouter has the corresponding interface created. <xref href="../concept/troubleshooting-vrouter.dita#xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7c86/section_dsy_dhh_hxb">Access the vRouter CLI</xref> and issue the <codeph>vif --list</codeph>
+          command.<codeblock>vif0/11     PCI: 0000:b3:11.1 (Speed 10000, Duplex 1) NH: 16 MTU: 9014            <b>---&gt; fabric interface</b>
+            <b>Type:Physical</b> HWaddr:b2:56:78:5c:af:fa IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:L3L2Vof QOS:0 Ref:42
+            RX port   packets:10988509 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:b3:11.1  Status: UP  Driver: net_iavf
+            RX packets:10988509  bytes:5582067106 errors:0
+            TX packets:10988484  bytes:5581953776 errors:0
+            Drops:0
+            TX port   packets:10988484 errors:0
+
+vif0/17     <b>PMD: ens1f1v1</b> NH: 44 MTU: 9000                                       <b>---&gt; tap interface</b>
+            <b>Type:Host</b> HWaddr:b2:56:78:5c:af:fa IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:L3L2 QOS:0 Ref:41 TxXVif:11 
+            RX device packets:2201  bytes:935980 errors:0
+            RX queue  packets:2201 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:2201  bytes:935980 errors:0
+            TX packets:493  bytes:161906 errors:0
+            Drops:0
+            TX queue  packets:493 errors:0
+            TX device packets:493  bytes:161906 errors:0
+
+vif0/48     <b>Virtual: ens1f1v1.201</b> Vlan(o/i)(,S): 201/201 NH: 161 MTU: 1514
+            <b>Parent:vif0/11</b>  <b>Sub-type:  physical-tap</b>                            <b>---&gt; L3 sub-interface, parent is a physical interface</b>
+            <b>Type:Virtual(Vlan)</b> HWaddr:b2:56:78:5c:af:fa <b>IPaddr:192.168.123.1</b>
+            <b>IP6addr:abcd:192:168:123::1
+</b>            DDP: OFF SwLB: ON
+            <b>Vrf:201 Mcast Vrf:201 Flags:L3DProxyEr</b> QOS:-1 Ref:4
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:18  bytes:1836 errors:0
+            Drops:0
+
+vif0/49     <b>Virtual: ens1f1v1.201</b> Vlan(o/i)(,S): 201/201 NH: 156 MTU: 9000
+            <b>Parent:vif0/17</b>  <b>Sub-type:  Host-tap</b>                                <b>---&gt; L3 sub-interface, parent is a tap interface</b>
+            <b>Type:Virtual(Vlan)</b> HWaddr:b2:56:78:5c:af:fa <b>IPaddr:192.168.123.1</b>
+            <b>IP6addr:abcd:192:168:123::1</b>
+            DDP: OFF SwLB: ON
+            <b>Vrf:201 Mcast Vrf:65535 Flags:L3DProxyEr</b> QOS:-1 Ref:4 TxXVif:48 
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:18  bytes:1908 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+
+vif0/50     <b>PMD: vhostnet1-9403fd77-648a-47</b> NH: 177 MTU: 9160                     <b>---&gt; pod interface</b>
+            <b>Type:Virtual</b> HWaddr:00:00:5e:00:01:00 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:65535 Mcast Vrf:65535 Flags:L3DProxyEr QOS:-1 Ref:20
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+
+vif0/51     Virtual: vhostnet1-9403fd77-648a-47.201 Vlan(o/i)(,S): 201/201 NH: 17 MTU: 1514
+            <b>Parent:vif0/50</b>                                                        <b>----&gt;L3 pod sub-interface, parent is the pod interface</b>
+            <b>Type:Virtual(Vlan)</b> HWaddr:00:00:5e:00:01:00 <b>IPaddr:99.62.0.2</b>
+            IP6addr:1234::633e:2
+            <b>DDP: OFF SwLB: ON
+            Vrf:2 Mcast Vrf:2 Flags:PL3DProxyEr</b> QOS:-1 Ref:4
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0</codeblock>You can see the IP addresses assigned to the sub-interfaces
+          for the corresponding valid VRF numbers.</li>
+            </ol>
+        </abstract>
+    </task>
+</topic-map>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE task PUBLIC "-//Juniper//DTD DITA 1.3 General Task//EN" "/SysSchema/dita13/dtd/subsection/dtd/generalTask.dtd">
+<task xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_19e939a6782fa58a--74813304-195a32dabb2--7d38" xml:lang="en-US">
+  <title>Configure the OAM Route on the Managed Node</title>
+  <shortdesc>This example procedure shows how to configure the OAM route on the managed node for
+    management access on the overlay.</shortdesc>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <taskbody>
+    <context id="context_lkg_xzy_tfc">
+      <p>In our example, since we only have a single interface for the Linux kernel, we'll simply
+        add a default route to point to the local Cloud-Native Router.</p>
+      <p>If your installation has more than one interface for the Linux kernel, then you might want
+        to add a specific route for the OAM traffic instead.</p>
+    </context>
+    <steps id="steps_fby_qfb_s2c">
+      <step>
+        <cmd>Create a default route to 10.10.1.1 on the Linux kernel on the managed node.</cmd>
+        <info>
+          <codeblock id="codeblock_q41_xfb_s2c">ip route add default via 10.10.1.1</codeblock>
+          <codeblock id="codeblock_c3c_2d4_s2c">ip route show
+default via 10.10.1.1 dev ens1f0v0</codeblock>
+        </info>
+      </step>
+    </steps>
+  </taskbody>
+</task>

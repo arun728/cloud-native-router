@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_16e9ffdde92d095d--4c26246f-1898c6bf578--7caf" xml:lang="en-US">
+  <title>Begin</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>In this guide, we will provide a simple, three-step path, to quickly get you up and running
+      with Juniper Cloud-Native Router (JCNR) on Red Hat® OpenShift® Container Platform (OCP). We'll
+      show you how to install and configure the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>release 23.2 as a container network interface
+      (CNI) on the worker nodes of an OCP cluster to provide Layer 3 connectivity between customer
+      workloads. Depending on the complexity of your design, other tasks may be required in addition
+      to the ones included in this workflow.</p>
+
+    <section><title>Meet Juniper Cloud-Native Router</title>
+      <p>The Juniper Cloud-Native Router (JCNR) is a container-based software solution that combines
+        the JCNR-controller (cRPD-based control plane) and the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter (DPDK-enabled
+        forwarding/data plane). With the cloud-native router, you can enable Junos OS-based
+        switching control with enhanced forwarding capabilities. The <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>controller, running on a
+        Kubernetes (K8s) compute host, provides control plane management functionality and uses the
+        forwarding capabilities provided by either the Linux kernel or the DPDK-enabled <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter. DPDK is an open source set of libraries and drivers. It enables fast packet
+        processing by allowing network interface cards (NICs) to send direct memory access (DMA)
+        packets directly into an application's address space. The applications poll for packets to
+        avoid the overhead of interrupts from the NIC. Integrating the DPDK allows a vRouter to
+        process more packets per second than is possible when the vRouter runs as a kernel module.
+        In this integrated solution, the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Controller uses gPRC-based services to exchange
+        messages and to communicate with the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter, thus creating a fully functional Cloud
+        Native Router. This close communication allows you to learn about fabric and workload
+        interfaces, provision DPDK or kernel-based interfaces for K8s pods as needed and configure
+        IPv4 and IPv6 address allocation for pods. </p></section>
+    <section id="section_nc5_tyr_gyb">
+      <title>Get Ready</title>
+      <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is supported on the following OpenShift platforms:</p>
+      <table colsep="1" frame="all" id="table_nvb_4zr_gyb" rowsep="1">
+        <title>JCNR-OCP System Requirements</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <colspec colname="c3" colnum="3" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>Component</entry>
+              <entry>Value/Version</entry>
+              <entry>Notes</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>OpenShift</entry>
+              <entry>4.12.0</entry>
+              <entry>The K8s version is 1.25.4</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <p>Ensure you have a valid <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>license. You can request for a license key from the JAL
+        portal.</p>
+    </section>
+    <section id="section_zb5_21s_gyb">
+      <title>Install Juniper Cloud-Native Router</title>
+      <ol>
+        <li>
+          <p>Download the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>tarball,
+              <codeph>Juniper_Cloud_Native_Router_release_nunber.tgz</codeph> from the <xref format="html" href="https://support.juniper.net/support/downloads/?p=jcnr" scope="external">Juniper Support Site</xref>, to a directory on your host machine. You
+            must perform the file transfer in binary mode when transferring the file to your server,
+            so that the compressed tar file expands properly.</p>
+        </li>
+        <li>
+          <p>Expand the file
+            <codeph>Juniper_Cloud_Native_Router_&lt;release-number&gt;.tgz</codeph>.</p>
+          <codeblock>tar xzvf Juniper_Cloud_Native_Router_&lt;release-number&gt;.tgz</codeblock>
+        </li>
+        <li>
+          <p>Change directory to
+              <codeph>Juniper_Cloud_Native_Router_<i>&lt;release-number&gt;</i></codeph>.</p>
+          <codeblock>cd Juniper_Cloud_Native_Router_&lt;release-number&gt;</codeblock>
+          <note>
+            <p>All remaining steps in the installation assume that your current working directory is
+              now Juniper_Cloud_Native_Router_&lt;release-number&gt;.</p>
+          </note>
+        </li>
+        <li>
+          <p>View the contents in the current directory.</p>
+          <codeblock>ls
+contrail-tools  helmchart  images  README.md  secrets</codeblock>
+        </li>
+        <li>
+          <p>Upload the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>images to local docker using the <codeph>docker load</codeph>
+            command.</p>
+          <codeblock>docker load -i images/jcnr-images.tar.gz</codeblock>
+        </li>
+        <li>
+          <p>Enter the root password for your host server and your Juniper Cloud-Native Router
+            license file into the secrets/jcnr-secrets.yaml file. You must enter the password and
+            license in base64 encoded format. Apply the secrets.</p>
+          <codeblock>kubectl apply -f secrets/jcnr-secrets.yaml
+namespace/jcnr created
+secret/jcnr-secrets created</codeblock>
+        </li>
+        <li>
+          <p>Customize the helm chart for your deployment using the
+              <codeph>helmchart/values.yaml</codeph> file. You must configure the fabric interfaces
+            and the number of replicas based on your setup. The <codeph>cni_bin_dir</codeph> must be
+            configured for OCP. A sample <codeph>values.yaml</codeph> file for OCP is provided
+            below. </p>
+          <codeblock>global:
+  registry: enterprise-hub.juniper.net/
+
+  common:
+    vrouter:
+      repository: atom-docker/cn2/bazel-build/dev/
+      tag: R23.2-156
+    crpd:
+      repository: junos-docker-local/warthog/
+      tag: 23.2R1.14
+    jcnrcni:
+      repository: junos-docker-local/warthog/
+      tag: 23.2-20230628-8cf4350
+
+  replicas: "2"
+
+  fabricInterface:
+    - ens1f0
+    - ens1f1
+  log_level: "DEBUG"
+  log_path: "/var/log/jcnr/"
+  syslog_notifications: "/var/log/jcnr/jcnr_notifications.json"
+  nodeAffinity:
+  - key: node-role.kubernetes.io/worker
+    operator: Exists
+  - key: node-role.kubernetes.io/master
+    operator: DoesNotExist
+
+  cni_bin_dir: /var/lib/cni/bin
+
+jcnr-vrouter:
+  restoreInterfaces: false
+  mtu: "9000"
+  cpu_core_mask: "2,3"
+  ddp: true
+  qosEnable: false
+  multinode: true
+  corePattern: "/var/crash/core-%e.%p.%h.%t"
+  coreFilePath: /var/crash
+  vrouter_dpdk_uio_driver: "vfio-pci"</codeblock>
+        </li>
+        <li>
+          <p>Deploy the Juniper Cloud-Native Router using the helm chart.Navigate to the
+              <codeph>helmchart</codeph> directory and run the command provided below.</p>
+          <codeblock>helm install jcnr .</codeblock>
+          <codeblock>NAME: jcnr
+LAST DEPLOYED: Fri Jun 23 06:04:33 2023
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None</codeblock>
+        </li>
+        <li>
+          <p>Verify the installation.</p>
+          <codeblock>helm ls</codeblock>
+          <p>Sample Output:</p>
+          <codeblock>NAME		NAMESPACE	REVISION		UPDATED                                	STATUS  		CHART                  	APP VERSION
+jcnr		default  	1       		2023-06-23 06:04:33.144611017 -0400 EDT	deployed		jcnr-23.2.0				23.2.0</codeblock>
+        </li>
+        <li>
+          <p>Ensure the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>pods are running.</p>
+          <codeblock>kubectl get pods -A -o wide | egrep "jcnr|contrail"</codeblock>
+          <p>Sample Output:</p>
+          <codeblock>contrail-deploy                                    contrail-k8s-deployer-6489b59fd6-5r8lb                       1/1     Running            0              4d3h    192.168.10.111   ocp-worker1       &lt;none&gt;           &lt;none&gt;
+contrail                                           contrail-vrouter-nodes-6gwnq                                 3/3     Running            0              4d3h    192.168.10.111   ocp-worker1       &lt;none&gt;           &lt;none&gt;
+contrail                                           contrail-vrouter-nodes-kjchz                                 3/3     Running            0              4d3h    192.168.10.114   ocp-worker2       &lt;none&gt;           &lt;none&gt;
+jcnr                                               kube-crpd-worker-sts-0                                       1/1     Running            0              4d3h    192.168.10.111   ocp-worker1       &lt;none&gt;           &lt;none&gt;
+jcnr                                               kube-crpd-worker-sts-1                                       1/1     Running            0              4d3h    192.168.10.114   ocp-worker2       &lt;none&gt;           &lt;none&gt;
+jcnr                                               syslog-ng-fzkrv                                              1/1     Running            0              4d3h    192.168.10.114   ocp-worker2       &lt;none&gt;           &lt;none&gt;
+jcnr                                               syslog-ng-hnxx4                                              1/1     Running            0              4d3h    192.168.10.111   ocp-worker1       &lt;none&gt;           &lt;none&gt;</codeblock>
+        </li>
+      </ol>
+    </section>
+  </conbody>
+
+  <related-links/>
+</concept>

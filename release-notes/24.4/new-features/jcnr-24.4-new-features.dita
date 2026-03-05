@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_7dcfbfe1ba4dc5dc-7ebe5c88-193f1fa3b32--7fa8" xml:lang="en-US">
+  <title>New and Updated Features</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>This section describes the new features in the Juniper Cloud-Native Router (JCNR) 24.4
+      release.</p>
+    <section>
+      <title>New Features in Juniper Cloud-Native Router Release 24.4</title>
+      <ul>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-user/topics/topic-map/ti-lfa-tm.html" format="html" scope="external">Support for Topology-Independent Loop-Free Alternates
+                (TI-LFA) with fast reroute (FRR)</xref></b>—JCNR supports implementing
+            Topology-Independent Loop-Free Alternates (TI-LFA) with fast reroute (FRR) in SR-MPLS.
+            TI-LFA is supported on IS-IS implementations for SR-MPLS. It is also supported on OSPF
+            implementations as a technology preview feature. Only protection against link failure is
+            supported with one primary and one secondary (backup) path. </p>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-user/topics/topic-map/l3cos-tm.html" format="html" scope="external">Support for Layer-3 Class of Service
+            (CoS)</xref></b>—Juniper Cloud-Native Router supports Layer 3 Class of Service (CoS),
+            also known as L3 Quality of Service (QoS). JCNR supports the following classifiers,
+            policers and rewrite/marker implementations:</p>
+          <ul id="ul_ud2_zgx_ycc">
+            <li>
+              <p>Behavior Aggregate (BA) and Multifield (MF) classifiers</p>
+            </li>
+            <li>
+              <p>Single-rate three-color marker (srTCM) and Two-rate three-color marker (trTCM)
+                policers</p>
+            </li>
+            <li>
+              <p>Rewrite rules supports copying outer IPv4/IPv6 DSCP marking to inner IP header DSCP
+                field as well as MPLS EXP bit marking</p>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-user/topics/concept/l3-access-control-lists.html" format="html" scope="external">Additional support for L3/L4 Access
+            Lists</xref></b>—JCNR now supports MPLS protocol family for L3/L4 access lists. It also
+            supports additional match nonterminating actions including syslog, routing-instance,
+            forwarding class and policer.</p>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-user/topics/concept/jcnr-telemetry.html" format="html" scope="external">Additional Telemetry Support</xref></b>—JCNR now
+            supports telemetry for interfaces extended statistics, firewall filter counters and
+            TI-LFA statistics via Prometheus and gNMI. </p>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-user/topics/topic-map/support-for-lldp.html" format="html" scope="external">Support for Link Layer Discovery Protocol
+                (LLDP)</xref></b>—Juniper Cloud-Native Router supports LLDP on Layer-3 interfaces to
+            advertise capabilities, identity, and other information onto a LAN. LLDP is supported on
+            Layer 3 interfaces. </p>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-user/topics/concept/dhcp-relay-overview.html" format="html" scope="external">Support for DHCP Relay</xref></b>—Juniper
+            Cloud-Native Router can be configured as a Stateless DHCP Relay agent for an L2-L3
+            deployment that can relay DHCP messages between cascaded Next-Generation Distributed
+            Units (NGDUs) and an external DHCP server. It supports simple packet forwarding
+            non-snooping DHCPv4 and DHCPv6 relay feature between the DHCP client and DHCP server. </p>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-user/topics/topic-map/l3cos-tm.html#id_hvn_lj2_pcc__d9e968" format="html" scope="external">Support for Layer 3 CoS scheduler</xref></b>—Juniper
+            Cloud-Native Router supports L3 class of service (CoS) scheduler implemention to compute
+            the priority of packets. It implements a strict priority 8-queue scheduler, with
+            priority order high to low. The forwarding class is directly mapped to scheduler
+            priority.</p>
+        </li>
+        <li><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-user/topics/concept/jcnr-telemetry.html" format="html" scope="external">Support for cSRX Telemetry</xref></b>—Juniper
+          Cloud-Native Router supports telemetry capabilities for cSRX deployed as a service chain
+          for IPSec security services. Visibility via Prometheus-based API and gRPC Network
+          Management Interface (gNMI) is supported.</li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-user/topics/concept/jcnr_twamp.html" format="html" scope="external">Support for vRouter timestamping TWAMP test
+                packets</xref></b>—Juniper Cloud-Native Router supports vRouter timestamping for
+            Two-Way Active Management Protocol (TWAMP) test packets in light mode implementation.
+            The vRouter uses hardware timestamping if the underlying NIC supports it, else it
+            defaults to the kernel system clock. </p>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-user/topics/concept/loop-detection-pure-l2.html" format="html" scope="external">Support for Loop Detection in Pure L2
+            Mode</xref></b>—Juniper Cloud-Native Router implements Layer 2 loop detection mechanisms
+            in the vRouter by detecting frequent MAC address movements between ports.</p>
+        </li>
+        <li><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-deployment-guide/topics/concept/jcnr-control-plane-policing.html" format="html" scope="external">Support for Host Protection using Control Plane
+              Policing</xref></b>—Juniper Cloud-Native Router supports host protection against DDoS
+          attacks. You can configure rate-limiting for host traffic, based on protocol
+          classification on the loopback interface <codeph>lo0.0.</codeph></li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-deployment-guide/topics/concept/system-resource-requirements-bms.html" format="html" scope="external">Support for Ubuntu OS</xref></b>—Juniper Cloud-Native
+            Router is now supported on Ubuntu for bare metal, Microsoft Azure, and Google Cloud
+            Platform (GCP) deployments.</p>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-deployment-guide/topics/concept/jcnr-readiness-checks.html" format="html" scope="external">Support for preflight and postflight
+              checks</xref></b>—Juniper Cloud-Native Router supports preflight and postflight checks
+            under the Juniper Cloud-Native Router Readiness framework. Preflight checks verify that
+            your cluster nodes can support JCNR and postflight checks verify that your Cloud-Native
+            Router installation is working properly.</p>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configlet.html" format="html" scope="external">Support for local persistence of cRPD
+                configuration</xref></b>—Juniper Cloud-Native Router supports local persistence of
+            cRPD configuration across reboots, pod restarts, and upgrades.</p>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-deployment-guide/topics/topic-map/jcnr-install-hbn.html" format="html" scope="external">Support for Service Module Host-Based
+              Routing</xref></b>—Juniper Cloud-Native Router Service Module for Host-Based Routing
+            augments the Operator Service Module framework to provide a cRPD host-based routing
+            solution for your Kubernetes cluster. You can now leverage an external cRPD installation
+            within the host's network namespace to provide a more feature-rich networking
+            implementation for your pod network.</p>
+        </li>
+        <li>
+          <p><b><xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-deployment-guide/topics/topic-map/jcnr-validation-factory.html" format="html" scope="external">Support for Validation Factory</xref></b>—Juniper
+            Cloud-Native Router Validation Factory is a library of test profiles that you can run to
+            validate your Cloud-Native Router deployment. Implemented as a Helm chart, Validation
+            Factory makes it easy for you to test your Cloud-Native Router deployment for evaluation
+            or even prior to going live in a production environment. Validation Factory is initially
+            supported for Layer 3 tests in Wind River deployments only.</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

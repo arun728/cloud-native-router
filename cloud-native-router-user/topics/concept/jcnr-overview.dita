@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7f76" xml:lang="en-US">
+  <title>Juniper Cloud-Native Router Overview</title>
+  <shortdesc>This topic provides an overview of the Juniper Cloud-Native Router (JCNR) overview, use
+    cases, and features.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <section id="section_n14_zwl_dpb"><title>Overview</title>While 5G unleashes higher bandwidth,
+      lower latency and higher capacity, it also brings in new infrastructure challenges such as
+      increased number of base stations or cell sites, more backhaul links with larger capacity and
+      more cell site routers and aggregation routers. Service providers are integrating cloud-native
+      infrastructure in distributed RAN (D-RAN) topologies, which are usually small, leased spaces,
+      with limited power, space and cooling. The disaggregation of radio access network (RAN) and
+      the expansion of 5G data centers into cloud hyperscalers has added newer requirements for
+      cloud-native routing.<p>The Juniper Cloud-Native Router provides the service providers the
+        flexibility to roll out the expansion requirements for 5G rollouts, reducing both the CapEx
+        and OpEx. </p><p>Juniper Cloud-Native Router (JCNR) is a containerized router that combines
+        Juniper's proven routing technology with the <xref format="html" href="https://www.juniper.net/us/en/products/routers/containerized-routing-protocol-daemon-crpd.html" scope="external">Junos containerized routing protocol daemon (cRPD)</xref>
+        as the controller and a high-performance Data Plane Development Kit (DPDK) or extended
+        Berkley Packet Filter (eBPF) eXpress Data Path (XDP) datapath based vRouter forwarding
+        plane. It is implemented in Kubernetes and interacts seemlessly with a Kubernetes container
+        network interface (CNI) framework. </p></section>
+    <section id="section_y5w_52g_qxb">
+      <title>Use Cases</title>
+      <p>The Cloud-Native Router has the following use cases:</p>
+      <ul id="ul_csw_x2g_qxb">
+        <li>
+          <p><b>Radio Access Network (RAN)</b></p>
+          <p>The new 5G-only sites are a mix of centralized RAN (C-RAN) and distributed RAN (D-RAN).
+            The C-RAN sites are typically large sites owned by the carrier and continue to deploy
+            physical routers. The D-RAN sites, on the other hand, are tens of thousands of smaller
+            sites, closer to the users. Optimization of CapEx and OpEx is a huge factor for the
+            large number of D-RAN sites. These sites are also typically leased, with limited space,
+            power and cooling capacities. There is limited connectivity over leased lines for
+            transit back to the mobile core. Juniper Cloud-Native Router is designed to work in the
+            constraints of a D-RAN. It is integrated with the distributed unit (DU) and installable
+            on an existing 1 U server. </p>
+        </li>
+        <li>
+          <p><b>Telco virtual private cloud (VPC)</b></p>
+          <p>The 5G data centers are expanding into cloud hyperscalers to support more radio sites.
+            The cloud-native routing available in public cloud environments do not support the
+            routing demands of telco VPCs, such as MPLS, quality of service (QoS), L3 VPN, and more.
+            The Juniper Cloud-Native Router integrates directly into the cloud as a containerized
+            network function (CNF), managed as a cloud-native Kubernetes component, while providing
+            advanced routing capabilities. </p>
+        </li>
+      </ul>
+    </section>
+    <section id="section_r3z_xnc_pxb">
+      <title>Architecture and Key Components</title>
+      <p>The Juniper Cloud-Native Router consists of the <xref format="html" href="https://www.juniper.net/us/en/products/routers/containerized-routing-protocol-daemon-crpd.html" scope="external">Junos containerized routing protocol Daemon (cRPD)</xref> as the control
+        plane
+        (<?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native
+        Router <?oxy_insert_end?>Controller), providing topology discovery, route advertisement and
+        forwarding information base (FIB) programming, as well as dynamic underlays and overlays. It
+        uses the Data Plane Development Kit (DPDK) or eBPF XDP datapath enabled vRouter as a
+        forwarding plane, providing packet forwarding for applications in a pod and host path I/O
+        for protocol sessions. The third component is the
+        <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native
+        Router <?oxy_insert_end?>container network interface (CNI) that interacts with Kubernetes as
+        a secondary CNI to create pod interfaces, assign addresses and generate the router
+        configuration. The CNI also provides networking for virtual machines created using
+        KuberVirt. </p>
+      <p>The Data Plane Development Kit (DPDK) is an open source set of libraries and drivers. DPDK
+        enables fast packet processing by allowing network interface cards (NICs) to send direct
+        memory access (DMA) packets directly into an application’s address space. The applications
+        poll for packets, to avoid the overhead of interrupts from the NIC. Integrating with DPDK
+        allows a vRouter to process more packets per second than is possible when the vRouter runs
+        as a kernel module.</p>
+      <p>The extended Berkley Packet Filter (eBPF) is a Linux kernel technology that executes
+        user-defined programs inside a sandbox virtual machine. It enables low-level networking
+        programs to execute with optimal performance. The eXpress Data Path (XDP) frameworks enables
+        high-speed packet processing for the eBPF programs. <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports eBPF XDP datapath based
+        vRouter. </p>
+      <p>In this integrated solution, the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Controller uses gRPC, a high performance Remote
+        Procedure Call, based services to exchange messages and to communicate with the vRouter,
+        thus creating the fully functional Cloud-Native Router. This close communication allows you
+        to:</p>
+      <ul id="ul_afy_kfb_2qb">
+        <li>
+          <p>Learn about fabric and workload interfaces.</p>
+        </li>
+        <li>
+          <p>Provision DPDK or kernel-based interfaces for Kubernetes pods as needed.</p>
+        </li>
+        <li>
+          <p>Configure IPv4 and IPv6 address allocation for pods.</p>
+        </li>
+        <li>
+          <p>Run routing protocols such as ISIS, BGP, and OSPF and much more.</p>
+        </li>
+      </ul>
+    </section>
+    <section id="section_trf_2jy_bsb">
+      <title>Features<?oxy_insert_start author="tkaur" timestamp="20230810T170915+0100"?><!--tkaur: updated for 23.3--><?oxy_insert_end?></title>
+      <ul id="ul_urf_2jy_bsb">
+        <li>
+          <p>Easy deployment, removal, and upgrade on general purpose compute devices using
+            Helm.</p>
+        </li>
+        <li>
+          <p>Higher packet forwarding performance with DPDK-based JCNR-vRouter.</p>
+        </li>
+        <li>
+          <p>Full routing, switching, and forwarding stacks in software.</p>
+        </li>
+        <li>
+          <p>Out-of-the-box software-based open radio access network (O-RAN) support.</p>
+        </li>
+        <li>
+          <p>Quick spin up with containerized deployment.</p>
+        </li>
+        <li>
+          <p>Highly scalable solution.</p>
+        </li>
+        <li>
+          <p>Deployable in Container Network Function (CNF) or Container Network Interface (CNI)
+            modes.</p>
+        </li>
+        <li>
+          <p>CNI support for pods and KuberVirt-based VMs.</p>
+        </li>
+        <li>
+          <p>L3 features such as transit gateway, support for routing protocols, BFD, VRRP,
+            VRF-Lite, EVPN Type-5, ECMP and BGP Unnumbered, access control lists, SRv6.</p>
+        </li>
+        <li>
+          <p>L2 functionality, such as MAC learning, MAC aging, MAC limiting, native VLAN, L2
+            statistics, and access control lists (ACLs).</p>
+        </li>
+        <li>
+          <p>L2 reachability to Radio Units (RU) for management traffic.</p>
+        </li>
+        <li>
+          <p>L2 or L3 reachability to physical distributed units (DU) such as 5G millimeter wave DUs
+            or 4G DUs.</p>
+        </li>
+        <li>
+          <p>VLAN tagging and bridge domains.</p>
+        </li>
+        <li>
+          <p>Trunk and access ports.</p>
+        </li>
+        <li>
+          <p>Support for multiple virtual functions (VF) on Ethernet NICs.</p>
+        </li>
+        <li>
+          <p>Support for bonded VF interfaces.</p>
+        </li>
+        <li>
+          <p>Rate limiting of egress broadcast, unknown unicast, and multicast traffic on fabric
+            interfaces.</p>
+        </li>
+        <li>
+          <p>IPv4 and IPv6 routing.</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

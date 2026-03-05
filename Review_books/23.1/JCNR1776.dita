@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_3467f701db4d427a--6771078f-186d00ab700--7e65" xml:lang="en-US">
+  <title>Preventing Local Switching</title>
+  <prolog>
+    <author>dgv</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>Starting in Juniper Cloud-Native Router Release 23.1, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>provides support to prevent
+      interfaces in a bridge domain that are a part of the same VLAN group, from transmitting
+      ethernet frame copies in between those interfaces. The <filepath>noLocalSwitching</filepath>
+      key provides the option to enable the functionality on the selected VLAN IDs. </p>
+    <note>
+      <p>The <filepath>noLocalSwitching</filepath> functionality is a Technology Preview feature in
+        the Juniper Cloud-Native Router Release 23.1.</p>
+    </note>
+    <p>To prevent interfaces in a bridge domain from transmitting and receiving ethernet frame
+      copies, enable the <filepath>noLocalSwitching</filepath> key and assign a VLAN ID to it to
+      ensure that the interfaces belonging to the VLAN ID do not transmit frames to one another.
+      Note that the <filepath>noLocalSwitching</filepath> functionality is enabled only on the
+      access interfaces. To enable <filepath>noLocalSwitching</filepath> on a trunk interface that
+      is a part of the same VLAN ID, you have to separately enable the trunk interface by setting
+      the <filepath>no-local-switching</filepath> key in the trunk interface to
+        <filepath>true</filepath>. Use the <filepath>noLocalSwitching</filepath> functionality when
+      you want to block interfaces that are a part of a VLAN group to stop transmitting traffic
+      directly to one another.</p>
+    <note>
+      <p>For all the trunk interfaces and access interfaces, cRPD isolates traffic for the bridge
+        domains configured with <filepath>no-local-switching</filepath>.</p>
+    </note>
+    <p>To prevent local switching, perform the steps below prior to the deploy time:</p>
+    <ol id="ol_dv3_bsq_wwb">
+      <li>
+        <p>Edit the <filepath>values.yaml</filepath> file in
+              <filepath>Juniper_Cloud_Native_Router_<varname>&lt;release-number&gt;</varname>/helmchart</filepath>
+          directory.</p>
+      </li>
+      <li>
+        <p>Enable the <filepath>noLocalSwitching</filepath> key and provide the VLAN IDs.</p>
+        <note>
+          <ol id="ol_zvr_pwq_wwb">
+            <li>
+              <p>The value for the <filepath>noLocalSwitching</filepath> key can be an indivdual
+                VLAN ID, or multipe comma-separated VLAN ID values, or a VLAN ID range, or a
+                combination of comma-separated VLAN ID values and a VLAN ID range. For example,
+                  <filepath>noLocalSwitching: [700, 701, 705-710]</filepath>.</p>
+            </li>
+            <li>
+              <p>With this step the feature is enabled for all access interfaces having the
+                specified VLAN ID. You can skip the next step if you do not want to enable the
+                feature on the trunk interface.</p>
+            </li>
+          </ol>
+        </note>
+      </li>
+      <li>
+        <p>To enable the feature on a trunk interface, add the key
+            <filepath>no-local-switching</filepath> and set it to <filepath>true</filepath> under
+          the trunk interface configuration.</p>
+      </li>
+      <li>
+        <p>Install or upgrade <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>using the <filepath>values.yaml</filepath>.</p>
+      </li>
+    </ol>
+    <subsection id="subsection_qq1_1xq_wwb">
+      <title>Example</title>
+      <codeblock>
+  ####################################################################
+  #                            L2 PARAMS                             #
+  ####################################################################
+
+  <b>noLocalSwitching: [700]</b>
+
+  # fabricInterface: NGDU or tor side interface, expected all types 
+  # of traffic; interface_mode is always trunk for this mode
+  fabricInterface:
+  - bond0:
+      interface_mode: trunk
+      vlan-id-list: [100, 200, 300, 700-705]
+      storm-control-profile: rate_limit_pf1
+      #native-vlan-id: 100
+      <b>no-local-switching: true</b>
+
+  # fabricWorkloadInterface: RU side interfaces, expected traffic is only 
+  # management/control traffic; interface mode can be trunk or access
+  # NOTE: only one vlan can be specified in case of access interfaces 
+  # (as opposed to multiple vlans in trunk mode)
+  fabricWorkloadInterface:
+  - enp59s0f1v0:
+      interface_mode: access
+      vlan-id-list: [700]
+</codeblock>
+    </subsection>
+    <p>To know all the interfaces that are enabled for <filepath>noLocalSwitching</filepath>
+      functionality on all the VLANs, connect to the vRouter agent by executing the command
+        <codeph>kubectl exec -it -n contrail contrail-vrouter-<varname>&lt;agent
+          container&gt;</varname> -- bash</codeph> command, and then run the command
+        <codeph>purel2cli --nolocal show</codeph>. A sample output is shown below.</p>
+    <codeblock>[root@nodep25 /]# purel2cli --nolocal show​
+============================​
+vlan    no_local_switch_list​
+============================​
+100     1, 2, 4,​
+200​
+300​
+700​
+701​
+702​
+703​
+​​</codeblock>
+    <p>To check if <filepath>noLocalSwitching</filepath> functionality is enabled on a specific VLAN
+      ID, connect to the vRouter agent by executing the command <codeph>kubectl exec -it -n contrail
+          contrail-vrouter-<varname>&lt;agent container&gt;</varname> -- bash</codeph> command, and
+      then run the command <codeph>purel2cli --nolocal get <varname>&lt;VLAN
+        ID&gt;</varname></codeph>. A sample output is shown below.</p>
+    <codeblock>[root@nodep25 /]# purel2cli --nolocal get 100​
+============================​
+vlan    no_local_switch_list​
+============================​
+100     1, 2, 4,​
+​​</codeblock>
+  </conbody>
+
+  <related-links/>
+</concept>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE task PUBLIC "-//Juniper//DTD DITA 1.3 General Task//EN" "/SysSchema/dita13/dtd/subsection/dtd/generalTask.dtd">
+<task xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_19e939a6782fa58a--74813304-195a32dabb2--7d37" xml:lang="en-US">
+  <title>Configure the OAM Route on the Management Host</title>
+  <shortdesc>This example procedure shows how to configure the OAM route on the management host for
+    management access on the overlay.</shortdesc>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <taskbody>
+    <context id="context_rdr_cww_s2c">
+      <p>There are different ways you can configure the OAM route. In this example we'll create a
+        separate routing instance with a default route to the transit Cloud-Native Router. We'll
+        then create a rule for OAM traffic to use this separate routing instance.</p>
+    </context>
+    <steps id="steps_tjq_md4_s2c">
+      <step>
+        <cmd>Create the OAM routing table.</cmd>
+        <info>Add the new table to <filepath>/etc/iproute2/rt_tables</filepath>. We'll call this
+          table <codeph>oam</codeph>. For
+          example:<codeblock id="codeblock_ujq_md4_s2c">echo 100 oam &gt;&gt; /etc/iproute2/rt_tables</codeblock></info>
+      </step>
+      <step>
+        <cmd>Add a default route to 10.10.2.1 to that table.</cmd>
+        <info>
+          <codeblock id="codeblock_vjq_md4_s2c">ip route add default via 10.10.2.1 table oam</codeblock>
+          <codeblock id="codeblock_wjq_md4_s2c">ip route show table oam
+default via 10.10.2.1 dev ens1f0</codeblock>
+        </info>
+      </step>
+      <step>
+        <cmd>Add a rule for traffic originating from 10.10.2.2 to use this OAM routing table.</cmd>
+        <info>
+          <codeblock id="codeblock_xjq_md4_s2c">ip rule add from 10.10.2.2 lookup oam</codeblock>
+          <codeblock id="codeblock_yjq_md4_s2c">ip rule show
+32765:  from 10.10.2.2 lookup oam</codeblock>
+        </info>
+      </step>
+    </steps>
+  </taskbody>
+</task>

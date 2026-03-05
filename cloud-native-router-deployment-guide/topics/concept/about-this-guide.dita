@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_a80d54bf200c39a9--49174253-179093887e2--7898" xml:lang="en-US">
+  <title>About This Guide</title>
+  <conbody>
+    <p>Use this guide to learn how to install Juniper Cloud-Native Router (JCNR), including
+      installing the Juniper Cloud-Native Router Controller (cRPD), the Juniper Cloud-Native Router
+      container network interface (JCNR-CNI), and the high-performant vRouter in a Kubernetes
+      cluster. The Cloud-Native Router controller integrates with JCNR-vRouter to provide the rich
+      forwarding capabilities of a Junos OS router, enabling high-performance forwarding and
+      throughput on a Linux host. Additionally, JCNR-CNI provides networking for the vRouter and the
+      Cloud-Native Router controller pods. </p>
+  </conbody>
+</concept>

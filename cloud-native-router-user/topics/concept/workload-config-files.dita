@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7abd" xml:lang="en-US">
+  <title>Sample Workload Configuration Files</title>
+  <abstract>
+    <p>Read this topic to review sample configuration files for the network attachment definition
+      (NAD) manifests and pod manifests for various L2 and L3 use cases of JCNR. </p>
+  </abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+
+    <section><title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Sample Workload Configuration Files</title><p>This section provides sample
+        NADs and pod manifests for the various <xref href="jcnr-interfaces-overview.dita"> JCNR interface
+        types</xref>.</p><subsection id="subsection_iwq_dwf_4xb">
+        <title>Configuring Trunk Mode Interface</title>
+      </subsection><codeph id="nad-dpdk-trk-v3002">Network Attachment Definition (NAD) manifest for
+        Trunk mode pod
+        interface</codeph><codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: nad-vswitch-bd3002
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "nad-vswitch-bd3002",
+    "capabilities":{"ips":true},
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "vswitch",                       <b>&lt;--- Do not change</b>
+          "instanceType": "virtual-switch",                <b>&lt;--- Do not change</b>
+          "bridgeDomain": "bd3002",                        <b>&lt;--- Configurable </b>
+          "bridgeVlanId": "3002",                          <b>&lt;--- Configurable</b>
+          "dataplane":"dpdk",                              <b>&lt;--- dpdk or kernel</b>
+          "mtu": "9000"
+        },
+        "ipam": {
+          "type": "static",
+          "capabilities":{"ips":true},
+          "addresses":[
+            {
+              "address":"2001:db8:3002::10.2.0.1/64",
+              "gateway":"2001:db83002::10.2.0.254"
+            },
+            {
+              "address":"10.2.0.1/24",
+              "gateway":"10.2.0.254"
+            }
+          ]
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock><codeph id="pod-dpdk-trk-v3002">Pod Manifest to create a Trunk mode interface attached to the L2
+        switching instance of the cloud-native
+        router</codeph><codeblock>apiVersion: v1
+kind: Pod
+metadata:
+  name:   odu-trunk-1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: nad-vswitch-bd3002                    <b>&lt;--- Defined by NAD</b>
+spec:
+  containers:
+    - name: odu-trunk
+      image: pktgen19116:trunk
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        privileged: true
+      resources:
+        requests:
+          memory: 2Gi
+        limits:
+          hugepages-1Gi: 2Gi
+      env:
+        - name: KUBERNETES_POD_UID
+          valueFrom:
+            fieldRef:
+               fieldPath: metadata.uid
+      volumeMounts:
+        - name: dpdk
+          mountPath: /dpdk
+          subPathExpr: $(KUBERNETES_POD_UID)
+        - mountPath: /dev/hugepages
+          name: hugepage
+  volumes:
+    - name: dpdk
+      hostPath:
+        path: /var/run/jcnr/containers
+    - name: hugepage
+      emptyDir:
+        medium: HugePages</codeblock><subsection id="subsection_w4x_fwf_4xb">
+        <title>Configuring Access Mode Interface</title>
+      </subsection><codeph>Network Attachment Definition (NAD) manifest for Access mode pod
+        interface</codeph><codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: pod1-vswitch-bd3001-1
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "pod1-vswitch-bd3001-1",
+    "capabilities":{"ips":true},
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "vswitch",                        <b>&lt;--- Do not change</b>
+          "instanceType": "virtual-switch",                 <b>&lt;--- Do not change</b>
+          "bridgeDomain": "bd3001",                         <b>&lt;--- Configurable</b> 
+          "bridgeVlanId": "3001",                           <b>&lt;--- Configurable </b>
+          "dataplane":"dpdk",                               <b>&lt;--- dpdk or kernel </b>
+          "mtu": "9000",
+          "interfaceType":"veth"                            <b>&lt;--- for not DPDK applications (OAM)</b> 
+        },
+        "ipam": {
+          "type": "static",
+          "capabilities":{"ips":true},
+          "addresses":[
+            {
+              "address":"2001:db8:3001::10.1.0.1/64",
+              "gateway":"2001:db8:3001::10.1.0.254"
+            },
+            {
+              "address":"10.1.0.1/24",
+              "gateway":"10.1.0.254"
+            }
+          ]
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock><codeph>Pod
+        Manifest to create an Access mode interface attached to the L2 switching instance of the
+        cloud-native
+        router</codeph><codeblock>apiVersion: v1
+kind: Pod
+metadata:
+  name:   odu-kenel-pod-bd3001-1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: pod1-vswitch-bd3001-1           <b>&lt;--- Defined by NAD</b>
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - 5d8s7.englab.juniper.net
+  containers:
+    - name: odu-kenel-pod-bd3001-1
+      image: iperf3:latest
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/bash","-c","sleep infinity"]
+      securityContext:
+        privileged: false
+      env:
+        - name: KUBERNETES_POD_UID
+          valueFrom:
+            fieldRef:
+               fieldPath: metadata.uid
+      volumeMounts:
+        - name: dpdk
+          mountPath: /dpdk
+          subPathExpr: $(KUBERNETES_POD_UID)
+  volumes:
+    - name: dpdk
+      hostPath:
+        path: /var/run/jcnr/containers</codeblock><subsection id="subsection_fmp_txf_4xb">
+        <title>Configuring VLAN Sub-Interface </title>
+      </subsection><p><codeph>Network Attachment Definition (NAD) manifest for VLAN
+          sub-interface</codeph></p><codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vswitch-bd3003-sub      
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "vswitch-bd3003-sub",
+    "capabilities":{"ips":true},
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "vswitch",                  <b>&lt;--- Do not change</b>
+          "instanceType": "virtual-switch",           <b>&lt;--- Do not change</b>
+          "bridgeDomain": "bd3003",                   <b>&lt;--- Configurable</b>
+          "bridgeVlanId": "3003",                     <b>&lt;--- Configurable</b>
+          "parentInterface":"net1",                   <b>&lt;--- Configurable</b>
+          "interface":"net1.3003",                    <b>&lt;--- Configurable</b>
+          "dataplane":"dpdk"                          <b>&lt;--- dpdk or kernel</b>
+        },
+        "ipam": {
+          "type": "static",
+          "capabilities":{"ips":true},
+          "addresses":[
+            {
+              "address":"10.3.0.1/24",
+              "gateway":"10.3.0.254"
+            },
+            {
+              "address":"2001:db8:3003::10.3.0.1/120",
+              "gateway":"2001:db8:3003::10.3.0.1"
+            }
+          ]
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock><p><codeph>Network
+          Attachment Definition (NAD) manifest for an additional VLAN
+          sub-interface</codeph></p><codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vswitch-bd3004-sub
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "vswitch-bd3004-sub",
+    "capabilities":{"ips":true},
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "vswitch",
+          "instanceType": "virtual-switch",
+          "bridgeDomain": "bd3004",
+          "bridgeVlanId": "3004",
+          "parentInterface":"net1",
+          "interface":"net1.3004",
+          "dataplane":"dpdk"
+
+        },
+        "ipam": {
+          "type": "static",
+          "capabilities":{"ips":true},
+          "addresses":[
+            {
+              "address":"30.4.0.1/24",
+              "gateway":"30.4.0.254"
+            },
+            {
+              "address":"2001:db8:3004::10.4.0.1/120",
+              "gateway":"2001:db8:3004::10.4.0.1"
+            }
+          ]
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock><p><codeph>Pod
+          Manifest to create sub-interfaces attached to the L2 switching instance of the
+          cloud-native
+        router</codeph></p><codeblock>apiVersion: v1
+kind: Pod
+metadata:
+  name:   odu-subinterface-1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "vswitch-bd3003-sub"                       <b>&lt;--- Defined by NAD</b>
+        },
+        {
+          "name": "vswitch-bd3004-sub"                       <b>&lt;--- Defined by NAD</b>
+          }
+      ]
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - 5d7s39.englab.juniper.net
+  containers:
+    - name: odu-subinterface
+      image: svl-artifactory.juniper.net/junos-docker-local/warthog/pktgen19116:subint
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        privileged: false
+      resources:
+        requests:
+          memory: 2Gi
+        limits:
+          hugepages-1Gi: 2Gi
+      env:
+        - name: KUBERNETES_POD_UID
+          valueFrom:
+            fieldRef:
+               fieldPath: metadata.uid
+      volumeMounts:
+        - name: dpdk
+          mountPath: /dpdk
+          subPathExpr: $(KUBERNETES_POD_UID)
+        - mountPath: /dev/hugepages
+          name: hugepage
+  volumes:
+    - name: dpdk
+      hostPath:
+        path: /var/run/jcnr/containers
+    - name: hugepage
+      emptyDir:
+        medium: HugePages</codeblock><subsection id="subsection_iys_wxf_4xb">
+        <title>Configuring an L3 interface</title>
+      </subsection><p><codeph>Network Attachment Definition (NAD) manifest for an L3
+          interface</codeph></p><codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net1
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "net1",
+    "type": "jcnr",
+    "args": {
+      "vrfName": "net1",
+      "vrfTarget": "1:11"
+    },
+    "kubeConfig":"/etc/kubernetes/kubelet.conf"
+  }'</codeblock><p><codeph>Pod
+          Manifest to create a pod interface attached to the cloud-native router deployed as a
+          transit
+      router</codeph></p><codeblock>apiVersion: v1
+kind: Pod
+metadata:
+  name: L3-pktgen-odu1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "net1",                                      <b>&lt;--- Defined by NAD</b>
+          "interface":"net1",
+          "cni-args": {
+            "mac":"aa:bb:cc:dd:ee:51",
+            "dataplane":"vrouter",
+            "ipConfig":{
+              "ipv4":{
+                "address":"10.1.51.2/30",
+                "gateway":"10.1.51.1",
+                "routes":[
+                  "10.1.51.0/30"
+                ]
+              },
+              "ipv6":{
+                "address":"2001:db8::10:1:51:2/126",
+                "gateway":"2001:db8::10:1:51:1",
+                "routes":[
+                  "2001:db8::1:1:51:0/126"
+                ]
+              }
+            }
+          }
+        }
+      ]
+spec:
+  containers:
+    - name: L3-pktgen-odu1
+      image: svl-artifactory.juniper.net/blr-data-plane/dpdk-app/dpdk:21.11
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/bash","-c","sleep infinity"]
+      securityContext:
+        privileged: false
+      env:
+        - name: KUBERNETES_POD_UID
+          valueFrom:
+            fieldRef:
+               fieldPath: metadata.uid
+      resources:
+        requests:
+          memory: 4Gi
+        limits:
+          hugepages-1Gi: 4Gi
+      name: hugepages
+      command: ["sleep"]
+      args: ["infinity"]
+      volumeMounts:
+        - name: dpdk
+          mountPath: /dpdk
+          subPathExpr: $(KUBERNETES_POD_UID)
+        - name: hugepages
+          mountPath: /hugepages
+  volumes:
+    - name: dpdk
+      hostPath:
+        path: /var/run/jcnr/containers
+    - name: hugepages
+      emptyDir:
+        medium: HugePages</codeblock></section>
+  </conbody>
+
+  <related-links>
+    <link href="jcnr-interfaces-overview.dita"/>
+  </related-links>
+</concept>

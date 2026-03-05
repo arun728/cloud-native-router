@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_1a8e069a06657f97--7cd600da-188de57988f--7c6b" xml:lang="en-US">
+    <title>Deploy L2 Pod with VLAN Sub-Interface</title>
+    <shortdesc>Read this topic to learn how to add a user pod with a Layer 2 VLAN sub-interface to
+        an instance of the cloud-native router.</shortdesc>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <concept id="xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1" xml:lang="en-US">
+        <title>Overview</title>
+        <conbody>
+            <p>You can configure a user pod with a Layer 2 VLAN sub-interface and attach it to the
+                <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>instance. The Juniper Cloud-Native Router must have an L2 interface configured
+                at the time of deployment. The cRPD must be configured with the valid VLAN
+                configuration for the fabric interface. For example:</p>
+            <codeblock>set interfaces eth1 unit 100 vlan-id 100</codeblock>
+            <note>
+                <p>Note that the unit number and the VLAN ID must match. </p>
+            </note>
+            <p>Your high-level tasks are:</p>
+            <ul>
+                <li>
+                    <p>Define and apply a network attachment definition (NAD)—The NAD file defines
+                        the required configuration for Multus to invoke the JCNR-CNI and create a
+                        network to attach the pod interface to.</p>
+                </li>
+                <li>
+                    <p>Define and apply a pod YAML file to your cloud-native router cluster—The pod
+                        YAML contains the pod specifications and an annotation to the network
+                        created by the JCNR-CNI</p>
+                    <note>
+                        <p>Please review the <xref href="../concept/config-examples-overview.dita"/> topic
+                            for more information on NAD and pod YAML files. </p>
+                    </note>
+                </li>
+            </ul>
+        </conbody>
+    </concept>
+    <task id="task_e15_krd_qjb">
+        <title>Configuration Example</title>
+        <abstract>
+            <ol id="ol_ehd_jrx_wxb">
+                <li>Here is an example NAD to create a Layer 2 VLAN
+                    sub-interface:<codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vswitch-bd201-sub      
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "vswitch-bd201-sub",
+    "capabilities":{"ips":true},
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "vswitch",               
+          "instanceType": "virtual-switch",        
+          "bridgeDomain": "bd201",                
+          "bridgeVlanId": "201",                  
+          "parentInterface": "net1",                
+          "interface": "net1.201"                 
+        },
+        "ipam": {
+          "type": "static",
+          "capabilities":{"ips":true},
+          "addresses":[
+            {
+              "address":"10.3.0.1/24",
+              "gateway":"10.3.0.254"
+            },
+            {
+              "address":"2001:db8:3003::10.3.0.1/120",
+              "gateway":"2001:db8:3003::10.3.0.1"
+            }
+          ]
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock>The
+                    NAD defines a bridge domain <codeph>bd201</codeph> and a sub-interface
+                        <codeph>net1.201</codeph> with a parent interface <codeph>net1</codeph>. The
+                    pod will be attached in the <codeph>virtual-switch</codeph> instance.. It also
+                    defines a static IP address to be assigned to the pod interface.</li>
+                <li>Apply the NAD manifest to create the network.
+                    <codeblock>kubectl apply -f nad_l2_vlan_subinterface.yaml 
+networkattachmentdefinition.k8s.cni.cncf.io/vswitch-bd201-sub created</codeblock></li>
+                <li> Verify the NAD is created.
+                    <codeblock>[root@jcnr-01]# kubectl get net-attach-def
+NAME                 AGE
+vswitch-bd201-sub    43s</codeblock></li>
+                <li>Here is an example yaml to create a pod attached to the
+                        <codeph>vswitch-bd201-sub</codeph> network:
+                    <codeblock>apiVersion: v1
+kind: Pod
+metadata:
+  name:   pod1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: "vswitch-bd201-sub"              
+spec:
+  containers:
+    - name: pod1
+      image: ubuntu:latest
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        privileged: false
+      resources:
+        requests:
+          memory: 2Gi
+        limits:
+          hugepages-1Gi: 2Gi
+      env:
+        - name: KUBERNETES_POD_UID
+          valueFrom:
+            fieldRef:
+               fieldPath: metadata.uid
+      volumeMounts:
+        - name: dpdk
+          mountPath: /dpdk
+          subPathExpr: $(KUBERNETES_POD_UID)
+        - mountPath: /dev/hugepages
+          name: hugepage
+  volumes:
+    - name: dpdk
+      hostPath:
+        path: /var/run/jcnr/containers
+    - name: hugepage
+      emptyDir:
+        medium: HugePages</codeblock>The
+                    pod attaches to the router instance using the
+                        <codeph>k8s.v1.cni.cncf.io/networks</codeph> annotation. </li>
+                <li> Apply the pod manifest.
+                    <codeblock>[root@jcnr-01]# kubectl apply -f pod_access_mode.yaml 
+pod/pod1 created</codeblock></li>
+                <li> Verify the pod is running.
+                    <codeblock>[root@jcnr-01 ~]# kubectl get pods 
+NAME   READY   STATUS    RESTARTS   AGE
+pod1   1/1     Running   0          40s</codeblock></li>
+                <li>Describe the pod to verify a secondary interface is created and attached to the
+                        <codeph>vswitch-bd201-sub</codeph> network. (The output is trimmed for
+                    brevity).<codeblock>[root@jcnr-01 ~]# kubectl describe pod pod1
+Name:         pod1
+Namespace:    default
+Priority:     0
+Node:         jcnr-01/10.100.20.25
+Start Time:   Mon, 26 Jun 2023 09:53:31 -0400
+Labels:       &lt;none&gt;
+Annotations:  cni.projectcalico.org/containerID: 58642dd26f85769e14d302153357e84e6900398532d1b82b50a845ac1ede051a
+              cni.projectcalico.org/podIP: 
+              cni.projectcalico.org/podIPs: 
+              <b>jcnr.juniper.net/dpdk-interfaces:
+                [
+                    {
+                        "name": "net1",
+                        "vhost-adaptor-path": "/dpdk/vhost-net1.sock",
+                        "vhost-adaptor-mode": "client",
+                        "ipv4-address": "10.3.0.1/24",
+                        "ipv6-address": "2001:db8:3003::a03:1/120",
+                        "mac-address": "02:00:00:84:DC:42",
+                        "vlan-id": "201"
+                    }
+                ]</b>
+              k8s.v1.cni.cncf.io/network-status:
+                [{
+                    "name": "k8s-pod-network",
+                    "ips": [
+                        "10.233.91.97"
+                    ],
+                    "default": true,
+                    "dns": {}
+                },<b>{
+                    "name": "default/vswitch-bd201-sub",
+                    "interface": "net1",
+                    "ips": [
+                        "10.3.0.1",
+                        "2001:db8:3003::a03:1"
+                    ],
+                    "mac": "02:00:00:84:DC:42",
+                    "dns": {}
+                }</b>]
+...</codeblock></li>
+                <li>Verify the vRouter has the corresponding interface created. <xref href="../concept/accessing-vrouter-cli.dita">Access the vRouter CLI</xref>
+                    and issue the <codeph>vif --list</codeph>
+                    command.<codeblock>vif0/2      PMD: vhostnet1-d5eee4ec-dd7c-4e MTU: 9160
+            Type:Virtual HWaddr:02:00:00:84:dc:42
+            DDP: OFF SwLB: ON
+            Vrf:65535 Flags:L2 QOS:-1 Ref:14
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+            TX port   packets:0 errors:293
+
+vif0/3      Virtual: vhostnet1-d5eee4ec-dd7c-4e.201 Vlan(o/i)(,S): <b>201/201 Parent:vif0/2</b> MTU: 1514
+            <b>Type:Virtual(Vlan)</b> HWaddr:02:00:00:84:dc:42
+            <b>DDP: OFF SwLB: ON</b>
+            <b>Vrf:0 Flags:L2</b> QOS:-1 Ref:1
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:208  bytes:17071 errors:0
+            Drops:0</codeblock>Note
+                    that the interface type is <codeph>Virtual</codeph> and the Vlan ID set to
+                        <codeph>201</codeph>. The parent interface is <codeph>vif0/2</codeph>. The
+                    VRF is always 0 for L2 sub-interfaces.</li>
+            </ol>
+        </abstract>
+    </task>
+</topic-map>

@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE task PUBLIC "-//Juniper//DTD DITA 1.3 General Task//EN" "/SysSchema/dita13/dtd/subsection/dtd/generalTask.dtd">
+<task xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_ea802945c31238bf--852731c-19a923fc65c--7f31" xml:lang="en-US"><!--Use the Task template to document a procedure.-->
+  <!--Start with the imperative verb. Do not use the gerund (-ing) form. For example: “Replace a Fan Module.” For best or safe practices, start with “How to”. For example: “How to Hold an MX960 MPC."-->
+  <title>Configuration Steps</title>
+  <prolog>
+    <author> tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <taskbody>
+    <prereq id="prereq_r5q_qf4_2yb">Open-Source Kubernetes v1.32 onwards and Red Hat OpenShift
+      (RHOCP) v4.19 onwards support this feature. Ensure KubeVirt v1.3.0 and multus CNI is installed
+      in the Kubernetes cluster. For more details review <xref href="https://kubevirt.io/user-guide/cluster_admin/installation/" format="html" scope="external"/></prereq>
+    <steps>
+      <step>
+        <cmd>Enable KubeVirt support in the Cloud-Native Router helm chart. When enabled, this
+          configuration registers the vhostuser network binding to the <codeph>kubevirt</codeph>
+          resource in open-source Kubernetes and <codeph>kubevirt-hyperconverged</codeph> resource
+          in RHOCP. You can either install Cloud-Native Router with KubeVirt settings enabled or
+          upgrade the installation to enable it later. </cmd>
+        <info>
+          <codeblock id="codeblock_z32_qs5_3hc"> #Specific to kubevirt deployments and kubevirt must me installed in the cluster
+  kubevirt:
+    repository: atom-docker/cn2/
+    tag: v1</codeblock>
+          <codeblock id="codeblock_ezd_1t5_3hc"># helm install jcnr .</codeblock>
+        </info>
+      </step>
+      <step>
+        <cmd>Verify the KubeVirt resource is patched.</cmd>
+        <info>
+          <ol id="ol_dh2_frb_jhc">
+            <li>View logs for the <codeph>apply-jcnr-deployment</codeph> pod in the
+                <codeph>contrail-deploy</codeph>
+              namespace:<codeblock id="codeblock_ojr_grb_jhc">│ applier time="2025-11-18T18:52:21Z" level=info msg="Detected hco.kubevirt.io API group (OCP platform)"                                                                                                                                                                                   │
+│ applier time="2025-11-18T18:52:21Z" level=info msg="Kubevirt support validated for platform: OCP"                                                                                                                                                                                        │
+│ applier time="2025-11-18T18:52:21Z" level=info msg="Kubernetes version: v1.31.6"                                                                                                                                                                                                         │
+│ applier time="2025-11-18T18:52:21Z" level=info msg="Applying OCP patch with image: s-artifactory.juniper.net/atom-docker/cn2/jcnr-vhostuser-netbinding:v1"                                                                                                                               │
+│ applier time="2025-11-18T18:52:21Z" level=info msg="Patching HyperConverged resource to register vhostuser network binding"                                                                                                                                                              │
+│ applier time="2025-11-18T18:52:21Z" level=info msg="Successfully applied kubevirt patch for platform: OCP"  </codeblock></li>
+            <li><p>You can also describe the resource and verify the network binding. An RHOCP
+                example is provided
+              below:</p><codeblock id="codeblock_e1z_hrb_jhc"># kubectl describe hyperconvergeds kubevirt-hyperconverged -n openshift-cnv
+Name:         kubevirt-hyperconverged
+Namespace:    openshift-cnv
+Labels:       app=kubevirt-hyperconverged
+Annotations:  deployOVS: false
+API Version:  hco.kubevirt.io/v1beta1
+Kind:         HyperConverged
+Metadata:
+  Creation Timestamp:  2025-04-07T23:56:28Z
+  Finalizers:
+    kubevirt.io/hyperconverged
+  Generation:        54
+  Resource Version:  179755209
+  UID:               0245a746-bfae-4760-a1b5-c7c1501ced56
+Spec:
+  Cert Config:
+    Ca:
+      Duration:      48h0m0s
+      Renew Before:  24h0m0s
+    Server:
+      Duration:       24h0m0s
+      Renew Before:   12h0m0s
+ ...&lt;trimmed&gt;
+ <b> Network Binding:
+    Vhostuser:
+      Downward API:   device-info
+      Sidecar Image:  s-artifactory.juniper.net/atom-docker/cn2/jcnr-vhostuser-netbinding:v1</b>
+  Resource Requirements:
+...&lt;trimmed&gt;
+</codeblock></li>
+          </ol>
+        </info>
+      </step>
+      <step>
+        <cmd>Create and apply one or more NetworkAttachmentDefinition (NAD) manifests to define
+          network instances <codeph>net-red</codeph> and <codeph>net-yellow</codeph>. You can also
+          use any existing NAD for multiple VMs or pods.</cmd>
+        <info>
+          <codeblock id="codeblock_ihg_cr5_3hc">apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-red
+  namespace: kv1
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "net-red",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "dataplane":"dpdk",
+         <b> "instanceName": "net-red"</b>,
+          "instanceType": "vrf",
+          "vrfTarget":"2:11"
+        },
+        "ipam": {
+          "type": "host-local",
+          "capabilities":{"ips":true},
+          "ranges": [
+            [
+              {
+                "subnet": "10.11.0.0/24",
+                "gateway": "10.11.0.254"
+              }
+            ],
+            [
+              {
+                "subnet": "2001:db8:10.11.0.0/120",
+                "gateway": "2001:db8:10.11.0.254"
+              }
+            ]
+          ],
+          "routes": [
+            { "dst": "0.0.0.0/0"},
+            { "dst": "30.0.0.0/8", "gw": "10.11.0.254" },
+            { "dst": "21.0.0.0/8", "gw": "10.11.0.254" },
+            { "dst": "3ffe:ffff:0:01ff::1/64" }
+          ]
+        },
+        "kubeConfig":"/var/home/core/kubeconfig"
+      }
+    ]
+  }' </codeblock>
+        </info>
+        <info>
+          <codeblock id="codeblock_etg_wp5_3hc">apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-yellow
+  namespace: kv1
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "net-yellow",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "dataplane":"dpdk",
+         <b> "instanceName": "net-yellow"</b>,
+          "instanceType": "vrf",
+          "vrfTarget":"2:12"
+        },
+        "ipam": {
+          "type": "host-local",
+          "capabilities":{"ips":true},
+          "ranges": [
+            [
+              {
+                "subnet": "10.12.0.0/24",
+                "gateway": "10.12.0.254"
+              }
+            ],
+            [
+              {
+                "subnet": "2001:db8:10.12.0.0/120",
+                "gateway": "2001:db8:10.12.0.254"
+              }
+            ]
+          ],
+          "routes": [
+            { "dst": "0.0.0.0/0"},
+            { "dst": "30.0.0.0/8", "gw": "10.12.0.254" },
+            { "dst": "21.0.0.0/8", "gw": "10.12.0.254" },
+            { "dst": "3ffe:ffff:0:01ff::1/64" }
+          ]
+        },
+        "kubeConfig":"/var/home/core/kubeconfig"
+      }
+    ]
+  }'</codeblock>
+          <codeblock id="codeblock_npc_vt5_3hc"># kubectl apply -f net-red-nad.yaml</codeblock>
+          <codeblock id="codeblock_bcc_vt5_3hc"># kubectl apply -f net-yellow-nad.yaml</codeblock>
+        </info>
+      </step>
+      <step>
+        <cmd>Create and apply a VM specification manifest with interface bindings and networks
+          defined. The VM is configured with a primary interface and two secondary vhost-user
+          interfaces in the <codeph>net-red</codeph> and <codeph>net-yellow</codeph> networks.</cmd>
+        <info>
+          <codeblock id="codeblock_wtz_jv5_3hc">apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  name: dpdkvm
+  namespace: kv1
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/size: small
+        kubevirt.io/domain: vm-virtio-veth
+        app: vm-1
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: node2
+      terminationGracePeriodSeconds: 30
+      domain:
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 2
+          #dedicatedCpuPlacement: true
+        memory:
+          hugepages:
+            pageSize: "1Gi"
+        resources:
+          requests:
+            memory: "8Gi"
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+          <b>interfaces:
+          - name: default
+            bridge: {}
+          - name: vhost-user-vn-net-red
+            binding:
+              name: vhostuser
+          - name: vhost-user-vn-net-yellow
+            binding:
+              name: vhostuser</b>
+          useVirtioTransitional: true
+      <b>networks:
+      - name: default
+        pod: {}
+      - name: vhost-user-vn-net-red
+        multus:
+          networkName: net-red
+      - name: vhost-user-vn-net-yellow
+        multus:
+          networkName: net-yellow</b>
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: s-artifactory.juniper.net/atom-docker/dpdk-pktgen/vmdisks/dpdk-pktgen-auto:latest
+        - downwardAPI:
+              fields:
+                - path: "labels"
+                  fieldRef:
+                    fieldPath: metadata.labels
+                - path: "annotations"
+                  fieldRef:
+                    fieldPath: metadata.annotations
+          name: podinfo
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            #userDataBase64: SGkuXG4=
+            userData: |
+              #cloud-config
+              runcmd:
+                - sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="default_hugepagesz=1GB hugepagesz=1G hugepages=4 intel_iommu=on iommu=pt isolcpus=2-7"/' /etc/default/grub
+                - grub2-mkconfig -o /boot/grub2/grub.cfg</codeblock>
+          <codeblock id="codeblock_ug3_sv5_3hc"># kubectl apply -f dpdkvm.yaml</codeblock>
+          <note id="note_ubf_swk_khc">It is not recommended to use bridge or veth-pair interface
+            type for secondary interfaces when deploying a KubeVirt-based VM with Cloud-Native
+            Router. Only vhost-user (DPDK) interfaces are supported.</note>
+        </info>
+        <stepxmp/>
+        <stepxmp/>
+      </step>
+      <step>
+        <cmd>Verify the vhost-user interfaces are created for the VM. </cmd>
+        <info>
+          <ol id="ul_cr4_jhv_3hc">
+            <li>To access the VM use the <codeph>virtctl</codeph> utility to expose a nodeport
+              service for the VM. You can then directly access the VM using <codeph>ssh</codeph> on
+              the port mapped to the target port.
+              <codeblock id="codeblock_okg_khv_3hc"># virtctl expose vmi -n kv1 dpdkvm --name=dpdkvm-ssh-service --port=2022 --target-port=22 --type=NodePort </codeblock><codeblock id="codeblock_t4z_khv_3hc"># kubectl get services -n kv1
+NAME                 TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+dpdkvm-ssh-service   NodePort   172.30.17.159   &lt;none&gt;        2022:31222/TCP   3d20h</codeblock><codeblock id="codeblock_hvq_lhv_3hc"># ssh root@node2 -p 31222
+root@node2's password: 
+Welcome to Ubuntu 20.04.3 LTS (GNU/Linux 5.4.0-122-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Tue Nov 18 18:59:07 UTC 2025
+
+  System load:  0.13               Processes:             200
+  Usage of /:   10.7% of 38.58GB   Users logged in:       0
+  Memory usage: 4%                 IPv4 address for ens1: 10.129.1.206
+  Swap usage:   0%
+
+ * Super-optimized for small spaces - read how we shrank the memory
+   footprint of MicroK8s to make it the smallest full K8s around.
+
+   https://ubuntu.com/blog/microk8s-memory-optimisation
+
+Last login: Fri Jul 22 20:32:33 2022 from 10.107.21.196</codeblock></li>
+            <li><p>Verify the interfaces using <codeph>ip -a</codeph>
+                command:</p><codeblock id="codeblock_lq1_rhv_3hc">root@dpdkvm:~# ip a
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: ens1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1400 qdisc fq_codel state UP group default qlen 1000
+    link/ether 0a:58:0a:81:01:ce brd ff:ff:ff:ff:ff:ff
+    inet 10.129.1.206/23 brd 10.129.1.255 scope global dynamic ens1
+       valid_lft 86313365sec preferred_lft 86313365sec
+    inet6 fe80::858:aff:fe81:1ce/64 scope link 
+       valid_lft forever preferred_lft forever
+3: ens2: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether 02:49:27:00:00:8f brd ff:ff:ff:ff:ff:ff
+4: ens3: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether 02:49:27:00:00:90 brd ff:ff:ff:ff:ff:ff</codeblock><p>Note that
+                interfaces <codeph>ens2</codeph> and <codeph>ens3</codeph> are dpdk interfaces,
+                however the output does display any information about them.</p></li>
+          </ol>
+        </info>
+      </step>
+      <step>
+        <cmd>Verify the interface binding in the domain XML of the VM. </cmd>
+        <info>
+          <ol id="ul_f4m_ljv_3hc">
+            <li>KubeVirt creates a special pod for each VM. List the pod in the <codeph>kv1</codeph>
+              namespace:<codeblock id="codeblock_dhq_njv_3hc"># kubectl get pods -n kv1
+NAME                         READY   STATUS    RESTARTS   AGE
+virt-launcher-dpdkvm-xpnvw   3/3     Running   0          26m</codeblock></li>
+            <li><p>Verify the network interfaces are available in the
+              pod:</p><codeblock id="codeblock_t4y_jxk_khc"># kubectl describe pod virt-launcher-dpdkvm-xpnvw -n kv1
+Name:              virt-launcher-dpdkvm-xpnvw
+Namespace:         kv1
+Priority:          0
+Service Account:   default
+Node:              node2/10.87.70.71
+Start Time:        Tue, 18 Nov 2025 18:55:47 +0000
+Labels:            app=vm-1
+                   kubevirt.io=virt-launcher
+                   kubevirt.io/created-by=a50ed4b4-9d2a-43be-9aab-2c2049e27405
+                   kubevirt.io/domain=vm-virtio-veth
+                   kubevirt.io/nodeName=node2
+                   kubevirt.io/size=small
+                   vm.kubevirt.io/name=dpdkvm
+Annotations:       descheduler.alpha.kubernetes.io/request-evict-only: 
+                  <b> jcnr.juniper.net/dpdk-interfaces:
+                     [
+                         {
+                             "name": "podc4fb1146cc8",
+                             "vhost-adaptor-path": "/dpdk/vhost-podc4fb1146cc8.sock",
+                             "vhost-adaptor-mode": "client",
+                             "ipv4-address": "10.11.0.1/24",
+                             "ipv6-address": "2001:db8:7a0b:1/120",
+                             "mac-address": "02:49:27:00:00:8f"
+                         },
+                         {
+                             "name": "podbe2ca98ba59",
+                             "vhost-adaptor-path": "/dpdk/vhost-podbe2ca98ba59.sock",
+                             "vhost-adaptor-mode": "client",
+                             "ipv4-address": "10.12.0.1/24",
+                             "ipv6-address": "2001:db8:7a0c:1/120",
+                             "mac-address": "02:49:27:00:00:90"
+                         }
+                     ]
+                   k8s.ovn.org/pod-networks:
+                     {"default":{"ip_addresses":["10.129.1.206/23"],"mac_address":"0a:58:0a:81:01:ce","gateway_ips":["10.129.0.1"],"routes":[{"dest":"10.128.0....</b>
+                   <b>k8s.v1.cni.cncf.io/network-status:</b>
+                     [{
+                         "name": "ovn-kubernetes",
+                         "interface": "eth0",
+                         "ips": [
+                             "10.129.1.206"
+                         ],
+                         "mac": "0a:58:0a:81:01:ce",
+                         "default": true,
+                         "dns": {}
+                     },<b>{
+                         "name": "kv1/net-red",
+                         "interface": "podc4fb1146cc8",
+                         "ips": [
+                             "10.11.0.1",
+                             "2001:db8:7a0b:1"
+                         ],
+                         "mac": "02:49:27:00:00:8f",
+                         "dns": {},
+                         "gateway": [
+                             "10.11.0.254"
+                         ]
+                     },{
+                         "name": "kv1/net-yellow",
+                         "interface": "podbe2ca98ba59",
+                         "ips": [
+                             "10.12.0.1",
+                             "2001:db8:7a0c:1"
+                         ],
+                         "mac": "02:49:27:00:00:90",
+                         "dns": {},
+                         "gateway": [
+                             "10.12.0.254"
+                         ]
+                     }]</b>
+                   k8s.v1.cni.cncf.io/networks:
+                     [{"name":"net-red","namespace":"kv1","mac":"02:49:27:00:00:8f","interface":"podc4fb1146cc8"},{"name":"net-yellow","namespace":"kv1...
+                   kubectl.kubernetes.io/default-container: compute
+                   kubevirt.io/domain: dpdkvm
+                   kubevirt.io/migrationTransportUnix: true
+                   kubevirt.io/network-info:
+                     [{"name":"podc4fb1146cc8","mac":"02:49:27:00:00:8f","networkName":"net-red","intfType":"vhostuser","mode":"server","path":"vhost-podc4fb1146c...
+                   kubevirt.io/vm-generation: 1
+                   openshift.io/scc: kubevirt-controller
+                   post.hook.backup.velero.io/command: ["/usr/bin/virt-freezer", "--unfreeze", "--name", "dpdkvm", "--namespace", "kv1"]
+                   post.hook.backup.velero.io/container: compute
+                   pre.hook.backup.velero.io/command: ["/usr/bin/virt-freezer", "--freeze", "--name", "dpdkvm", "--namespace", "kv1"]
+                   pre.hook.backup.velero.io/container: compute
+                   seccomp.security.alpha.kubernetes.io/pod: localhost/kubevirt/kubevirt.json
+Status:            Running
+</codeblock></li>
+            <li><p>List the containers in the
+              pod:</p><codeblock id="codeblock_pf3_sjv_3hc"># kubectl top pod virt-launcher-dpdkvm-xpnvw --containers -n kv1
+POD                          NAME                  CPU(cores)   MEMORY(bytes)   
+virt-launcher-dpdkvm-xpnvw   compute               1000m        113Mi           
+virt-launcher-dpdkvm-xpnvw   hook-sidecar-0        0m           12Mi            
+virt-launcher-dpdkvm-xpnvw   volumecontainerdisk   1m           0Mi </codeblock></li>
+            <li><p>Navigate to the shell of the compute
+              container:</p><codeblock id="codeblock_dnc_1kv_3hc"># kubectl exec -it virt-launcher-dpdkvm-xpnvw -n kv1 -c compute -- bash</codeblock></li>
+            <li><p>List the running VMs. Take note of the domain
+              ID.</p><codeblock id="codeblock_gxn_ckv_3hc">bash-5.1$ virsh list
+ Id   Name                  State
+-------------------------------------
+ 1    kv1_dpdkvm            running</codeblock></li>
+            <li><p>View the domain XML using the <codeph>virsh dumpxml &lt;domain_id&gt;</codeph>
+                command. Notice the two <codeph>vhostuser</codeph>
+              interfaces.</p><codeblock id="codeblock_gtt_jkv_3hc">bash-5.1$ virsh dumpxml 1
+   &lt;feature policy='require' name='vmx-exit-load-efer'/&gt;
+    &lt;feature policy='require' name='vmx-exit-save-preemption-timer'/&gt;
+    &lt;feature policy='disable' name='vmx-exit-clear-bndcfgs'/&gt;
+    &lt;feature policy='require' name='vmx-entry-noload-debugctl'/&gt;
+    &lt;feature policy='require' name='vmx-entry-ia32e-mode'/&gt;
+    &lt;feature policy='require' name='vmx-entry-load-perf-global-ctrl'/&gt;
+    &lt;feature policy='require' name='vmx-entry-load-pat'/&gt;
+    &lt;feature policy='require' name='vmx-entry-load-efer'/&gt;
+    &lt;feature policy='disable' name='vmx-entry-load-bndcfgs'/&gt;
+    &lt;feature policy='require' name='vmx-eptp-switching'/&gt;
+    &lt;feature policy='disable' name='hle'/&gt;
+    &lt;feature policy='disable' name='rtm'/&gt;
+    &lt;feature policy='disable' name='mpx'/&gt;
+...&lt;trimmed&gt;
+    &lt;interface type='ethernet'&gt;
+      &lt;mac address='0a:58:0a:81:01:ce'/&gt;
+      &lt;target dev='tap0' managed='no'/&gt;
+      &lt;model type='virtio-transitional'/&gt;
+      &lt;mtu size='1400'/&gt;
+      &lt;alias name='ua-default'/&gt;
+      &lt;rom enabled='no'/&gt;
+      &lt;address type='pci' domain='0x0000' bus='0x02' slot='0x01' function='0x0'/&gt;
+    &lt;/interface&gt;
+   <b> &lt;interface type='vhostuser'&gt;
+      &lt;mac address='02:49:27:00:00:8f'/&gt;
+      &lt;source type='unix' path='/var/run/kubevirt-hooks/vhost-podc4fb1146cc8.sock' mode='server'/&gt;
+      &lt;target dev='vhost-podc4fb1146cc8.sock'/&gt;
+      &lt;model type='virtio-transitional'/&gt;
+      &lt;driver name='vhost'/&gt;
+      &lt;alias name='ua-vhost-user-vn-net-red'/&gt;
+      &lt;address type='pci' domain='0x0000' bus='0x02' slot='0x02' function='0x0'/&gt;
+    &lt;/interface&gt;
+    &lt;interface type='vhostuser'&gt;
+      &lt;mac address='02:49:27:00:00:90'/&gt;
+      &lt;source type='unix' path='/var/run/kubevirt-hooks/vhost-podbe2ca98ba59.sock' mode='server'/&gt;
+      &lt;target dev='vhost-podbe2ca98ba59.sock'/&gt;
+      &lt;model type='virtio-transitional'/&gt;
+      &lt;driver name='vhost'/&gt;
+      &lt;alias name='ua-vhost-user-vn-net-yellow'/&gt;
+      &lt;address type='pci' domain='0x0000' bus='0x02' slot='0x03' function='0x0'/&gt;
+    &lt;/interface&gt;</b>
+    &lt;serial type='unix'&gt;
+...&lt;trimmed&gt;</codeblock></li>
+            <li><p>You can verify any plugin errors using the <codeph>kubectl logs
+                  virt-launcher-dpdkvm-xpnvw -c hook-sidecar-0</codeph> -n kv1 command.</p></li>
+          </ol>
+        </info>
+      </step>
+    </steps>
+  </taskbody>
+</task>

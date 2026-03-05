@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_3467f701db4d427a--6771078f-186d00ab700--7e65" xml:lang="en-US">
+  <title>Native VLAN</title>
+  <prolog>
+    <author>dgv</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>Starting in Juniper Cloud-Native Router Release 23.1, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports receiving and forwarding
+      untagged packets on a trunk interface. Typically, trunk ports accept only tagged packets, and
+      the untagged packets are dropped. You can enable a <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>fabric trunk port to accept untagged
+      packets by configuring a native VLAN identifier (ID) on the interface on which you want the
+      untagged packets to be received. When a <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>fabric trunk port is enabled to accept untagged
+      packets, such packets are forwarded in the native VLAN domain.</p>
+    <section id="section_ugw_wph_5wb">
+      <title>native-vlan-id</title>
+      <p>Enable the <codeph>native-vlan-id</codeph> key in the Helm chart, prior to the deploy time,
+        to configure the VLAN identifier to associate it with untagged data packets received on the
+        fabric trunk interface. Edit the <codeph>values.yaml</codeph> file in
+            <filepath>Juniper_Cloud_Native_Router_<varname>&lt;release-number&gt;</varname>/helmchart</filepath>
+        directory and add the key <codeph>native-vlan-id</codeph> along with a value for it. For
+        example,</p>
+      <codeblock>
+fabricInterface:
+  - bond0:
+      interface_mode: trunk
+      vlan-id-list: [100, 200, 300, 700-705]
+      storm-control-profile: rate_limit_pf1
+      native-vlan-id: 100
+</codeblock>
+      <note>
+        <p>After editing the <filepath>values.yaml</filepath> file, you have to install or upgrade
+          <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>using the edited <filepath>values.yaml</filepath> to ensure that the
+            <codeph>native-vlan-id</codeph> key is enabled.</p>
+      </note>
+      <p>To verify, if native VLAN is enabled for an interface, connect to the vRouter agent by
+        executing the command <codeph>kubectl exec -it -n contrail
+            contrail-vrouter-<varname>&lt;agent container&gt;</varname> -- bash</codeph> command,
+        and then run the command <codeph>vif --get <varname>&lt;interface index
+          id&gt;</varname></codeph>. A sample output is shown below.</p>
+      <codeblock>vif0/1      PCI: 0000:00:00.0 (Speed 10000, Duplex 1)​
+            Type:Physical HWaddr:6a:45:b2:a8:ce:5c​
+            Vrf:0 Flags:L2Vof QOS:-1 Ref:11​
+            RX port   packets:36550 errors:0​
+            RX queue  packets:36550 errors:0​
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0​
+            Fabric Interface: eth_bond_bond0  Status: UP  Driver: net_bonding​
+            Slave Interface(0): 0000:3b:02.0  Status: UP  Driver: net_iavf​
+            Vlan Mode: Trunk  Vlan: 100 200 300​
+            <b>Native vlan id: 100​</b>
+            RX packets:36550  bytes:5875795 errors:0​
+            TX packets:0  bytes:0 errors:0​
+            Drops:613</codeblock>
+    </section>
+  </conbody>
+  <related-links/>
+</concept>

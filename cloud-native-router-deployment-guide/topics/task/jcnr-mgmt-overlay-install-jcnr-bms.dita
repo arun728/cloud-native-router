@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE task PUBLIC "-//Juniper//DTD DITA 1.3 General Task//EN" "/SysSchema/dita13/dtd/subsection/dtd/generalTask.dtd">
+<task xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_19e939a6782fa58a--74813304-195a32dabb2--7d3a" xml:lang="en-US">
+  <title>Install Cloud-Native Router on the Managed and Transit Nodes</title>
+  <shortdesc>This example procedure shows how to configure the Cloud-Native Routers for management
+    access on the overlay in a bare metal deployment.</shortdesc>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <taskbody>
+    <steps id="steps_mrw_bdb_s2c">
+      <step>
+        <cmd>Create the three virtual functions on the SR-IOV-enabled NIC on the managed node. These
+          are ens1f0v0, ens1f0v1, and ens1f0v2 in our example. See public SR-IOV documentation for
+          information on how to do this.</cmd>
+        <info>
+          <note id="note_ycx_4sn_s2c">You must create the ens1f0v0 and ens1f0v1 virtual functions
+            from the same physical function or NIC because this solution relies on the virtual
+            Ethernet bridge on the NIC to perform switching between these two virtual functions. In
+            our example, we use the same NIC for all three virtual functions.</note>
+        </info>
+      </step>
+      <step>
+        <cmd>Configure and install the Cloud-Native Router on the managed node.</cmd>
+        <info>Follow the steps in <xref href="../concept/install-jcnr-bms.dita#task_rdw_nj5_mpb"/> to configure and
+          install the Cloud-Native Router. Configure the installation Helm chart as you normally
+          would, but specify ens1f0v2 to be a fabric interface and ens1f0v1 to be a fabric workload
+          interface:<codeblock id="codeblock_nql_t2b_s2c">fabricInterface:
+- ens1f0v2:
+  ddp: "off" 
+fabricWorkloadInterface:
+- ens1f0v1:
+  ddp: “off”</codeblock>The fabric workload interface is the OAM interface.</info>
+      </step>
+      <step>
+        <cmd>Configure and install the Cloud-Native Router on the transit node.</cmd>
+        <info>Follow the steps in <xref href="../concept/install-jcnr-bms.dita#task_rdw_nj5_mpb"/> to configure and
+          install the Cloud-Native Router. Configure the installation Helm chart on the transit node
+          as you normally would (with both interfaces configured as fabric
+          interfaces).<codeblock id="codeblock_xm3_rd3_s2c">fabricInterface:
+- ens1f0:
+  ddp: "off" 
+- ens1f1:
+  ddp: “off”</codeblock></info>
+      </step>
+    </steps>
+  </taskbody>
+</task>

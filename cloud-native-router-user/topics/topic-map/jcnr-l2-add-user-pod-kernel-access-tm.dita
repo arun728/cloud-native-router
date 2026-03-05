@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7c2f" xml:lang="en-US">
+    <title>L2 - Add User Pod with Kernel Access to a Cloud-Native Router Instance</title>
+    <shortdesc>Read this topic to learn how to add a user pod with a kernel access interface to an
+        instance of the cloud-native router.</shortdesc>
+    <prolog>
+        <author>dgv</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <concept id="xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1" xml:lang="en-US">
+        <title>Overview</title>
+        <prolog>
+            <author>dgv</author>
+            <data name="cli-help-filename"/>
+            <data name="cli-help-text"/>
+            <data name="jweb-help-filename"/>
+        </prolog>
+        <conbody>
+            <p>To add a user pod to the cloud-native router, your high-level tasks are:</p>
+            <ul id="ul_md1_wbq_pvb">
+                <li>
+                    <p> Ensure that a network attachment definition (NAD) exists. </p>
+                </li>
+                <li>
+                    <p>Apply a pod YAML file to your cloud-native router cluster.</p>
+                </li>
+            </ul>
+            <p>Throughout this example, we use the <codeph>kubectl</codeph> command with various
+                options. You must run this command on the host-server CLI.</p>
+            <section id="section_i5x_zk4_q5b">
+                <title>High-Level Steps</title>
+                <p>In this example, we assume that this is the first user pod that you are adding to
+                    your newly installed cloud-native router. Therefore, we provide the steps to
+                    create a NAD on the cluster and then add the new user pod.</p>
+                <p>Below we provide a list of the individual steps we perform in this example. Each
+                    step in the list is a link to the detailed description of the step.</p>
+                <ol id="ul_brp_xh4_q5b">
+                    <li>
+                        <p>
+                            <xref href="#task_izs_nt5_q5b/step_iy3_3w5_q5b" format="dita">View the
+                                vRouter interface list</xref>
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <xref href="#task_izs_nt5_q5b/step_bvd_jw5_q5b" format="dita">Examine
+                                the example NAD YAML file</xref>
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <xref href="#task_izs_nt5_q5b/step_axt_jw5_q5b" format="dita">Apply the
+                                NAD to the cluster</xref>
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <xref href="#task_izs_nt5_q5b/step_kc3_kw5_q5b" format="dita">Verify the
+                                NAD</xref>
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <xref href="#task_izs_nt5_q5b/step_umz_kw5_q5b" format="dita">Examine
+                                the example Pod YAML file</xref>
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <xref href="#task_izs_nt5_q5b/step_vzt_lw5_q5b" format="dita">Apply the
+                                Pod to the cluster</xref>
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <xref href="#task_izs_nt5_q5b/step_hnt_mw5_q5b" format="dita">Verify the
+                                Pod</xref>
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <xref href="#task_izs_nt5_q5b/step_tmm_nw5_q5b" format="dita">View the
+                                updated vRouter interface list</xref>
+                        </p>
+                    </li>
+                </ol>
+            </section>
+        </conbody>
+    </concept>
+    <task id="task_e15_krd_qjb">
+        <title>Before You Begin</title>
+        <taskbody>
+            <section>
+                <title>Access the vRouter-Agent CLI</title>
+                <p>You perform the first and last steps of this example procedure on the CLI of the
+                    vRouter agent. We recommend that you open two SSH (terminal) sessions to the
+                    host server. You can use one session to run the CLI commands on the vRouter
+                    agent and the other session to run the <codeph>kubectl</codeph> commands that
+                    deploy the NAD and the pod on the cluster.</p>
+                <note>
+                    <p>To make it easy to copy and paste commands from here to your system, we do
+                        not include paths or shell prompts from the host server in the command
+                        listings.</p>
+                </note>
+                <p>Access the CLI of the <codeph>contrail-vrouter-agent</codeph> container in the
+                        <codeph>contrail-vrouter-masters</codeph> pod. </p>
+                <p>In one terminal, enter this command:</p>
+                <codeblock>kubectl get pods -n contrail</codeblock>
+                <p>The output should be a single line that looks like this:</p>
+                <codeblock>NAME READY STATUS RESTARTS AGE
+contrail-vrouter-masters-97v8z 3/3 Running 0 6h10m</codeblock>
+                <p>This output gives you the name and specific instance hash of the vRouter pod,
+                        <codeph>contrail-vrouter-masters-97v8z</codeph>. We use this name in the
+                    next command to access the vRouter CLI. The name of your vRouter pod will have a
+                    different hash at the end. Use the pod name from your system in place of
+                        <varname>&lt;contrail-vrouter-masters-hash&gt;</varname> in the following
+                    command.</p>
+                <p>Enter the following command:</p>
+                <codeblock>kubectl exec -n contrail -it &lt;<varname>contrail-vrouter-masters-hash</varname>&gt; -c &lt;<varname>container name</varname>&gt;-- bash</codeblock>
+                <p>You should see the following two-line output:</p>
+                <codeblock>Defaulted container "contrail-vrouter-agent" out of: contrail-vrouter-agent, contrail-vrouter-agent-dpdk, contrail-vrouter-telemetry-exporter, contrail-init (init), contrail-vrouter-kernel-init-dpdk (init)
+root@jcnr1:/#</codeblock>
+                <p>Note that the shell prompt has changed from what it was when you entered the
+                    command. On the system we used to create this example, the prompt changed from
+                        <codeph>[root@jcnr1 ~]#</codeph> to <codeph>root@jcnr1:/#</codeph>. This
+                    change in prompt indicates that you have successfully connected to the CLI of
+                    the vRouter agent.</p>
+                <p>You can now see the following detailed steps  to complete the example.</p>
+            </section>
+        </taskbody>
+    </task>
+    <task id="task_izs_nt5_q5b">
+        <title>Detailed Steps</title>
+        <taskbody>
+            <steps id="steps_tpp_d55_q5b">
+                <step id="step_iy3_3w5_q5b">
+                    <cmd>View the vRouter-agent interface list.</cmd>
+                    <info>
+                        <p>In the terminal session connected to the vRouter-agent CLI, enter the
+                            following command:</p>
+                        <codeblock>vif --list</codeblock>
+                        <p>The output looks like this:</p>
+                        <codeblock>Vrouter Operation Mode: PureL2
+Vrouter Interface Table
+
+Flags: P=Policy, X=Cross Connect, S=Service Chain, Mr=Receive Mirror
+       Mt=Transmit Mirror, Tc=Transmit Checksum Offload, L3=Layer 3, L2=Layer 2
+       D=DHCP, Vp=Vhost Physical, Pr=Promiscuous, Vnt=Native Vlan Tagged
+       Mnp=No MAC Proxy, Dpdk=DPDK PMD Interface, Rfl=Receive Filtering Offload, Mon=Interface is Monitored
+       Uuf=Unknown Unicast Flood, Vof=VLAN insert/strip offload, Df=Drop New Flows, L=MAC Learning Enabled
+       Proxy=MAC Requests Proxied Always, Er=Etree Root, Mn=Mirror without Vlan Tag, HbsL=HBS Left Intf
+       HbsR=HBS Right Intf, Ig=Igmp Trap Enabled, Ml=MAC-IP Learning Enabled, Me=Multicast Enabled
+
+vif0/0      Socket: unix
+            Type:Agent HWaddr:00:00:5e:00:01:00
+            Vrf:65535 Flags:L2 QOS:-1 Ref:3
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:2127928  bytes:510246290 errors:0
+            Drops:0
+
+vif0/1      PCI: 0000:00:00.0 (Speed 10000, Duplex 1)
+            Type:Physical HWaddr:3a:b2:ee:fe:a7:62
+            Vrf:65535 Flags:L2Vof QOS:-1 Ref:12
+            RX queue  packets:172174354904 errors:20998087137
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 7293345594 6559356797 7145384746
+            Fabric Interface: eth_bond_bond0  Status: UP  Driver: net_bonding
+            Slave Interface(0): 0000:18:09.1  Status: UP  Driver: net_iavf
+            Slave Interface(1): 0000:18:05.1  Status: UP  Driver: net_iavf
+            Vlan Mode: Trunk  Vlan: 100 200 300 500 3001-3004 3201-3250
+            RX packets:172172714121  bytes:33745848248728 errors:1642900
+            TX packets:2272839360  bytes:4536582775436 errors:0
+            Drops:80189427216
+
+vif0/2      PCI: 0000:18:01.1 (Speed 1000, Duplex 1)
+            Type:Physical HWaddr:a6:c1:0b:12:8c:44
+            Vrf:65535 Flags:L2Vof QOS:-1 Ref:12
+            RX queue  packets:108 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:18:01.1  Status: DOWN  Driver: net_iavf
+            Vlan Mode: Trunk  Vlan: 100 200 300 500 3001-3004 3201-3250
+            RX packets:0  bytes:0 errors:108
+            TX packets:61278711540  bytes:15781059334468 errors:0
+            Drops:108
+
+vif0/3      PCI: 0000:18:0d.1 (Speed 10000, Duplex 1)
+            Type:Physical HWaddr:7a:30:33:68:6c:70
+            Vrf:65535 Flags:L2Vof QOS:-1 Ref:12
+            RX queue  packets:91255 errors:626
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 120 397 109
+            Fabric Interface: 0000:18:0d.1  Status: UP  Driver: net_iavf
+            Vlan Mode: Trunk  Vlan: 100 200 300 500 3001-3004 3201-3250
+            RX packets:2015  bytes:170734 errors:89240
+            TX packets:61279338241  bytes:15781182125402 errors:0
+            Drops:91703
+
+vif0/4      PCI: 0000:86:00.0 (Speed 1000, Duplex 1)
+            Type:Physical HWaddr:40:a6:b7:0d:7b:b8
+            Vrf:65535 Flags:TcL2Vof QOS:-1 Ref:12
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:86:00.0  Status: DOWN  Driver: net_i40e
+            Vlan Mode: Trunk  Vlan: 100 200 300 500 3001-3004 3201-3250
+            RX packets:0  bytes:0 errors:0
+            TX packets:61278779459  bytes:15781072646592 errors:0
+            Drops:0</codeblock>
+                    </info>
+                    <info>
+                        <p>As you can see, the vRouter agent knows about five interfaces</p>
+                        <ul id="ul_cjl_clx_4wb">
+                            <li>
+                                <p>vif0/0 </p>
+                            </li>
+                            <li>
+                                <p>vif0/1</p>
+                            </li>
+                            <li>
+                                <p>vif0/2</p>
+                            </li>
+                            <li>
+                                <p>vif0/3 </p>
+                            </li>
+                            <li>
+                                <p>vif0/4 </p>
+                            </li>
+                        </ul>
+                        <p/>
+                        <p>
+                            <xref href="#xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1/section_i5x_zk4_q5b" format="dita">Back to high-level steps</xref>
+                        </p>
+                    </info>
+                </step>
+                <step id="step_bvd_jw5_q5b">
+                    <cmd>Examine the NAD YAML file.</cmd>
+                    <info><p>In this step, we look at a commented NAD file in the YAML format. The
+                            comments start with a hash symbol (#) and are displayed in boldface. You
+                            do not need to change most of the values because this file contains a
+                            NAD example. The NAD specifies the parameters of a virtual device that
+                            enables the pod to connect to the network. You can use this example file
+                            on your cloud-native router only if you remove the comments from the
+                            file.</p><codeph>cat
+                            nad-kernel_access_bd3001.yaml</codeph><codeblock>apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: nad-vswitch-bd3001 <b>#Name of the NAD</b>
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "nad-vswitch-bd3001", <b>#This is the name of the NAD as it appears in the K8s cluster.</b>
+    "capabilities":{"ips":true},
+    "plugins": [
+      {
+        "type": "jcnr", <b>#Always define as jcnr</b>
+        "args": {
+          "instanceName": "vswitch", <b>#Prefix for the name of the NAD within the cluster</b>
+          "instanceType": "virtual-switch", <b>#What type of NAD is this?</b>
+          "bridgeDomain": "bd3001", <b>#The name of the bridge domain</b>
+          "bridgeVlanId": "3001", <b>#Which VLAN ID is allowed on this bridge domain</b>
+          "dataplane":"dpdk", <b>#Which dataplane to use. Options are dpdk and kernel</b>
+          "mtu": "9000",
+          "interfaceType":"veth" <b>#Options are <codeph>veth</codeph> or <codeph>virtio</codeph>. For this example <codeph>veth</codeph> is the correct option</b>
+        },
+        "ipam": {
+          "type": "static", <b>#IP address type. Leave as static in 22.2 release</b>
+          "capabilities":{"ips":true}, <b>#Does this ipam definition support IP addresses?</b>
+          "addresses":[
+            {
+              "address":"2001:db8:3001::10.30.0.1/64", <b>#IPv6 address of the IFL</b>
+              "gateway":"2001:db8:3001::10.30.0.254" <b>#IPv6 gateway for the IFL</b>
+            },
+            {
+              "address":"10.30.0.1/24", <b>#IPv4 address for the IFL</b>
+              "gateway":"10.30.0.254" <b>#IPv4 Gateway for the IFL</b>
+            }
+          ]
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]
+  }'</codeblock><p>When
+                            you apply the NAD YAML file to the cluster, the virtual device becomes
+                            visible in the Kubernetes cluster.</p><p>
+                            <xref href="#xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1/section_i5x_zk4_q5b" format="dita">Back to high-level steps</xref>
+                        </p></info>
+                </step>
+                <step id="step_axt_jw5_q5b">
+                    <cmd>Apply the NAD to the cluster.</cmd>
+                    <info><p>If you use the same file name for your version of the NAD file, you can
+                            run the following command on the host-server
+                            CLI:</p><codeblock>kubectl apply -f nad-kernel_access_vlan_3001.yaml</codeblock><p>The
+                            command output looks like
+                            this:</p><codeph>networkattachmentdefinition.k8s.cni.cncf.io/nad-vswitch-bd3001
+                            created</codeph><p>
+                            <xref href="#xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1/section_i5x_zk4_q5b" format="dita">Back to high-level steps</xref>
+                        </p></info>
+                </step>
+                <step id="step_kc3_kw5_q5b">
+                    <cmd>Verify the NAD.</cmd>
+                    <info>
+                        <p>On the host-server CLI, issue the following command:</p>
+                        <codeblock>kubectl get network-attachment-definitions</codeblock>
+                        <p>The output from the command looks like this:</p>
+                        <codeblock>
+NAME                 AGE
+vswitch               1d
+nad-vswitch-bd3001    3m47s</codeblock>
+                        <p>
+                            <xref href="#xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1/section_i5x_zk4_q5b" format="dita">Back to high-level steps</xref>
+                        </p>
+                    </info>
+                </step>
+                <step id="step_umz_kw5_q5b">
+                    <cmd>Examine the example Pod YAML file.</cmd>
+                    <info><p>Similar to the NAD YAML file, the pod YAML file or the pod definition
+                            specifies the configuration of the user pod that you want to create. In
+                            this example, we create a pod that works with the
+                                <codeph>pod1-vswitch-bd3001</codeph> NAD that we just applied. You
+                            can use the following file on your cloud-native router deployment
+                            .</p><codeph>cat pod-kernel-access-vlan-3001.yaml</codeph><codeblock>apiVersion: v1
+kind: Pod
+metadata:
+  name:   odu-kernel-pod-bd3001
+  annotations:
+    k8s.v1.cni.cncf.io/networks: pod1-vswitch-bd3001
+spec:
+  containers:
+    - name: odu-kernel-pod-bd3001
+      image: svl-artifactory.juniper.net/junos-docker-local/warthog/pktgen19116:20210303
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/bash","-c","sleep infinity"]
+      securityContext:
+        privileged: false
+      env:
+        - name: KUBERNETES_POD_UID
+          valueFrom:
+            fieldRef:
+               fieldPath: metadata.uid
+      volumeMounts:
+        - name: dpdk
+          mountPath: /dpdk
+          subPathExpr: $(KUBERNETES_POD_UID)
+  volumes:
+    - name: dpdk
+      hostPath:
+        path: /var/run/jcnr/containers</codeblock><p>
+                            <xref href="#xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1/section_i5x_zk4_q5b" format="dita">Back to high-level steps</xref>
+                        </p></info>
+                </step>
+                <step id="step_vzt_lw5_q5b">
+                    <cmd>Apply the pod to the cluster.</cmd>
+                    <info><p>If you have used the preceding filename for the pod YAML file, then you
+                            can run the following command on the host-server CLI to apply the pod to
+                            the
+                            cluster:</p><codeblock>kubectl apply -f pod-kernel-access-vlan-3001.yaml</codeblock><p>The
+                            command output looks like this:</p><codeph>pod/odu-kernel-pod-bd3001
+                            created created</codeph><p>
+                            <xref href="#xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1/section_i5x_zk4_q5b" format="dita">Back to high-level steps</xref>
+                        </p></info>
+                </step>
+                <step id="step_hnt_mw5_q5b">
+                    <cmd>Verify the pod.</cmd>
+                    <info>
+                        <p>On the host-server CLI, issue the following command to verify the pod
+                            creation:</p>
+                        <codeblock>kubectl get pods odu-kernel-pod-bd3001</codeblock>
+                        <p>The command output looks like this:</p>
+                        <codeblock>
+NAME                    READY   STATUS    RESTARTS   AGE
+odu-kernel-pod-bd3001   1/1     Running   0          58s</codeblock>
+                        <p>
+                            <xref href="#xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1/section_i5x_zk4_q5b" format="dita">Back to high-level steps</xref>
+                        </p>
+                    </info>
+                </step>
+                <step id="step_tmm_nw5_q5b">
+                    <cmd>View the updated vRouter interface list.</cmd>
+                    <info>
+                        <p>On the vRouter-agent CLI, issue the following command:</p>
+                        <codeblock>vif --list</codeblock>
+                        <p>The command output looks like this:</p>
+                        <codeblock>Flags: P=Policy, X=Cross Connect, S=Service Chain, Mr=Receive Mirror
+       Mt=Transmit Mirror, Tc=Transmit Checksum Offload, L3=Layer 3, L2=Layer 2
+       D=DHCP, Vp=Vhost Physical, Pr=Promiscuous, Vnt=Native Vlan Tagged
+       Mnp=No MAC Proxy, Dpdk=DPDK PMD Interface, Rfl=Receive Filtering Offload, Mon=Interface is Monitored
+       Uuf=Unknown Unicast Flood, Vof=VLAN insert/strip offload, Df=Drop New Flows, L=MAC Learning Enabled
+       Proxy=MAC Requests Proxied Always, Er=Etree Root, Mn=Mirror without Vlan Tag, HbsL=HBS Left Intf
+       HbsR=HBS Right Intf, Ig=Igmp Trap Enabled, Ml=MAC-IP Learning Enabled, Me=Multicast Enabled
+
+vif0/0      Socket: unix
+            Type:Agent HWaddr:00:00:5e:00:01:00
+            Vrf:65535 Flags:L2 QOS:-1 Ref:3
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:14  bytes:1672 errors:0
+            Drops:0
+
+vif0/1      PCI: 0000:00:00.0 (Speed 10000, Duplex 1)
+            Type:Physical HWaddr:3a:b2:ee:fe:a7:62
+            Vrf:65535 Flags:L2Vof QOS:-1 Ref:12
+            RX queue  packets:971 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: eth_bond_bond0  Status: UP  Driver: net_bonding
+            Slave Interface(0): 0000:18:05.1  Status: UP  Driver: net_iavf
+            Slave Interface(1): 0000:18:09.1  Status: UP  Driver: net_iavf
+            Vlan Mode: Trunk  Vlan: 100 200 300 500 3001-3004 3201-3250
+            RX packets:18  bytes:1256 errors:965
+            TX packets:26  bytes:2204 errors:0
+            Drops:989
+
+vif0/2      PCI: 0000:18:01.1 (Speed 1000, Duplex 1)
+            Type:Physical HWaddr:a6:c1:0b:12:8c:44
+            Vrf:65535 Flags:L2Vof QOS:-1 Ref:12
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:18:01.1  Status: DOWN  Driver: net_iavf
+            Vlan Mode: Trunk  Vlan: 100 200 300 500 3001-3004 3201-3250
+            RX packets:0  bytes:0 errors:0
+            TX packets:37  bytes:2862 errors:0
+            Drops:0
+
+vif0/3      PCI: 0000:18:0d.1 (Speed 10000, Duplex 1)
+            Type:Physical HWaddr:7a:30:33:68:6c:70
+            Vrf:65535 Flags:L2Vof QOS:-1 Ref:12
+            RX queue  packets:331 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:18:0d.1  Status: UP  Driver: net_iavf
+            Vlan Mode: Trunk  Vlan: 100 200 300 500 3001-3004 3201-3250
+            RX packets:7  bytes:590 errors:324
+            TX packets:37  bytes:2870 errors:0
+            Drops:331
+
+vif0/4      PCI: 0000:86:00.0 (Speed 1000, Duplex 1)
+            Type:Physical HWaddr:40:a6:b7:0d:7b:b8
+            Vrf:65535 Flags:TcL2Vof QOS:-1 Ref:12
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:86:00.0  Status: DOWN  Driver: net_i40e
+            Vlan Mode: Trunk  Vlan: 100 200 300 500 3001-3004 3201-3250
+            RX packets:0  bytes:0 errors:0
+            TX packets:37  bytes:2862 errors:0
+            Drops:0
+
+vif0/5      Ethernet: jvknet1-0ea0f72
+            Type:Virtual HWaddr:02:00:00:b3:b9:a1
+            Vrf:0 Flags:L2Vof QOS:-1 Ref:10
+            RX queue  packets:23 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Vlan Mode: Access  Vlan Id: 3001  OVlan Id: 3001
+            RX packets:19  bytes:1614 errors:4
+            TX packets:0  bytes:0 errors:0
+            Drops:24</codeblock>
+                        <p>The vRouter agent now knows about six interfaces. This is because the Pod
+                            created the sub-interface and the parent interface. You can see above
+                            that the virtual VLAN interface, <codeph>vif0/4</codeph>, shows the
+                            parent interface as <codeph>vif0/3</codeph>. The interface,
+                                <codeph>vif0/3</codeph>, is a virtual interface with a name that
+                            includes "net1" as defined in the NAD and pod YAML files.</p>
+                        <p>
+                            <xref href="#xd_ad0bd4fae3c102ee--57c2743b-182bc7776e5--7db1/section_i5x_zk4_q5b" format="dita">Back to high-level steps</xref>
+                        </p>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

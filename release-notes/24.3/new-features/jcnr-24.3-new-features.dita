@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_853cadf3bbccede8--7444e1be-192651e83d1--7fc3" xml:lang="en-US">
+  <title>New and Updated Features</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section describes the new features in the Juniper Cloud-Native Router (JCNR) 24.3
+      release.</p>
+    <section>
+      <title>New Features in Juniper Cloud-Native Router Release 24.3</title>
+      <ul>
+        <li>
+          <p><b>Support for Topology-Independent Loop-Free Alternates (TI-LFA) with fast reroute
+              (FRR)</b>—JCNR supports implementing Topology-Independent Loop-Free Alternates
+            (TI-LFA) with fast reroute (FRR) in SR-MPLS. TI-LFA is supported on IS-IS
+            implementations for SR-MPLS. It is also supported on OSPF implementations as a
+            technology preview feature. Only protection against link failure is supported with one
+            primary and one secondary (backup) path. </p>
+        </li>
+        <li>
+          <p><b>Support for Layer-3 Class of Service (CoS)</b>—Juniper Cloud-Native Router supports
+            Layer 3 Class of Service (CoS), also known as L3 Quality of Service (QoS). JCNR supports
+            the following classifiers, policers and rewrite/marker implementations:</p>
+          <ul id="ul_ud2_zgx_ycc">
+            <li>
+              <p>Behavior Aggregate (BA) and Multifield (MF) classifiers</p>
+            </li>
+            <li>
+              <p>Single-rate three-color marker (srTCM) and Two-rate three-color marker (trTCM)
+                policers</p>
+            </li>
+            <li>
+              <p>Rewrite rules supports copying outer IPv4/IPv6 DSCP marking to inner IP header DSCP
+                field as well as MPLS EXP bit marking</p>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <p><b>Additional support for L3/L4 Access Lists</b>—JCNR now supports MPLS protocol family
+            for L3/L4 access lists. It also supports additional match nonterminating actions
+            including syslog, routing-instance, forwarding class and policer.</p>
+        </li>
+        <li>
+          <p><b>Additional Telemetry Support</b>—JCNR now supports telemetry for interfaces extended
+            statistics, firewall filter counters and TI-LFA statistics via Prometheus and gNMI. </p>
+        </li>
+        <li>
+          <p><b>Support for Readiness Check during JCNR installation</b>—JCNR now supports readiness
+            preflight and postflight checks during installation. Preflight checks verify that your
+            infrastructure can support JCNR and take place before JCNR is installed. Postflight
+            checks verify that your JCNR installation is working properly and take place after JCNR
+            is installed.</p>
+        </li>
+        <li>
+          <p><b>Support for Ubuntu OS</b>—JCNR now supports Ubuntu OS as a supported operating
+            system for installation on bare metal servers.</p>
+        </li>
+        <li>
+          <p><b>Support for configuring cRPD using CLI or NETCONF</b>—JCNR supports configuring cRPD
+            via CLI or NETCONF. The flag <varname>enableLocalPersistence</varname> must be enabled
+            in the helm chart.</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7f73" xml:lang="en-US">
+  <title>Access Control Lists (Firewall Filters)</title>
+  <shortdesc>Read this topic to learn about Layer 2 access control lists (Firewall filters) in the
+    cloud-native router.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+
+    <section id="section_vyp_nk1_mxb">
+      <title id="title_gbj_pj1_mxb">Access Control Lists (Firewall Filters)</title>
+      <p>Starting with Juniper Cloud-Native Router Release 22.2 we've included a limited firewall
+        filter capability. You can configure the filters using the Junos OS CLI within the
+        cloud-native router controller, using NETCONF, or the cloud-native router APIs. Starting
+        with Juniper Cloud-Native Router Release 23.2, you can also configure firewall filters using
+        node annotations and custom configuration template at the time of <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>deployment. Please
+        review the deployment guide for more details.</p>
+      <p>During deployment, the system defines and applies firewall filters to block traffic from
+        passing directly between the router interfaces. You can dynamically define and apply more
+        filters. Use the firewall filters to:</p>
+      <ul id="ul_en5_gzg_q5b">
+        <li>
+          <p>Define firewall filters for bridge family traffic.</p>
+        </li>
+        <li>
+          <p>Define filters based on one or more of the following fields: source MAC address,
+            destination MAC address, or EtherType.</p>
+        </li>
+        <li>
+          <p>Define multiple terms within each filter.</p>
+        </li>
+        <li>
+          <p>Discard the traffic that matches the filter.</p>
+        </li>
+        <li>
+          <p>Apply filters to bridge domains.</p>
+        </li>
+      </ul>
+    </section>
+    <section id="section_u3k_qj1_mxb"><title>Configuration Example</title><p>Below you can see an
+        example of a firewall filter configuration from a cloud-native router
+        deployment:</p><codeblock>root@jcnr01&gt; show configuration firewall
+firewall {
+    family {
+        bridge {
+            filter example {
+                term t1 {
+                    from {
+                        destination-mac-address 10:10:10:10:10:11;
+                        source-mac-address 10:10:10:10:10:10;
+                        ether-type arp;
+                    }
+                    then {
+                        discard;
+                    }
+                }
+            }
+       }  
+    }
+}</codeblock><note>You
+        can configure up to 16 terms in a single firewall filter. The only <i>then</i> action you
+        can configure in a firewall filter is the <codeph>discard</codeph> action.</note>After
+      configuration, you must apply your firewall filters to a bridge domain using the <codeph>set
+        routing-instances vswitch bridge-domains <varname>bd3001</varname> forwarding-options filter
+        input <varname>filter1</varname></codeph> configuration command. Then you must commit the
+      configuration for the firewall filter to take effect. <p>To see how many packets matched the
+        filter (per VLAN), you can issue the <codeph>show firewall filter
+          <varname>filter1</varname></codeph> command on the controller CLI. For
+        example:</p><codeblock>show firewall filter <varname>filter1</varname>
+ Filter : filter1    vlan-id : 3001
+ Term                  Packet
+  t1                   0</codeblock><p>In
+        the preceding example, we applied the filter to the bridge domain <codeph>bd3001</codeph>.
+        The filter has not yet matched any packets.</p></section>
+    <section id="section_lww_ck1_mxb">
+      <title>Troubleshooting</title>
+      <p>The following table lists some of the potential problems that you might face when you
+        implement firewall rules or ACLs in the cloud-native router. You run most of these commands
+        on the host server.</p>
+      <table colsep="1" frame="all" id="table_yfq_5z2_55b" rowsep="1">
+        <title>L2 Firewall Filter or ACL Troubleshooting</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <colspec colname="c3" colnum="3" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>Problem</entry>
+              <entry>Possible Causes and Resolution</entry>
+              <entry>Command </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry morerows="1">Firewall filters or ACLs not working</entry>
+              <entry>gRPC connection (port 50052) to the vRouter is down. Check the gRPC
+                connection.</entry>
+              <entry>
+                <codeblock>netstat -antp|grep 50052</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>The <codeph>ui-pubd</codeph> process is not running. Check whether
+                  <codeph>ui-pubd</codeph> is running.</entry>
+              <entry>
+                <codeblock>ps aux|grep ui-pubd</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry morerows="2">Firewall filter or ACL show commands not working</entry>
+              <entry>The gRPC connection (port 50052) to the vRouter is down. Check the gRPC
+                connection.</entry>
+              <entry>
+                <codeblock>netstat -antp|grep 50052</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry morerows="1">The firewall service is not running.</entry>
+              <entry>
+                <codeblock>ps aux|grep firewall</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry><codeblock>show log filter.log</codeblock>You must run this command in the
+                JCNR-controller (cRPD) CLI.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+  </conbody>
+</concept>

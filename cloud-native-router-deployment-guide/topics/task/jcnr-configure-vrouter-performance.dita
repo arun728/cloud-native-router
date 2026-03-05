@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE task PUBLIC "-//Juniper//DTD DITA 1.3 General Task//EN" "/SysSchema/dita13/dtd/subsection/dtd/generalTask.dtd">
+<task xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_27a7ba04b8c81368--469b23e6-18e4d047d14--7f1d" xml:lang="en-US">
+ <title>Configure vRouter Performance</title>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+ <taskbody>
+  <context>Use this procedure to assign guaranteed CPU and memory resources to the vRouter DPDK
+        pods.<p>The <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter is integrated with the Kubernetes CPU Manager. You can use the
+        Kubernetes CPU Manager to allocate dedicated CPUs to the vRouter DPDK pods.</p><p>Before you
+        start, ensure you've enabled CPU Manager.</p></context>
+<steps>
+      <!--<step><cmd>Enable the Kubernetes CPU Manager and specify the CPUs you want to reserve.</cmd><info/><substeps id="substeps_opx_wpf_51c"><substep><cmd>Locate the <filepath>/var/lib/kubelet/config.yaml</filepath> file.</cmd></substep><substep><cmd>Add the following to the file to enable CPU Manager.</cmd><info><codeblock id="codeblock_tgr_zpf_51c">cpuManagerPolicy: static</codeblock></info></substep><substep><cmd>Add the following to the file to reserve specified CPUs.</cmd><info><codeblock id="codeblock_zhs_qqf_51c">reservedSystemCPUs: <varname>&lt;cores></varname></codeblock>where <varname>&lt;cores></varname> is the set of cores to reserve (for example, <codeph>reservedSystemCPUs: 0-1,5-7</codeph>).</info></substep></substeps></step>-->
+ <step>
+        <cmd>Specify the resource limits and requests for the
+            <codeph>contrail-vrouter-kernel-init-dpdk</codeph> and the
+            <codeph>contrail_vrouter_agent_dpdk</codeph> containers.</cmd>
+        <substeps>
+          <substep>
+            <cmd>Locate the <filepath>charts/jcnr-vrouter/values.yaml</filepath> file in your
+              installation directory.</cmd>
+          </substep>
+          <substep>
+            <cmd>Edit that file to specify the resource limits and requests for both the
+                <codeph>contrail-vrouter-kernel-init-dpdk</codeph> and the
+                <codeph>contrail_vrouter_agent_dpdk</codeph> containers.</cmd>
+            <info><codeblock id="codeblock_bnx_hmf_51c">  resources:
+    limits:
+      cpu: <varname>&lt;number_of_cpus&gt;</varname>
+      memory: <varname>&lt;memory&gt;</varname>
+    requests:
+      cpu: <varname>&lt;number_of_cpus&gt;</varname>
+      memory: <varname>&lt;memory&gt;</varname></codeblock>To guarantee that each container
+              gets what it's asking for, set the same <codeph>cpu</codeph> value in both the
+                <codeph>limits</codeph> and <codeph>requests</codeph> sections, and set the same
+                <codeph>memory</codeph> value in both the <codeph>limits</codeph> and
+                <codeph>requests</codeph> sections for each container.</info>
+          </substep>
+        </substeps>
+      </step>
+      <step>
+        <cmd>Configure the helm chart to specify the number of guaranteed vRouter CPUs.</cmd>
+        <substeps id="substeps_sjr_jyf_51c">
+          <substep>
+            <cmd>Disable the core mask method of assigning CPUs by commenting out the following
+              lines:</cmd>
+            <info>
+              <codeblock id="codeblock_fys_kyf_51c">
+#cpu_core_mask: "2,3,22,23"
+#dpdkCtrlThreadMask: "2,3"
+#serviceCoreMask: "2,3"
+#numServiceCtrlThreadCPU: 1
+</codeblock>
+            </info>
+          </substep>
+          <substep>
+            <cmd>Configure the vRouter DPDK pods to use the guaranteed CPUs reserved by the CPU
+              Manager.</cmd>
+            <info><codeblock id="codeblock_vwq_xyf_51c">guaranteedVrouterCpus: 5</codeblock>This
+              value must be:<ul id="ul_dzf_jzf_51c">
+                <li>
+                  <p>greater or equal to the number of CPUs configured for the
+                      <codeph>contrail-vrouter-kernel-init-dpdk</codeph> and the
+                      <codeph>contrail_vrouter_agent_dpdk</codeph> containers in
+                      <filepath>charts/jcnr-vrouter/values.yaml</filepath>, and</p>
+                </li>
+              </ul></info>
+            <info>smaller or equal to the number of CPUs reserved by the CPU Manager.</info>
+          </substep>
+        </substeps>
+      </step>
+      <step>
+        <cmd>Proceed with your <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation.</cmd>
+      </step>
+      <step>
+        <cmd>After <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is installed, check to see how the CPUs are allocated.</cmd>
+        <info/>
+        <substeps id="substeps_rjf_v1g_51c">
+          <substep>
+            <cmd>SSH into a node where <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is running.</cmd>
+          </substep>
+          <substep>
+            <cmd>Look at the CPU Manager state.</cmd>
+            <info>For
+                example:<codeblock id="codeblock_f1y_cbg_51c"> cat /var/lib/kubelet/cpu_manager_state | jq
+{
+  "policyName": "static",
+  "defaultCpuSet": "0-1,7-11",
+  "entries": {
+    "915d338f-c013-4984-a53c-51db78476dbf": {
+      "contrail-vrouter-agent-dpdk": "2-6",
+      "contrail-vrouter-kernel-init-dpdk": "2"
+    }
+  },
+  "checksum": 3199431349
+}
+</codeblock><note id="note_ncm_hbg_51c">
+                <p>You'll need to install <codeph>jq</codeph> (<codeph>dnf install -y jq</codeph>)
+                  in order to see formatted output.</p>
+              </note></info>
+          </substep>
+          <substep>
+            <cmd/>
+          </substep>
+        </substeps>
+      </step>
+</steps>
+  <postreq><?oxy-placeholder content="postreq is an optional element."?></postreq>
+</taskbody>
+<related-links/>
+</task>

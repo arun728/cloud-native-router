@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "/SysSchema/dita13/dtd/technicalContent/dtd/map.dtd">
+<map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" xml:lang="en-US">
+    <title>key-cloud-native-router-user</title>
+    <!--For each guide, create a keymap file to define keydefs to support cross-book links (links to topics in your guide from topics in other guides). Define a keydef for every topic to which you want to insert a cross-book link, The keys attribute value for a keydef must be the filename for the topic. For example, the keydef to a topic file named my-topic.dita must have my-topic as the keys attribute value. The keymap file must be placed in the folder for the guide and mapref'd into the ditamap file for the guide and in the ditamap file for every other guide that has cross-book links to topics in your guide. -->
+<!-- Thu Jun 29 04:01:19 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.l3-virtual-router" inserted by "umas" -->
+<keydef keys="l3-virtual-router" href="topics/concept/l3-virtual-router.dita"/>
+
+<!-- Thu Jul 06 02:59:05 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.juniper-jcnr-tech-preview" inserted by "tkaur" -->
+<keydef keys="juniper-jcnr-tech-preview" href="topics/concept/juniper-jcnr-tech-preview.dita"/>
+
+<!-- Thu Jul 06 03:10:02 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.jcnr-deployment-modes" inserted by "tkaur" -->
+<keydef keys="jcnr-deployment-modes" href="topics/concept/jcnr-deployment-modes.dita"/>
+
+<!-- Tue Jul 11 02:05:18 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.accessing-vrouter-cli" inserted by "tkaur" -->
+<keydef keys="accessing-vrouter-cli" href="topics/concept/accessing-vrouter-cli.dita"/>
+
+<!-- Wed Aug 23 09:36:05 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.accessing-crpd-cli" inserted by "tkaur" -->
+<keydef keys="accessing-crpd-cli" href="topics/concept/accessing-crpd-cli.dita"/>
+
+<!-- Thu Dec 07 06:42:26 PST 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.jcnr-telemetry" inserted by "dgv" -->
+<keydef keys="jcnr-telemetry" href="topics/concept/jcnr-telemetry.dita"/>
+    <!--Feb 28 2024 :: By bfong :: Added below element to support cross-book link "jcnr-and-security-services"-->
+    <keydef keys="jcnr-and-security-services" href="topics/concept/jcnr-and-security-services.dita"/>
+
+<!-- Wed Mar 06 10:57:55 PST 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.jcnr-interfaces-overview" inserted by "tkaur" -->
+<keydef keys="jcnr-interfaces-overview" href="topics/concept/jcnr-interfaces-overview.dita"/>
+
+<!-- Wed Mar 06 11:00:40 PST 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.l2-l3-dynamic-device-personalization" inserted by "tkaur" -->
+<keydef keys="l2-l3-dynamic-device-personalization" href="topics/concept/l2-l3-dynamic-device-personalization.dita"/>
+    <keydef keys="l2-bum-rate-limiting" href="topics/concept/l2-bum-rate-limiting.dita" navtitle="/Content/l2-bum-rate-limiting_xi931744_1_1.dita"/>
+
+<!-- Wed Mar 06 11:08:46 PST 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.l2-qos" inserted by "tkaur" -->
+<keydef keys="l2-qos" href="topics/concept/l2-qos.dita"/>
+
+<!-- Wed Mar 06 11:09:33 PST 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.l2-prevent-local-switching" inserted by "tkaur" -->
+<keydef keys="l2-prevent-local-switching" href="topics/concept/l2-prevent-local-switching.dita"/>
+
+<!-- Wed Mar 06 11:10:19 PST 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.l2-native-vlan" inserted by "tkaur" -->
+<keydef keys="l2-native-vlan" href="topics/concept/l2-native-vlan.dita"/>
+
+<!-- Wed Mar 06 11:19:10 PST 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.troubleshooting-vrouter" inserted by "tkaur" -->
+<keydef keys="troubleshooting-vrouter" href="topics/concept/troubleshooting-vrouter.dita"/>
+
+<!-- Thu Mar 14 05:53:27 PDT 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.config-examples-overview" inserted by "tkaur" -->
+<keydef keys="config-examples-overview" href="topics/concept/config-examples-overview.dita"/>
+    <keydef keys="jcnr-and-security-services" href="topics/concept/jcnr-and-security-services.dita"/>
+
+<!-- Wed Dec 04 13:27:37 PST 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.jcnr_twamp" inserted by "bfong" -->
+<keydef keys="jcnr_twamp" href="topics/concept/jcnr_twamp.dita"/>
+
+<!-- Mon Dec 16 09:08:46 PST 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.l3cos-tm" inserted by "tkaur" -->
+<keydef keys="l3cos-tm" href="topics/topic-map/l3cos-tm.dita"/>
+
+<!-- Wed Nov 26 04:35:14 PST 2025 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-user.jcnr-introspect" inserted by "tkaur" -->
+<keydef keys="jcnr-introspect" href="topics/concept/jcnr-introspect.dita"/>
+</map>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_1a8e069a06657f97--7cd600da-188de57988f--793b" xml:lang="en-US">
+  <title>Access cRPD CLI</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Use the <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">configlet resource</xref> to configure the cRPD pods.</p>
+    <p>You can access the command-line interface (CLI) of the cloud-native router controller by
+      accessing the shell of the running cRPD container to verify or troubleshooting the
+      configuration.</p>
+    <note>
+      <p>The commands below are provided as an example. The cRPD pod name must be replaced from your
+        environment. The command outputs may differ based on your environment.</p>
+    </note>
+    <p>View the running pods in the cluster:</p>
+    <codeblock>kubectl get pods -A
+NAMESPACE         NAME                                            READY   STATUS    RESTARTS        AGE
+<b>contrail-deploy   contrail-k8s-deployer-5dff6d8b89-7pt9c          1/1     Running   0               138m
+contrail          contrail-tools-p27js                            1/1     Running   0               138m
+contrail          jcnr-0-dp-contrail-vrouter-nodes-fslcb          2/2     Running   0               138m
+contrail          jcnr-0-dp-contrail-vrouter-nodes-vrdpdk-pw9w6   1/1     Running   0               138m
+jcnr              jcnr-0-crpd-0                                   2/2     Running   0               135m
+jcnr              syslog-ng-svzxg                                 1/1     Running   0               138m</b>
+kube-system       calico-kube-controllers-7675746f76-bqbvc        1/1     Running   0               179d
+kube-system       calico-node-pt7vb                               1/1     Running   0               540d
+kube-system       coredns-59d6b54d97-2qms8                        1/1     Running   0               540d
+kube-system       dns-autoscaler-7944dc7978-9t7zd                 1/1     Running   0               540d
+kube-system       kube-apiserver-5d8s1-node1                      1/1     Running   0               483d
+kube-system       kube-controller-manager-5d8s1-node1             1/1     Running   0               359d
+kube-system       kube-multus-ds-amd64-hhhk9                      1/1     Running   0               126d
+kube-system       kube-proxy-nfvrl                                1/1     Running   0               540d
+kube-system       kube-scheduler-5d8s1-node1                      1/1     Running   0               359d
+kube-system       kube-sriov-cni-ds-amd64-wcsfh                   1/1     Running   0               126d
+kube-system       kube-sriov-device-plugin-amd64-b9qvp            1/1     Running   0               223d
+kube-system       nodelocaldns-qzjq9                              1/1     Running   0               540d</codeblock>
+    <p>Copy the name of the cRPD pod—<codeph>jcnr-0-crpd-0</codeph> in this example output . You
+      will use the pod name to connect to the running container's shell.</p>
+    <p><b>Connect to the cRPD CLI</b></p>
+    <p>Issue the <codeph>kubectl exec</codeph> command to access the running container's shell:</p>
+    <codeblock>kubectl exec -n &lt;namespace&gt; -it &lt;pod name&gt; --container &lt;container name&gt; -- bash</codeblock>
+    <p>where <i>&lt;namespace&gt;</i> identifies the namespace in which the pod is running, <i>&lt;pod
+        name&gt;</i> specificies the name of the pod and the <i>&lt;container name&gt;</i> specifies the
+      name of the container (to be specified if the pod has more than one container).</p>
+    <p>The cRPD pod has only one running container. Here is an example command:</p>
+    <codeblock>Defaulted container "kube-crpd-worker" out of: kube-crpd-worker, jcnr-crpd-config (init), install-cni (init)
+
+===&gt;
+           Containerized Routing Protocols Daemon (CRPD)
+ Copyright (C) 2020-2022, Juniper Networks, Inc. All rights reserved.
+                                                                      &lt;===
+root@jcnr-01:/#</codeblock>
+    <p>At this point, you have connected to the shell of the cRPD. Just as with other Junos-based
+      shells, you access the operational mode of the cloud-native router the same way as if you were
+      connected to the console of a physical Junos OS device.</p>
+    <codeblock>root@jcnr-01:/# cli
+root@jcnr-cni&gt;</codeblock>
+  </conbody>
+
+  <related-links/>
+</concept>

@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_048028fc5d39450a-2e4925b9-18a45bf518c--7ee3" xml:lang="en-US">
+    <title>Install and Verify Juniper Cloud-Native Router on Amazon EKS</title>
+    <abstract>
+        <p>The Juniper Cloud-Native Router uses the the JCNR-Controller (cRPD) to provide control
+            plane capabilities and JCNR-CNI to provide a container network interface. Juniper
+            Cloud-Native Router uses the DPDK-enabled vRouter to provide high-performance data plane
+            capabilities and Syslog-NG to provide notification functions. This section explains how
+            you can install these components of the Cloud-Native Router.</p>
+    </abstract>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody/>
+    <task conref="install-jcnr-eks-support-package.dita#task_rdw_nj5_mpb" id="id_sc4_3wg_qyb">
+        <title/>
+    </task>
+    <task conref="install-jcnr-eks-marketplace-package.dita#task_rdw_nj5_mpb" id="id_edg_h5g_qyb">
+        <title/>
+    </task>
+    <task audience="internal" id="task_djt_xjc_t1c">
+        <title>Install Juniper Cloud-Native Router Using AWS Marketplace Subscription (PAYG)</title>
+        <taskbody>
+            <context id="context_ejt_xjc_t1c">
+                <p>Use this procedure to install Cloud-Native Router with an AWS Marketplace
+                    pay-as-you-go (PAYG) licensing subscription using Helm charts. </p>
+                <p>The JCNR (PAYG) products support usage-based licensing, giving you the option of
+                    being billed based on the amount of throughput you use. Billing is based on the
+                    total throughput across all interfaces. Incoming and outgoing bit counts over a
+                    one-hour period are summed together and compared with the total number of bits
+                    allowed per hour based on the license. Throughput in excess of the allowed
+                    amount might incur additional charges.</p>
+                <p>This procedure installs Cloud-Native Router on your existing Amazon EKS cluster.
+                    Ensure you've set up your Amazon EKS cluster prior to running this procedure.
+                    You can use any method to create an EKS cluster as long as it meets the system
+                    requirements described in <xref href="../concept/system-resource-requirements-eks.dita">System
+                        Requirements for EKS Deployment</xref>. </p>
+                <p>For convenience, we've provided a CloudFormation template that you can use to
+                    quickly get a cluster up and running. This template is provided in <xref href="../example/jcnr-aws-eks-cloud-formation-template.dita"/>.</p>
+            </context>
+            <steps id="steps_fjt_xjc_t1c">
+                <step>
+                    <cmd>Review the <xref href="../concept/system-resource-requirements-eks.dita">System Requirements for EKS Deployment</xref> to ensure the setup has
+                        all the required configuration.</cmd>
+                </step>
+                <step>
+                    <cmd>Log in to and search for Cloud-Native Router products from the <xref format="html" href="https://aws.amazon.com/marketplace/search/results?searchTerms=jcnr" scope="external">AWS Marketplace</xref>.</cmd>
+                </step>
+                <step>
+                    <cmd>Select the desired Cloud-Native Router throughput-based licensing product
+                        and subscribe to it.</cmd>
+                </step>
+                <step>
+                    <cmd>Scroll down on the selected product's landing page to view the usage
+                        instructions.</cmd>
+                    <info>
+                        <p>The instructions show you how to log in to the ECR Helm registry and
+                            download the Cloud-Native Router helm chart.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Copy and run the provided usage instructions on the setup where you issue
+                        your AWS CLI commands.</cmd>
+                    <info>
+                        <codeblock id="codeblock_ift_p43_t1c">aws configure
+aws ecr get-login-password <varname>&lt;...&gt;</varname>
+helm pull oci: <varname>&lt;...&gt;</varname></codeblock>
+                    </info>
+                    <info>This downloads the
+                            <filepath>jcnr-<varname>&lt;version&gt;</varname>.tgz</filepath> file
+                        onto your setup.</info>
+                </step>
+                <step>
+                    <cmd>Expand the <filepath>jcnr-<varname>&lt;version&gt;</varname>.tgz</filepath>
+                        file.</cmd>
+                    <info>
+                        <codeblock id="codeblock_jjt_xjc_t1c">tar xzvf jcnr-<varname>&lt;version&gt;</varname>.tgz</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change directory to <codeph>jcnr</codeph>.</cmd>
+                    <info>
+                        <codeblock id="codeblock_kjt_xjc_t1c">cd jcnr</codeblock>
+                    </info>
+                    <info>
+                        <note id="note_ljt_xjc_t1c">
+                            <p>All remaining steps in the installation assume that your current
+                                working directory is now <filepath>jcnr</filepath>.</p>
+                        </note>
+                    </info>
+                </step>
+                <step>
+                    <cmd>View the contents in the current directory.</cmd>
+                    <info>
+                        <codeblock id="codeblock_mjt_xjc_t1c">ls
+Chart.yaml  charts  cRPD_examples  scripts  secrets  values.yaml</codeblock>
+                    </info>
+                </step>
+                <step id="step_vtx_pzw_kxb">
+                    <cmd>Enter the root password for your host server into the
+                            <filepath>secrets/jcnr-secrets.yaml</filepath> file at the following
+                        line:</cmd>
+                    <info>
+                        <codeblock id="codeblock_brf_cts_51c">  root-password: &lt;add your password in base64 format&gt;</codeblock>
+                    </info>
+                    <info>You must enter the password in base64-encoded format. Encode your password
+                        as follows:
+                        <codeblock id="codeblock_eqx_kyz_51c">echo -n "<varname>password</varname>" | base64 -w0</codeblock>Copy
+                        the output of this command into
+                            <filepath>secrets/jcnr-secrets.yaml</filepath>.</info>
+                </step>
+                <step>
+                    <cmd>Apply <codeph>jcnr-secrets.yaml</codeph> to the cluster.</cmd>
+                    <info>
+                        <codeblock id="codeblock_sjt_xjc_t1c">kubectl apply -f secrets/jcnr-secrets.yaml 
+namespace/jcnr created 
+secret/jcnr-secrets created</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Create the <xref href="../concept/system-resource-requirements-eks.dita#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/section_b5d_xzg_vyb">JCNR ConfigMap</xref> if using the Virtual Router Redundancy Protocol
+                        (VRRP) for your Cloud-Native Router cluster. Apply the
+                            <codeph>jcnr-aws-config.yaml</codeph> to the Kubernetes system.</cmd>
+                    <info>
+                        <codeblock id="codeblock_tjt_xjc_t1c">kubectl apply -f jcnr-aws-config.yaml
+configmap/jcnr-aws-config created</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Create an identity provider.</cmd>
+                    <substeps id="substeps_w2y_qqb_v1c">
+                        <substep>
+                            <cmd>Fetch the OpenID Connect provider URL from the the EKS
+                                cluster.</cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Create an identity provider and IAM:</cmd>
+                            <info>
+                                <ol id="ol_bwc_5qb_v1c">
+                                    <li><p>Add an identity provider with the OpenID Connect
+                                            option.</p></li>
+                                    <li><p>Update the provider URL with the OpenID Connect
+                                            provider.</p></li>
+                                    <li><p>Set audience to
+                                        <codeph>sts.amazonaws.com</codeph>.</p></li>
+                                </ol>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Run the provided <filepath>scripts/aws-config.sh</filepath> script.</cmd>
+                    <info><codeblock id="codeblock_kcm_rrb_v1c">cd scripts; chmod +x aws-config.sh</codeblock><codeblock id="codeblock_mnl_5rb_v1c">./aws-config.sh <varname>&lt;EKS_Cluster_Region&gt;</varname> <varname>&lt;EKS_Cluster_Name&gt;</varname></codeblock>where
+                            <varname>&lt;EKS_Cluster_Region&gt;</varname> is the AWS region of your
+                        cluster and <varname>&lt;EKS_Cluster_Name&gt;</varname> is the name that you
+                        called your cluster.</info>
+                    <info>The script creates an IAM role for using the AWS Marketplace metering
+                        service and automatically sets <codeph>iamrole</codeph> properly in
+                            <filepath>values.yaml</filepath>.</info>
+                </step>
+                <step>
+                    <cmd>If desired, configure how cores are assigned to the vRouter DPDK
+                        containers. See <xref href="jcnr-configure-vrouter-performance.dita"/>.</cmd>
+                </step>
+                <step>
+                    <cmd>Customize the helm chart for your deployment using the
+                            <filepath>values.yaml</filepath> file.</cmd>
+                    <info>
+                        <p>See, <xref href="../concept/deployment-config-files-eks.dita">Customize JCNR Helm Chart for EKS Deployment</xref> for
+                            descriptions of the helm chart configurations and a sample helm chart
+                            for EKS deployment.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Optionally, customize Cloud-Native Router configuration.</cmd>
+                    <info>See, <xref href="../concept/crpd-customization-node-configlet.dita"/>
+                        for creating and applying the cRPD customizations.</info>
+                </step>
+                <step>
+                    <cmd>Verify that the Amazon EBS CSI driver role policy has been attached to the
+                        EKS cluster node role.</cmd>
+                    <info>
+                        <codeblock id="codeblock_uq4_hhb_v1c">aws iam list-attached-role-policies --role-name <varname>&lt;EKS_Cluster_Node_Role_Name&gt;</varname></codeblock>
+                        <p>Look for
+                                <codeph>arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy</codeph>
+                            in the output. If this policy is not listed, add it as follows:</p>
+                        <codeblock id="codeblock_zhh_nhb_v1c">aws iam attach-role-policy --role-name <varname>&lt;EKS_Cluster_Node_Role_Name&gt;</varname> --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Verify that the Amazon VPC CNI role policy has been attached to the EKS
+                        cluster node role.</cmd>
+                    <info>
+                        <codeblock id="codeblock_gqz_g3b_v1c">aws iam list-attached-role-policies --role-name <varname>&lt;EKS_Cluster_Node_Role-Name&gt;</varname></codeblock>
+                        <p>Look for <codeph>arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy</codeph> in
+                            the output. If this policy is not listed, add it as follows:</p>
+                        <codeblock id="codeblock_gqf_k3b_v1c">aws iam attach-role-policy --role-name <varname>&lt;EKS_Cluster_Node_Role_Name&gt;</varname> --policy-arn arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Verify that the Amazon EBS CSI driver and Amazon VPC CNI add-ons are
+                        installed.</cmd>
+                    <info>
+                        <codeblock id="codeblock_utc_x3b_v1c">aws eks describe-addon-versions --addon-name aws-ebs-csi-driver</codeblock>
+                        <codeblock id="codeblock_e55_fjb_v1c">aws eks describe-addon-versions --addon-name vpc-cni</codeblock>
+                        <p>If any of the add-ons is not installed, you can install them respectively
+                            as follows:</p>
+                        <codeblock id="codeblock_n1v_njb_v1c">aws eks create-addon --cluster-name my-cluster --addon-name aws-ebs-csi-driver --addon-version <varname>&lt;version&gt;</varname> --service-account-role-arn <varname>&lt;EKS_Cluster_Node_IAM_role_ARN&gt;</varname></codeblock>
+                        <codeblock id="codeblock_lcj_4jb_v1c">aws eks create-addon --cluster-name my-cluster --addon-name vpc-cni --addon-version <varname>&lt;version&gt;</varname> --service-account-role-arn <varname>&lt;EKS_Cluster_Node_IAM_role_ARN&gt;</varname></codeblock>
+                    </info>
+                    <info>Be sure to install the versions listed in <xref href="../concept/system-resource-requirements-eks.dita#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/section_kh4_wdk_gxb"/>.</info>
+                </step>
+                <step>
+                    <cmd>Label the nodes where you want Cloud-Native Router to be installed based on
+                        the <codeph>nodeaffinity</codeph> configuration (if defined in the
+                            <codeph>values.yaml</codeph>). For example:</cmd>
+                    <info>
+                        <codeblock id="codeblock_t5g_4hn_sbc">kubectl label nodes ip-10.0.100.17.us-east-2.compute.internal key1=jcnr --overwrite</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Deploy the Juniper Cloud-Native Router using the helm chart.</cmd>
+                    <info>Run the following
+                        command:<codeblock id="codeblock_vjt_xjc_t1c">helm install jcnr .</codeblock></info>
+                    <info>
+                        <codeblock id="codeblock_xjt_xjc_t1c">NAME: jcnr
+LAST DEPLOYED: <varname>&lt;date_time&gt;</varname>
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Confirm Juniper Cloud-Native Router deployment.</cmd>
+                    <info>
+                        <codeblock id="codeblock_yjt_xjc_t1c">helm ls</codeblock>
+                        <p>Sample output:</p>
+                        <codeblock id="codeblock_dyc_xvb_v1c" scale="80">
+NAME    NAMESPACE    REVISION   UPDATED       STATUS      CHART            APP VERSION
+jcnr    default      1          <varname>&lt;date_time&gt;</varname>   deployed    jcnr-<varname>&lt;version&gt;</varname>   <varname>&lt;version&gt;</varname></codeblock>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_xlz_fkg_qyb">
+        <title>Verify Cloud-Native Router Installation on Amazon EKS</title>
+        <taskbody>
+            <context id="context_gwg_wqy_tbc">
+                <note id="note_icd_xqy_tbc">
+                    <p>The output shown in this example procedure is affected by the number of nodes
+                        in the cluster. The output you see in your setup may differ in that
+                        regard.</p>
+                </note>
+            </context>
+            <steps id="steps_xp1_35g_qyb">
+                <step>
+                    <cmd>Verify the state of the Cloud-Native Router pods by issuing the
+                            <codeph>kubectl get pods -A</codeph> command. The output of the
+                            <codeph>kubectl</codeph> command shows all of the pods in the Kubernetes
+                        cluster in all namespaces. Successful deployment means that all pods are in
+                        the running state. In this example we have marked the Juniper Cloud-Native
+                        Router Pods in <b>bold</b>. For example:</cmd>
+                    <info>
+                        <codeblock>kubectl get pods -A</codeblock>
+                        <codeblock scale="70">
+NAMESPACE         NAME                                               READY   STATUS    RESTARTS         AGE
+contrail-deploy   contrail-k8s-deployer-5b6c9656d5-nw9t9             1/1     Running   0               13d   
+contrail          jcnr-0-dp-contrail-vrouter-nodes-b2jxp             2/2     Running   0               13d   
+contrail          jcnr-0-dp-contrail-vrouter-nodes-vrdpdk-g7wrk      1/1     Running   0               13d
+jcnr              jcnr-0-crpd-0                                      1/1     Running   0               13d   
+jcnr              syslog-ng-tct27                                    1/1     Running   0               13d   
+kube-system       aws-node-k8hxl                                     1/1     Running   1 (15d ago)     15d   
+kube-system       ebs-csi-node-c8rbh                                 3/3     Running   3 (15d ago)     15d   
+kube-system       kube-multus-ds-8nzhs                               1/1     Running   1 (13d ago)     13d   
+kube-system       kube-proxy-h669c                                   1/1     Running   1 (15d ago)     15d   </codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Verify the Cloud-Native Router daemonsets by issuing the <codeph>kubectl
+                            get ds -A</codeph> command. Use the <codeph>kubectl get ds -A</codeph>
+                        command to get a list of daemonsets. The Cloud-Native Router daemonsets are
+                        highlighted in <b>bold</b> text.</cmd>
+                    <info>
+                        <codeblock>kubectl get ds -A</codeblock>
+                        <codeblock scale="70">
+NAMESPACE     NAME                                        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR              AGE
+contrail      jcnr-0-dp-contrail-vrouter-nodes            1         1         1       1            1           &lt;none&gt;                     13d
+contrail      jcnr-0-dp-contrail-vrouter-nodes-vrdpdk     1         1         1       1            1           &lt;none&gt;                     13d
+jcnr          syslog-ng                                   1         1         1       1            1           &lt;none&gt;                     13d
+kube-system   aws-node                                    8         8         8       8            8           &lt;none&gt;                     15d
+kube-system   ebs-csi-node                                8         8         8       8            8           kubernetes.io/os=linux     15d
+kube-system   ebs-csi-node-windows                        0         0         0       0            0           kubernetes.io/os=windows   15d
+kube-system   kube-multus-ds                              8         8         8       8            8           &lt;none&gt;                     13d
+kube-system   kube-proxy                                  8         8         8       8            8           &lt;none&gt;                     15d</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Verify the Cloud-Native Router statefulsets by issuing the <codeph>kubectl
+                            get statefulsets -A</codeph> command. The command output provides the
+                        statefulsets.</cmd>
+                    <info>
+                        <codeblock>kubectl get statefulsets -A</codeblock>
+                        <codeblock>
+NAMESPACE   NAME          READY   AGE
+jcnr        jcnr-0-crpd   1/1     27m</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Verify if the cRPD is licensed and has the appropriate
+                        configurations.</cmd>
+                    <substeps id="substeps_b1t_wkg_qyb">
+                        <substep>
+                            <cmd>View the <xref keyref="cloud-native-router-user.accessing-crpd-cli">Access the cRPD CLI</xref> section for instructions to access
+                                the cRPD CLI. </cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Once you have access the cRPD CLI, issue the <codeph>show system
+                                    license</codeph> command in the cli mode to view the system
+                                licenses. For example:</cmd>
+                            <info>
+                                <codeblock>root@jcnr-01:/# cli
+root@jcnr-01&gt; show system license
+License usage:
+                                 Licenses     Licenses    Licenses    Expiry
+  Feature name                       used    installed      needed
+  containerized-rpd-standard            1        1           0    2024-09-20 16:59:00 PDT
+ 
+Licenses installed:
+  License identifier: 85e5229f-0c64-0000-c10e4-a98c09ab34a1
+  License SKU: S-CRPD-10-A1-PF-5
+  License version: 1
+  Order Type: commercial
+  Software Serial Number: 1000098711000-iHpgf
+  Customer ID: Juniper Networks Inc.
+  License count: 15000
+  Features:
+    containerized-rpd-standard - Containerized routing protocol daemon with standard features
+      date-based, 2022-08-21 17:00:00 PDT - 2027-09-20 16:59:00 PDT</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Issue the <codeph>show configuration | display set</codeph> command
+                                in the cli mode to view the cRPD default and custom configuration.
+                                The output will be based on the custom configuration and the
+                                Cloud-Native Router deployment mode.</cmd>
+                            <info>
+                                <codeblock>root@jcnr-01# cli          
+root@jcnr-01&gt; show configuration | display set </codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Type the <codeph>exit</codeph> command to exit from the pod
+                                shell.</cmd>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Verify the vRouter interfaces configuration.</cmd>
+                    <substeps id="substeps_yp1_35g_qyb">
+                        <substep>
+                            <cmd>View the <xref keyref="cloud-native-router-user.accessing-vrouter-cli">Access
+                                    the vRouter CLI</xref> section for instructions on how to access
+                                the vRouter CLI. </cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Once you have accessed the vRouter CLI, issue the <codeph>vif
+                                    --list</codeph> command to view the vRouter interfaces . The
+                                output will depend upon the Cloud-Native Router deployment mode and
+                                configuration. An example for L3 mode deployment, with one fabric
+                                interface configured, is provided below:</cmd>
+                            <info>
+                                <codeblock>$ vif --list 
+
+Vrouter Interface Table
+
+Flags: P=Policy, X=Cross Connect, S=Service Chain, Mr=Receive Mirror
+       Mt=Transmit Mirror, Tc=Transmit Checksum Offload, L3=Layer 3, L2=Layer 2
+       D=DHCP, Vp=Vhost Physical, Pr=Promiscuous, Vnt=Native Vlan Tagged
+       Mnp=No MAC Proxy, Dpdk=DPDK PMD Interface, Rfl=Receive Filtering Offload, Mon=Interface is Monitored
+       Uuf=Unknown Unicast Flood, Vof=VLAN insert/strip offload, Df=Drop New Flows, L=MAC Learning Enabled
+       Proxy=MAC Requests Proxied Always, Er=Etree Root, Mn=Mirror without Vlan Tag, HbsL=HBS Left Intf
+       HbsR=HBS Right Intf, Ig=Igmp Trap Enabled, Ml=MAC-IP Learning Enabled, Me=Multicast Enabled
+
+vif0/0      Socket: unix MTU: 1514
+            Type:Agent HWaddr:00:00:5e:00:01:00
+            Vrf:65535 Flags:L2 QOS:-1 Ref:3
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+
+vif0/1      PCI: 0000:00:07.0 (Speed 1000, Duplex 1) NH: 6 MTU: 9000
+            Type:Physical HWaddr:0e:d0:2a:58:46:4f IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:L3L2 QOS:0 Ref:8
+            RX device packets:20476  bytes:859992 errors:0
+            RX port   packets:20476 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:00:07.0  Status: UP  Driver: net_ena
+            RX packets:20476  bytes:859992 errors:0
+            TX packets:2  bytes:180 errors:0
+            Drops:0
+            TX port   packets:2 errors:0
+            TX device packets:8  bytes:740 errors:0
+
+vif0/2      PCI: 0000:00:08.0 (Speed 1000, Duplex 1) NH: 7 MTU: 9000
+            Type:Physical HWaddr:0e:6a:9e:04:da:6f IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:L3L2 QOS:0 Ref:8
+            RX device packets:20476  bytes:859992 errors:0
+            RX port   packets:20476 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:00:08.0  Status: UP  Driver: net_ena
+            RX packets:20476  bytes:859992 errors:0
+            TX packets:2  bytes:180 errors:0
+            Drops:0
+            TX port   packets:2 errors:0
+            TX device packets:8  bytes:740 errors:0
+
+vif0/3      PMD: eth2 NH: 10 MTU: 9000
+            Type:Host HWaddr:0e:d0:2a:58:46:4f IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:65535 Flags:L3L2DProxyEr QOS:-1 Ref:11 TxXVif:1 
+            RX device packets:2  bytes:180 errors:0
+            RX queue  packets:2 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:2  bytes:180 errors:0
+            TX packets:20476  bytes:859992 errors:0
+            Drops:0
+            TX queue  packets:20476 errors:0
+            TX device packets:20476  bytes:859992 errors:0
+
+vif0/4      PMD: eth3 NH: 15 MTU: 9000
+            Type:Host HWaddr:0e:6a:9e:04:da:6f IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:65535 Flags:L3L2DProxyEr QOS:-1 Ref:11 TxXVif:2 
+            RX device packets:2  bytes:180 errors:0
+            RX queue  packets:2 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:2  bytes:180 errors:0
+            TX packets:20476  bytes:859992 errors:0
+            Drops:0
+            TX queue  packets:20476 errors:0
+            TX device packets:20476  bytes:859992 errors:0</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Type <codeph>exit</codeph> to exit from the pod shell.</cmd>
+                        </substep>
+                    </substeps>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

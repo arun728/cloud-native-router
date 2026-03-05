@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_ef094a73502120b8--51ca2f83-1889e4c7645--7f43" xml:lang="en-US">
+  <title>Virtual Router Redundancy Protocol (VRRP)</title>
+  <shortdesc>Read this topic to learn about the support for the Virtual Router Redundancy Protocol
+    (VRRP) in Juniper Cloud-Native router. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>The Virtual Router Redundancy Protocol (VRRP) enables hosts on a LAN to make use of redundant
+      routing platforms on that LAN without requiring more than the static configuration of a single
+      default route on the hosts. The VRRP routing platforms share the IP address corresponding to
+      the default route configured on the hosts. At any time, one of the VRRP routing platforms is
+      the primary (active) and the others are backups. If the primary routing platform fails, one of
+      the backup routing platforms becomes the new primary routing platform, providing a virtual
+      default routing platform and enabling traffic on the LAN to be routed without relying on a
+      single routing platform. Using VRRP, a backup device can take over a failed default device
+      within a few seconds. This is done with minimum VRRP traffic and without any interaction with
+      the hosts. When <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is deployed in the containerized network function (CNF) mode in cloud
+      deployments, the VRRP unicast can be used to decide between the active and backup <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>nodes.
+      Review the <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/high-availability/topics/topic-map/vrrp-understanding.html" scope="external">Understanding VRRP</xref> topic for more information.</p>
+    <note>
+      <p>To enable VRRP for <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>on an EKS cluster, a ConfigMap must be configured. Please review
+          <xref keyref="cloud-native-router-deployment-guide.system-resource-requirements-eks/section_b5d_xzg_vyb"/> topic for more information</p>
+    </note>
+  </conbody>
+
+  <related-links/>
+</concept>

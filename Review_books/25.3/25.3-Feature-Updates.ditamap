@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "/SysSchema/dita13/dtd/technicalContent/dtd/map.dtd">
+<map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" xml:lang="en-US">
+    <title>25.3-Feature-Updates</title>
+    <!-- Use the Review Map template to assemble topics that you wish to send for technical or editorial review. The review maps must be created in the /Content/internal/<username>/review/ folder. After the review is completed, please delete the review map file you created. -->
+    <topicmeta>
+        <author>tkaur</author>
+    </topicmeta>
+    
+<!-- Mon Sep 29 03:05:11 PDT 2025 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.jcnr-deploy-csrx-task_qpq_j53_1bc" inserted by "tkaur" -->
+
+<mapref href="../../cloud-native-router-deployment-guide/keys-cloud-native-router-deployment-guide.ditamap" keyscope="cloud-native-router-deployment-guide" processing-role="resource-only" scope="peer"/>
+<topicref href="../../cloud-native-router-user/topics/concept/static-vxlan.dita"/>
+    <topicref href="../../cloud-native-router-user/topics/concept/jcnr-and-security-services.dita"/>
+</map>

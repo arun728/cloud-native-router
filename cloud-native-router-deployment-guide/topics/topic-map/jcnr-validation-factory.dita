@@ -1,0 +1,1023 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_f8c7b3865841839e-2a965920-193ca123f59--7ff2" xml:lang="en-US">
+    <title>Validation Factory</title>
+    <shortdesc>Validation Factory provides a framework to test and validate Juniper Cloud-Native
+        Router deployments. It simplifies the evaluation of Cloud-Native Router solutions for
+        customer adoption.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <concept id="concept_a2x_k4h_sdc">
+        <title>Overview</title>
+        <conbody>
+            <p>Validation Factory provides a library of well-defined test profiles that validate
+                basic layer 3 features, including common sanity and performance tests for
+                Cloud-Native Router deployments. </p>
+            <p>The aim of Validation Factory is to reduce the number of tests you need to manually
+                create and execute when evaluating or qualifying a Cloud-Native Router deployment
+                for a production environment. </p>
+            <p>Test execution is automated using a Kubernetes custom resource (CR) and the test
+                result is published in a user-friendly format. </p>
+            <note id="note_dgw_c4k_sdc">
+                <p>Validation Factory is supported for Wind River deployments only.</p>
+            </note>
+            <p><xref href="#concept_a2x_k4h_sdc/table_an4_htt_ldc" format="dita"/> shows the
+                supported features.</p>
+            <table frame="all" id="table_an4_htt_ldc">
+                <title>Validation Factory Supported Features</title>
+                <tgroup cols="2">
+                    <colspec colname="c1" colnum="1" colwidth="1*"/>
+                    <colspec colname="c2" colnum="2" colwidth="1.01*"/>
+                    <thead>
+                        <row>
+                            <entry>
+                                <p>Supported Features</p>
+                            </entry>
+                            <entry>
+                                <p>Description</p>
+                            </entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>
+                                <p>Supported topology</p>
+                            </entry>
+                            <entry>
+                                <ul id="ul_jrj_f4d_ydc">
+                                    <li>
+                                        <p>Cloud-Native Router deployed in two single-node
+                                            clusters</p>
+                                    </li>
+                                    <li>
+                                        <p>Cloud-Native Router deployed in five single-node
+                                            clusters</p>
+                                    </li>
+                                </ul>
+                                <p>We recommend that you validate with five single-node
+                                    clusters.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>Supported routing protocols</p>
+                            </entry>
+                            <entry>
+                                <p>BGP, OSPF, IS-IS</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>Supported tests</p>
+                            </entry>
+                            <entry>
+                                <p>MPLS-over-UDP, SR-MPLS, SRv6 </p>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <p><xref href="#concept_a2x_k4h_sdc/table_bdh_2xt_ldc" format="dita"/> shows the
+                Validation Factory components.</p>
+            <table frame="all" id="table_bdh_2xt_ldc">
+                <title>Components</title>
+                <tgroup cols="2">
+                    <colspec colname="c1" colnum="1" colwidth="1*"/>
+                    <colspec colname="c2" colnum="2" colwidth="1.02*"/>
+                    <thead>
+                        <row>
+                            <entry>
+                                <p>Component</p>
+                            </entry>
+                            <entry>
+                                <p>Description</p>
+                            </entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>
+                                <p>Test Profile Library</p>
+                            </entry>
+                            <entry>
+                                <p>A python-based, well-defined collection of test profiles for
+                                    basic layer 3 Cloud-Native Router functionality. Each profile
+                                    specifies:</p>
+                                <ul id="ul_nll_m4h_sdc">
+                                    <li>
+                                        <p>Test-Description: A clear explanation of the
+                                            functionality or behavior being tested.</p>
+                                    </li>
+                                    <li>
+                                        <p>Test Parameters: Configurable parameters to tailor the
+                                            test profiles to specific scenarios.</p>
+                                    </li>
+                                    <li>
+                                        <p>Pass and Fail Criteria: Defined metrics or conditions
+                                            that determine success or failure of the test case.</p>
+                                    </li>
+                                </ul>
+                                <p>The following test cases are executed:</p>
+                                <ul id="ul_n5f_wg5_ldc">
+                                    <li>End-to-end IPv4 &amp; IPv6 traffic between pods. Both kernel
+                                        &amp; DPDK interfaces are included.</li>
+                                    <li>Restart routing process on cRPD.</li>
+                                    <li>Restart of pod running test traffic.</li>
+                                    <li>Respawn of the cRPD pod.</li>
+                                    <li>Respawn of the vRouter agent pod.</li>
+                                    <li>Respawn of the vRouter DPDK pod.</li>
+                                    <li audience="internal">Reboot of the Cloud-Native Router node,
+                                        except when testing OCP and Windriver platforms</li>
+                                </ul>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>Kubernetes Operator</p>
+                            </entry>
+                            <entry>
+                                <p>The framework is implemented as a Kubernetes custom resource
+                                    (CR). The operator performs the following tasks:</p>
+                                <ul id="ul_d2k_lwt_ldc">
+                                    <li>
+                                        <p>Manages the test custom resource definitions (CRDs).</p>
+                                    </li>
+                                    <li>
+                                        <p>Parses the CR upon creation.</p>
+                                    </li>
+                                    <li>
+                                        <p>Orchestrates the test execution process by bringing up
+                                            containerized test pods.</p>
+                                    </li>
+                                    <li>
+                                        <p>Monitors test pod execution and collects results. </p>
+                                    </li>
+                                    <li>
+                                        <p>Publishes test results in a user-friendly format.</p>
+                                    </li>
+                                </ul>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>Test Pods</p>
+                            </entry>
+                            <entry>
+                                <p>Test pods execute specific test profiles. The pods contain the
+                                    necessary tools and libraries for network performance testing.
+                                    The operator dynamically provisions the pods based on the
+                                    requested test profile.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>Results</p>
+                            </entry>
+                            <entry>
+                                <p>The results are stored as a filesystem volume on the Kubernetes
+                                    cluster.</p>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </conbody>
+    </concept>
+    <concept id="concept_ggb_x4h_sdc">
+        <title>Test Topology Manifest</title>
+        <conbody>
+            <p>The test topology manifest describes the part of your network that you want to test.
+                    <xref href="#concept_ggb_x4h_sdc/table_l3y_wyt_ldc" format="dita"/> shows the
+                main configuration parameters.</p>
+            <table frame="all" id="table_l3y_wyt_ldc">
+                <title>Main Test Topology Parameters</title>
+                <tgroup cols="5">
+                    <colspec colname="c1" colnum="1" colwidth="1.24*"/>
+                    <colspec colname="newCol2" colnum="2" colwidth="1.13*"/>
+                    <colspec colname="newCol3" colnum="3" colwidth="1*"/>
+                    <colspec colname="newCol4" colnum="4" colwidth="1.4*"/>
+                    <colspec colname="c2" colnum="5" colwidth="3.65*"/>
+                    <thead>
+                        <row>
+                            <entry nameend="newCol4" namest="c1">
+                                <p>Parameter</p>
+                            </entry>
+                            <entry>
+                                <p>Description</p>
+                            </entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>
+                                <p>apiVersion</p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3"/>
+                            <entry>
+                                <p>Set to
+                                        <codeph>testtopology.validationfactory.juniper.net/v1</codeph>.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>kind</p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3"/>
+                            <entry>
+                                <p>Set to <codeph>TestTopology</codeph>.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>metadata</p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3"/>
+                            <entry/>
+                        </row>
+                        <row>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p>name</p>
+                            </entry>
+                            <entry nameend="newCol4" namest="newCol3">
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p>The name you want to call this test topology manifest.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p>namespace</p>
+                            </entry>
+                            <entry nameend="newCol4" namest="newCol3">
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p>Set to <codeph>jcnr</codeph>.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>spec</p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3"/>
+                            <entry>
+                                <p/>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry> </entry>
+                            <entry>global</entry>
+                            <entry nameend="newCol4" namest="newCol3"/>
+                            <entry>
+                                <p/>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry> </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">platform</entry>
+                            <entry>
+                                <p>Set to <codeph>windriver</codeph>.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">auth</entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry> </entry>
+                            <entry/>
+                            <entry/>
+                            <entry>secret</entry>
+                            <entry>
+                                <p>The name of the secret that contains the kubeconfigs of all
+                                    cluster nodes.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">crpd</entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry/>
+                            <entry/>
+                            <entry> username</entry>
+                            <entry>
+                                <p>Username to log in to cRPD via SSH.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry/>
+                            <entry>password</entry>
+                            <entry>
+                                <p>Password to log in to cRPD via SSH.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry>cluster</entry>
+                            <entry nameend="newCol4" namest="newCol3"/>
+                            <entry>
+                                <p>An array of Cloud-Native Router clusters to be tested. We support
+                                    the following:</p>
+                                <ul id="ul_y23_skq_xdc">
+                                    <li>
+                                        <p>two clusters, with each cluster consisting of a single
+                                            (worker) node</p>
+                                    </li>
+                                    <li>
+                                        <p>five clusters, with each cluster consisting of a single
+                                            (worker) node</p>
+                                    </li>
+                                </ul>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">name</entry>
+                            <entry>
+                                <p>Name of the cluster.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry> </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">kubeconfigpath</entry>
+                            <entry>
+                                <p>Path to the kubeconfig file on a node in the specified
+                                    cluster.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">nodes</entry>
+                            <entry>
+                                <p>An array of Cloud-Native Router nodes in the cluster.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry/>
+                            <entry>name</entry>
+                            <entry>
+                                <p>Name of the node.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry/>
+                            <entry/>
+                            <entry> ip</entry>
+                            <entry>
+                                <p>IP address of the node.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry/>
+                            <entry> jumphost</entry>
+                            <entry/>
+                            <entry>
+                                <p>(Optional) IP address of the jumphost to access the node.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry> connections</entry>
+                            <entry nameend="newCol4" namest="newCol3"/>
+                            <entry>
+                                <p>An array of connections between the specified nodes as per the
+                                    test topology.</p>
+                                <p>You're describing how your nodes are connected together. For
+                                    example, if you have five nodes connected in a full mesh, then
+                                    this array will contain ten connections.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">name</entry>
+                            <entry>
+                                <p>Name of the connection.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">node1</entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry> </entry>
+                            <entry/>
+                            <entry/>
+                            <entry>name</entry>
+                            <entry>
+                                <p>Name of the node at one end of the connection.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry/>
+                            <entry/>
+                            <entry> interface</entry>
+                            <entry>
+                                <p>Name of the fabric interface on that node.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p>node2</p>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry/>
+                        </row>
+                        <row>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p>name</p>
+                            </entry>
+                            <entry>
+                                <p>Name of the node at the other end of the connection.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p>interface</p>
+                            </entry>
+                            <entry>
+                                <p>Name of the fabric interface on that node.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">protocols</entry>
+                            <entry>
+                                <p>The underlay protocols running on this connection (link). Set to
+                                    the same value for all connections. </p>
+                                <p>Valid values depend on the type of test you're running: </p>
+                                <ul id="ul_qmp_qmr_tdc">
+                                    <li>
+                                        <p>If the tunnel <codeph>type</codeph> is
+                                                <codeph>mpls-over-udp</codeph>, then set to either
+                                                <codeph>bgp</codeph>, <codeph>ospf</codeph>, or
+                                                <codeph>isis</codeph>.</p>
+                                    </li>
+                                    <li>
+                                        <p>If the segment routing path <codeph>type</codeph> is
+                                                <codeph>sr-mpls</codeph>, then set to both
+                                                <codeph>isis</codeph> and <codeph>mpls</codeph>. For
+                                            example:</p>
+                                        <codeblock id="codeblock_mpf_s4k_tdc">protocols:
+   - isis
+   - mpls</codeblock>
+                                    </li>
+                                    <li>
+                                        <p>If the segment routing path <codeph>type</codeph> is
+                                                <codeph>srv6</codeph>, then set to
+                                                <codeph>isis</codeph>.</p>
+                                    </li>
+                                </ul>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry> </entry>
+                            <entry namest="newCol2" nameend="newCol4">tunnels<sup>1</sup></entry>
+                            <entry>
+                                <p>An array of tunnels for MPLS-over-UDP. Omit this section if
+                                    you're not testing MPLS-over-UDP.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">name</entry>
+                            <entry>
+                                <p>Name of the tunnel.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3"> type</entry>
+                            <entry>
+                                <p>Tunnel type. Set to <codeph>mpls-over-udp</codeph>.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry nameend="newCol4" namest="newCol3">node1</entry>
+                            <entry/>
+                        </row>
+                        <row>
+                            <entry>
+                                <p> </p>
+                            </entry>
+                            <entry/>
+                            <entry/>
+                            <entry>name</entry>
+                            <entry>
+                                <p>Name of the node at one end of the tunnel.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p>node2</p>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p/>
+                            </entry>
+                            <entry>
+                                <p>name</p>
+                            </entry>
+                            <entry>
+                                <p>Name of the node at the other end of the tunnel.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry namest="newCol2" nameend="newCol4">segmentroutings<sup>1</sup></entry>
+                            <entry>An array of segment routing paths for SR-MPLS and SRv6. Omit this
+                                section if you're not testing SR-MPLS or SRv6.</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry/>
+                            <entry>name</entry>
+                            <entry/>
+                            <entry>
+                                <p>Name of the segment routing path.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry/>
+                            <entry>type</entry>
+                            <entry/>
+                            <entry>
+                                <p>Path type. Set to <codeph>sr-mpls</codeph> or
+                                        <codeph>srv6</codeph>.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry/>
+                            <entry namest="newCol3" nameend="newCol4">endpoints</entry>
+                            <entry>
+                                <p>The pair of endpoints for this path. For example:</p>
+                                <codeblock id="codeblock_csc_wcr_tdc">endpoints:
+   - jcnr-node5
+   - jcnr-node6</codeblock>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry/>
+                            <entry namest="newCol3" nameend="newCol4">transit</entry>
+                            <entry>
+                                <p>An array of transit hops for SRv6 paths. For example:</p>
+                                <codeblock id="codeblock_gxv_cdr_tdc">transit:
+   - jcnr-node7
+   - jcnr-node8</codeblock>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry namest="c1" nameend="c2">
+                                <p><sup>1</sup> Each test topology manifest is limited to only one
+                                    type of test: <codeph>mpls-over-udp</codeph>,
+                                        <codeph>sr-mpls</codeph>, or <codeph>srv6</codeph>. </p>
+                                <ul id="ul_vrj_tfr_tdc">
+                                    <li>
+                                        <p>If you're testing MPLS-over-UDP, then include the
+                                                <codeph>tunnels</codeph> section but omit the
+                                                <codeph>segmentroutings</codeph> section. </p>
+                                    </li>
+                                    <li>
+                                        <p>If you're testing SR-MPLS or SRv6, then include the
+                                                <codeph>segmentroutings</codeph> section but omit
+                                            the <codeph>tunnels</codeph> section. </p>
+                                    </li>
+                                    <li>
+                                        <p>Within the <codeph>segmentroutings</codeph> section, the
+                                                <codeph>type</codeph> must be the same for all
+                                            paths. You cannot create a test that has a mix of
+                                            SR-MPLS and SRv6 paths.</p>
+                                    </li>
+                                </ul>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <p>Here's a sample two-node test topology manifest:</p>
+            <codeblock id="codeblock_lsf_tnj_sdc">apiVersion: testtopology.validationfactory.juniper.net/v1
+kind: TestTopology
+metadata:
+  name: twonode-mplsoverudp
+  namespace: jcnr
+spec:
+  global:
+    platform: windriver
+    auth:
+      secret: sshauth
+    crpd:
+      username: root
+      password: <varname>&lt;password&gt;</varname>
+  cluster:
+  - name: cluster1
+    kubeconfigpath: /etc/kubernetes/admin.conf
+    nodes:
+    - name: jcnr-node5
+      ip: 10.108.33.135
+  - name: cluster2
+    kubeconfigpath: /etc/kubernetes/admin.conf
+    nodes:
+    - name: jcnr-node6
+      ip: 10.108.33.136
+  connections:
+  - name: toDC1
+    node1:
+      name: jcnr-node5
+      interface: ens1f2
+    node2:
+      name: jcnr-node6
+      interface: ens1f2
+    protocols:
+    - isis
+  tunnels:
+  - name: tun1
+    type: mpls-over-udp
+    node1:
+      name: jcnr-node5
+    node2:
+      name: jcnr-node6</codeblock>
+            <p>Here's a sample five-node test topology manifest:</p>
+            <codeblock id="codeblock_knk_lg5_ldc">apiVersion: testtopology.validationfactory.juniper.net/v1
+kind: TestTopology
+metadata:
+  name: fiveonode-mplsoverudp
+  namespace: jcnr
+spec:
+  global:
+    platform: windriver
+    auth:
+      secret: sshauth
+    crpd:
+      username: root
+      password: <varname>&lt;password&gt;</varname>
+  cluster:
+  - name: PE1
+    kubeconfigpath: /etc/kubernetes/admin.conf
+    nodes:
+    - name: jcnr-node14
+      ip: 10.204.8.14
+  - name: PE2
+    kubeconfigpath: /etc/kubernetes/admin.conf
+    nodes:
+    - name: jcnr-node16
+      ip: 10.204.8.16
+  - name: P1
+    kubeconfigpath: /etc/kubernetes/admin.conf
+    nodes:
+    - name: jcnr-node13
+      ip: 10.204.8.13
+  - name: P2
+    kubeconfigpath: /etc/kubernetes/admin.conf
+    nodes:
+    - name: jcnr-node12
+      ip: 10.204.8.12
+  - name: P3
+    kubeconfigpath: /etc/kubernetes/admin.conf
+    nodes:
+    - name: jcnr-node15
+      ip: 10.204.8.15
+
+
+  connections:
+  - name: PE1andP1
+    node1:
+      name: jcnr-node14
+      interface: ens1f0np0
+    node2:
+      name: jcnr-node13
+      interface: ens1f0
+    protocols:
+      - isis
+  - name: P1toPE2
+    node1:
+      name: jcnr-node13
+      interface: ens1f1
+    node2:
+      name: jcnr-node16
+      interface: ens2f0
+    protocols:
+      - isis
+  - name: PE1andP2
+    node1:
+      name: jcnr-node14
+      interface: ens1f1np1
+    node2:
+      name: jcnr-node12
+      interface: ens1f1
+    protocols:
+      - isis
+  - name: P2andP3
+    node1:
+      name: jcnr-node12
+      interface: ens2f0
+    node2:
+      name: jcnr-node15
+      interface: ens2f0
+    protocols:
+      - isis
+
+  - name: P3toPE2
+    node1:
+      name: jcnr-node15
+      interface: ens2f1
+    node2:
+      name: jcnr-node16
+      interface: ens2f1
+    protocols:
+      - isis
+  - name: P1toP2
+    node1:
+      name: jcnr-node13
+      interface: ens1f2
+    node2:
+      name: jcnr-node12
+      interface: ens1f0
+    protocols:
+      - isis
+  - name: P1toP3
+    node1:
+      name: jcnr-node13
+      interface: ens1f3
+    node2:
+      name: jcnr-node15
+      interface: ens1f0
+    protocols:
+      - isis
+
+
+  tunnels:
+  - name: tun1
+    type: mpls-over-udp
+    node1:
+      name: jcnr-node14
+    node2:
+      name: jcnr-node16</codeblock>
+        </conbody>
+    </concept>
+    <task id="task_ah2_3ph_sdc">
+        <title>Execute the Test Profiles</title>
+        <taskbody>
+            <context id="context_hmk_jph_sdc">
+                <p>You can run the Validation Factory tests on any host that has access to the
+                    clusters you want to test. Typically, however, you would run the tests on the
+                    installation host in one of those clusters. The installation host is where you
+                    installed Helm and where you ran the Cloud-Native Router installation for that
+                    cluster.</p>
+                <p>All clusters must have Cloud-Native Router installed, and all nodes in all
+                    clusters must allow the same login credentials (username and password or SSH
+                    key).</p>
+            </context>
+            <steps id="steps_my2_mph_sdc">
+                <step>
+                    <cmd>Download the Validation Factory software package to the installation host
+                        in one of the clusters that you want to test. The installation host is where
+                        you have Helm installed and where you ran the Cloud-Native Router
+                        installation for that cluster.</cmd>
+                    <info>
+                        <p>You can download the Cloud-Native Router Validation Factory software
+                            package from the Juniper Networks software download site. See <xref href="../ref/jcnr-sw-download-packages.dita"/>.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Gunzip and untar the software package.</cmd>
+                    <info>
+                        <codeblock id="codeblock_p35_sgk_sdc">tar -xzvf JCNR_Validation_Factory_<varname>&lt;release&gt;</varname>.tar.gz</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Load the provided images on all nodes in the cluster. The images are
+                        located in the downloaded package.</cmd>
+                    <info>See <xref href="../task/jcnr-deploy-prepackaged-images.dita"/>.</info>
+                </step>
+                <step id="step_ofq_2lq_xdc">
+                    <cmd>If desired, configure the port where you want the test results to be
+                        accessible.</cmd>
+                    <info>Look for the following line in
+                            <filepath>validation-factory/values.yaml</filepath> and change the port
+                        number to your desired
+                        value:<codeblock id="codeblock_m2y_flk_sdc">nodePort: 30000</codeblock></info>
+                </step>
+                <step>
+                    <cmd>Install the Helm chart.</cmd>
+                    <info>
+                        <codeblock id="codeblock_d5c_mnj_sdc">cd validation-factory</codeblock>
+                        <codeblock id="codeblock_mlr_mnj_sdc">helm install validation-factory .</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Create a secret with the login credentials and kubeconfigs of your clusters
+                        and apply it.</cmd>
+                    <info>valfac-secrets.yaml:<codeblock id="codeblock_spb_fdk_sdc">
+apiVersion: v1
+kind: Secret
+metadata:
+   name: <varname>&lt;name_of_secret&gt;</varname>
+   namespace: jcnr
+type: Opaque
+data:
+   key: <varname>&lt;base64-encoded_ssh_key&gt;</varname>
+   username: <varname>&lt;base64-encoded_username&gt;</varname>
+   password: <varname>&lt;base64-encoded_password&gt;</varname>
+   <varname>&lt;cluster1_name&gt;</varname>-kubeconfig: <varname>&lt;base64-encoded_kubeconfig_of_cluster1&gt;</varname> 
+   <varname>&lt;cluster2_name&gt;</varname>-kubeconfig: <varname>&lt;base64-encoded_kubeconfig_of_cluster2&gt;</varname>
+   <varname>&lt;clusterN_name&gt;</varname>-kubeconfig: <varname>&lt;base64-encoded_kubeconfig_of_clusterN&gt;</varname>
+   etc.</codeblock><dl id="dl_ulm_2fk_sdc">
+                            <dlentry>
+                                <dt>name</dt>
+                                <dd>The name you want to call this secret.</dd>
+                            </dlentry>
+                            <dlentry>
+                                <dt>key</dt>
+                                <dd>The base64-encoded ssh key that allows <codeph>username</codeph>
+                                    to log in to every node. If you specify the
+                                    <codeph>key</codeph>, then you don't specify the
+                                        <codeph>password</codeph>.</dd>
+                            </dlentry>
+                            <dlentry>
+                                <dt>username</dt>
+                                <dd>The base64-encoded username to log in to every node.</dd>
+                            </dlentry>
+                            <dlentry>
+                                <dt>password</dt>
+                                <dd>The base64-encoded password for <codeph>username</codeph> to log
+                                    in to every node. If you specify the <codeph>password</codeph>,
+                                    then you don't specify the <codeph>key</codeph>.</dd>
+                            </dlentry>
+                            <dlentry>
+                                <dt><varname>&lt;cluster1_name&gt;</varname>-kubeconfig</dt>
+                                <dd>The base64-encoded kubeconfig file of the first cluster. The
+                                    order that you list your clusters is not important, but
+                                        <varname>&lt;cluster1_name&gt;</varname> must match the name of
+                                    one of your clusters.</dd>
+                            </dlentry>
+                            <dlentry>
+                                <dt><varname>&lt;cluster2_name&gt;</varname>-kubeconfig</dt>
+                                <dd>The base64-encoded kubeconfig file of the second cluster.
+                                        <varname>&lt;cluster2_name&gt;</varname> must match the name of
+                                    one of the remaining clusters.</dd>
+                            </dlentry>
+                            <dlentry>
+                                <dt><varname>&lt;clusterN_name&gt;</varname>-kubeconfig</dt>
+                                <dd>The base64-encoded kubeconfig file of the N<sup>th</sup>
+                                    cluster. <varname>&lt;clusterN_name&gt;</varname> must match the
+                                    name of one of the remaining clusters.</dd>
+                            </dlentry>
+                        </dl><note id="note_lmz_thk_sdc">
+                            <p>You'll need to base64-encode most of the required information in the
+                                secrets manifest.</p>
+                            <ul id="ul_o3r_q3k_sdc">
+                                <li>
+                                    <p>To base64-encode a file: <codeph>base64 -w0
+                                                <varname>&lt;file&gt;</varname></codeph></p>
+                                </li>
+                                <li>
+                                    <p>To base64-encode a string: <codeph>echo -n
+                                                <varname>&lt;string&gt;</varname> | base64
+                                            -w0</codeph></p>
+                                    <p>Copy the output to the respective locations in the secrets
+                                        manifest.</p>
+                                </li>
+                            </ul>
+                        </note>Apply the
+                        secret:<codeblock id="codeblock_ulc_pmk_sdc">kubectl apply -f valfac-secrets.yaml</codeblock></info>
+                </step>
+                <step>
+                    <cmd>Configure the test topology manifest. See <xref href="#concept_ggb_x4h_sdc" format="dita"/>.</cmd>
+                </step>
+                <step>
+                    <cmd>Apply the manifest to begin test execution.</cmd>
+                    <info>For
+                        example:<codeblock id="codeblock_xmw_r35_ldc">kubectl create -f fivenode_topology_test.yaml</codeblock></info>
+                </step>
+                <step>
+                    <cmd>View the test results.</cmd>
+                    <info>
+                        <p>View the test results at
+                                    <userinput>http://<varname>&lt;cluster_node_IP&gt;</varname>:<varname>&lt;node_port&gt;</varname>/<varname>&lt;test_topology_name&gt;</varname>/<varname>&lt;test_topology_name&gt;</varname>.html</userinput>,
+                            where <varname>&lt;node_port&gt;</varname> is the value you set in step
+                                <xref href="#task_ah2_3ph_sdc/step_ofq_2lq_xdc"/>.</p>
+                        <p>For example, if you executed the test profile named
+                                <codeph>fivenode-mplsoverudp</codeph> on a cluster with node IP
+                            address <codeph>10.0.0.100</codeph> and node port
+                            <codeph>30000</codeph>, you'll be able to see the results at
+                                <userinput>http://10.0.0.100:30000/fivenode-mplsoverudp/fivenode-mplsoverudp.html</userinput>.</p>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

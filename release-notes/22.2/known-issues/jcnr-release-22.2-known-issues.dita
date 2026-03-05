@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b0836fd7d6536646-294b527a-181238eba6d--7e8f" xml:lang="en-US">
+  <title>Known-Limitations</title>
+  <prolog>
+    <author>probbins</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Learn about known limitations in the JCNR 22.2 Beta release.</p>
+    <section id="section_wlq_1tl_5rb">
+      <title>cRPD and JCNR-vRouter</title>
+      <ul id="ul_tgz_gfw_15b">
+        <li>
+          <p><b>JCNR-2276: MBUF memory pool leak</b>–When packetgen pods are deleted and re-created
+            repeatedly soon after traffic is applied, an mbuf mempool leak is observed. </p>
+        </li>
+        <li>
+          <p><b>JCNR-2205: L2 rate limiting does not work when configured for more than 1000000
+              Bps</b>–If rate limiting is configured for more that 1000000 Bps, JCNR-vRouter will
+            only rate limit at 1000000 Bps.</p>
+        </li>
+        <li>
+          <p><b>JCNR-2043: DPDK bond interface can fail to come up</b>–If the physical interface
+            (PF) link is down, a VF interface based on that PF interface does not come up.</p>
+        </li>
+        <li>
+          <p><b>JCNR-2400: Misleading Lic notification seen : LICENSE_TOKEN_REFRESH_FAILURE -
+              License token refresh of feature 243 and quantity 1 has failed due to license
+              deletion</b>–This notification can appear when adding or deleting pods. It is safe to
+            ignore this notification.</p>
+        </li>
+        <li>
+          <p><b>JCNR-2340: All cloud-native router Pods use a UTC timestamp when recording syslog
+              entries</b>–This is a known issue. Manual conversion of timesamps from UTC to system
+            local time is required at this time.</p>
+        </li>
+        <li>
+          <p><b>JCNR-2428: Default VLAN list (1-4094) is applied to the interface if vlanIdList is
+              specified in the network attachment definition (NAD) file</b>–The effect of this issue
+            is that the interface may get traffic from unintended VLANs. You can apply the
+            vlanIdList in the Pod YAML file rather than the NAD file to avoid this behavior.</p>
+        </li>
+        <li>
+          <p><b>JCNR-2423: vRouter Pod crashes when traffic loop is present due to
+              misconfiguration</b>–The traffic loop causes continuous MAC move events between bond
+            and switch interface.</p>
+        </li>
+        <li>
+          <p><b>JCNR-2404: Workload Pod stuck in ContainerCreating state</b>–In some rare instances,
+            the cRPD mgd-api daemon fails to accept connection requests. Restart the mgd-api daemon
+            manually to resolve the issue.</p>
+        </li>
+        <li>
+          <p><b>JCNR-2291: contrail-k8s-deployer Pod stuck in error state</b>–If changes are made to
+            the vRouter section of the <filepath>values.yaml</filepath> file, and then the
+              <filepath>helm upgrade jcnr</filepath> command is run, the Pod enters error state.
+            Helm upgrade command is not currently supported.</p>
+        </li>
+        <li>
+          <p><b>JCNR-1413: All interfaces on host shown in cRPD</b>–If you use the cRPD CLI and run
+            a show interfaces command like <codeph>show interfaces routing</codeph>, the system
+            displays all interfaces known to the host, even those that do not belong to Juniper
+            Cloud-Native Router.</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

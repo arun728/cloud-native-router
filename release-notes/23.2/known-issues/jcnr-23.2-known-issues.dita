@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7868" xml:lang="en-US">
+  <title>Known Limitations</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section describes issues and limitations present in Juniper Cloud-Native Router release
+      23.2.</p>
+    <section id="section_zqk_5dh_xvb">
+      <title>Known Issues and Limitations in Juniper Cloud-Native Router Release 23.2</title>
+      <ul id="ul_k4r_hwv_ywb">
+        <!--23.2 known issues-->
+        <li>
+          <p><b>JCNR-4348:</b>
+            <b>IPv4 and IPv6 traceroute via JCNR is not working with bgp unnumbered
+            underlay.</b>—When JCNR is deployed between two provider edge routers, the IPv4 and IPv6
+            traceroute does not work with BGP underlay. In case of BGP unnumbered, interfaces don’t
+            have v4 or v6 routable addresses. So, JCNR should generate TTL expiry error packets with
+            source address as vrf loopback address. However, currently JCNR only supports one
+            loopback in global vrf. </p>
+        </li>
+        <li>
+          <p><b>JCNR-4346</b>: <b>The vrouter deployment fails in L3 mode if Networkmanager is
+              enabled for the interfaces assigned to JCNR—</b>The vRouter deployment fails in L3
+            mode with the following error message: <codeph>error creating TAP interface bond0:
+              Invalid argument</codeph>. The Networkmanager must be disabled for the interfaces
+            assigned to JCNR and the bond interface must be manually created. Please review the
+            System Requirements for more detail.</p>
+        </li>
+        <li>
+          <p><b>JCNR-4342: The vRouter does not persist latest interface configuration on pod
+              restart or crash</b>—If interfaces have IP configuration prior to JCNR deployment and
+            post deployment, the interfaces are configured via the cRPD, the vRouter does not
+            persist the latest configuration on pod restart or crash. The latest interface
+            configuration must be manually applied via the cRPD after the vRouter restarts.</p>
+        </li>
+        <li>
+          <p><b>JCNR-4171: Ping between IPv6 kernel pod interfaces intermittently fails</b>—Ping
+            between IPv6 kernel pod interfaces with JCNR deployed as a CNI in L3 mode fails
+            intermittently with <codeph>Destination unreachable: Address unreachable</codeph> error
+            message. It is recommended to disable ipv6 forwarding globally on the host as a
+            workaround.</p>
+        </li>
+        <li>
+          <p><b>JCNR-4145: Link Local Addresses do not persist for non-default VRFs upon cRPD
+              restart</b>—The link local addresses do not persist for non-default VRFs upon the cRPD
+            restart, if the Networkmanager is enabled for interfaces assigned to JCNR. The
+            Networkmanager must be disabled for interfaces assigned to JCNR at the time of
+            deployment. Please review the System Requirements for more detail.</p>
+        </li>
+        <li>
+          <p><b>JCNR-4248: Keepalived cores are generated when VRRP is initially configured in
+              cRPD</b>— When VRRP is initially configured in cRPD or deleted and re-configured,
+            keepalived cores are generated in the <codeph>/var/crash</codeph> directory. </p>
+        </li>
+        <li>
+          <p><b>JCNR-4364: PersistentVolumeClaims (PVCs) and PersistentVolumes (PVs) created by JCNR
+              are not deleted upon uninstallation on AWS EKS deployments</b>—When Helm installs the
+            JCNR charts, including the cRPD statefulset, any PVCs and PVs created are not deleted
+            upon JCNR uninstallation. This is standard Helm behavior. The following additional steps
+            are recommended to clean up JCNR PVCs on EKS when uninstalling: </p>
+          <codeblock>kubectl delete pvc &lt;pvc_name&gt; -n jcnr
+kubectl delete pv &lt;pv_name&gt;  </codeblock>
+          <p>Note that the JCNR PVCs are in the <codeph>jcnr</codeph> namespace, while the PVs have
+              <codeph>StorageClass</codeph> set to <codeph>jcnrstorage</codeph>. </p>
+        </li>
+        <li>
+          <p><b>JCNR-4070: Core path not updated as per values.yaml</b>— The core path is not
+            updated as defined under the <codeph>corePattern</codeph> attribute in values.yaml. The
+              <codeph>core_pattern</codeph> value must be defined on the host before deploying JCNR.
+            Please see System Requirements for more detail.</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

@@ -1,0 +1,1046 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b57ec3e11a771659-723ccab0-18ea33ae17c--7eab" xml:lang="en-US">
+    <title>Example: Create a Kubernetes Cluster and Install JCNR</title>
+    <shortdesc>This is an example on how to create a Kubernetes cluster and install
+        JCNR.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody>
+        <note id="note_a5g_dpz_y1c">
+            <p>To reviewers: Feel free to suggest additions to make this example more interesting
+                and meaningful.</p>
+        </note>
+        <p>We present an example on how to create a Kubernetes cluster and install Cloud-Native
+            Router on it. The cluster consists of a single control plane node and a single worker
+            node. We'll install Cloud-Native Router on the single worker node.</p>
+        <p>We've tested this on VMs running on both a KVM host and a VMWare ESXi host, but the steps
+            can generally apply to bare metal servers and systems with other hypervisors.</p>
+        <p>In preparation for this example, we've set up 3 VMs, each running a freshly-installed
+            Rocky Linux 8.9 OS (minimal ISO) with ssh root access and the same root password. All
+            VMs run on the same KVM/ESXi host.</p>
+        <table colsep="1" frame="all" id="table_gbn_pq1_z1c" rowsep="1">
+            <title>VMs in this Example</title>
+            <tgroup cols="7">
+                <colspec colname="c1" colnum="1" colwidth="0.5*"/>
+                <colspec colname="newCol2" colnum="2" colwidth="1*"/>
+                <colspec colname="newCol3" colnum="3" colwidth="1*"/>
+                <colspec colname="c2" colnum="4" colwidth="0.75*"/>
+                <colspec colname="newCol5" colnum="5" colwidth="1.1*"/>
+                <colspec colname="c3" colnum="6" colwidth="1*"/>
+                <colspec colname="newCol6" colnum="7" colwidth="1*"/>
+                <thead>
+                    <row>
+                        <entry>
+                            <p>VM</p>
+                        </entry>
+                        <entry>
+                            <p>Description</p>
+                        </entry>
+                        <entry>
+                            <p>Tested Configuration<sup>1</sup></p>
+                        </entry>
+                        <entry>
+                            <p>Interfaces<sup>2</sup></p>
+                        </entry>
+                        <entry>
+                            <p>Interface Type<sup>3</sup></p>
+                        </entry>
+                        <entry>
+                            <p>IP Address</p>
+                        </entry>
+                        <entry>
+                            <p>Other Network Settings<sup>4</sup></p>
+                        </entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>
+                            <p>h1</p>
+                        </entry>
+                        <entry>
+                            <p>This is the ansible host where we run kubespray to set up the
+                                cluster.</p>
+                        </entry>
+                        <entry>
+                            <p>Cores: 8</p>
+                            <p>Memory: 8 GB</p>
+                            <p>Disk: 100 GB</p>
+                        </entry>
+                        <entry>
+                            <p>enp1s0</p>
+                        </entry>
+                        <entry>
+                            <p>KVM: virtio</p>
+                            <p>ESXi: VMXNET3</p>
+                        </entry>
+                        <entry>
+                            <p>10.16.0.10/24</p>
+                        </entry>
+                        <entry>
+                            <p>Gateway: 10.16.0.254</p>
+                            <p>DNS: 66.129.233.81</p>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <p>cp1</p>
+                        </entry>
+                        <entry>
+                            <p>This is the Kubernetes control plane node.</p>
+                        </entry>
+                        <entry>
+                            <p>Cores: 8</p>
+                            <p>Memory: 16 GB</p>
+                            <p>Disk: 160 GB</p>
+                        </entry>
+                        <entry>
+                            <p>enp1s0</p>
+                        </entry>
+                        <entry>
+                            <p>KVM: virtio</p>
+                            <p>ESXi: VMXNET3</p>
+                        </entry>
+                        <entry>
+                            <p>10.16.0.11/24</p>
+                        </entry>
+                        <entry>
+                            <p>Gateway: 10.16.0.254</p>
+                            <p>DNS: 66.129.233.81</p>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <p>w1</p>
+                        </entry>
+                        <entry>
+                            <p>This is the Kubernetes worker node where we'll install JCNR.</p>
+                        </entry>
+                        <entry>
+                            <p>Cores: 8</p>
+                            <p>Memory: 16 GB</p>
+                            <p>Disk: 100 GB</p>
+                        </entry>
+                        <entry>
+                            <p>enp1s0</p>
+                        </entry>
+                        <entry>
+                            <p>KVM: virtio</p>
+                            <p>ESXi: VMXNET3</p>
+                        </entry>
+                        <entry>
+                            <p>10.16.0.14/24</p>
+                        </entry>
+                        <entry>
+                            <p>Gateway: 10.16.0.254</p>
+                            <p>DNS: 66.129.233.81</p>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <p/>
+                        </entry>
+                        <entry>
+                            <p/>
+                        </entry>
+                        <entry>
+                            <p/>
+                        </entry>
+                        <entry>
+                            <p>enp2s0</p>
+                        </entry>
+                        <entry>
+                            <p>KVM: virtio</p>
+                            <p>ESXi: E1000E</p>
+                        </entry>
+                        <entry>
+                            <p>unassigned - to be used as a Cloud-Native Router fabric interface</p>
+                        </entry>
+                        <entry>
+                            <p>unassigned - to be used as a Cloud-Native Router fabric interface</p>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry nameend="newCol6" namest="c1">
+                            <p><sup>1</sup>This is the tested configuration and not the minimal
+                                configuration.</p>
+                            <p><sup>2</sup>Interface names may be different on your setup.</p>
+                            <p><sup>3</sup>On KVM, this is the device model. On ESXi, this is the
+                                adapter type.</p>
+                            <p><sup>4</sup>Network settings may be different on your setup. The
+                                10.16.0.254 gateway is the gateway that we set up on the KVM/ESXi
+                                host. The 66.129.233.81 DNS server is one of the DNS servers that we
+                                use in our lab. </p>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+        <p>Furthermore, we've set up the following infrastructure on the KVM/ESXi host:</p>
+        <ul id="ul_lgd_3rz_y1c">
+            <li>
+                <p>A 10.16.0.0/24 network that connects all 3 VMs together on their respective
+                    enp1s0 interfaces.</p>
+            </li>
+            <li>
+                <p>A gateway on the 10.16.0.0/24 network that allows all 3 VMs to reach the Internet
+                    using NAT. We don't cover setting up the gateway in this example because this
+                    depends largely on the infrastructure you're using.</p>
+            </li>
+            <li>
+                <p>A second network that the worker node (w1) connects to on the enp2s0 interface.
+                </p>
+            </li>
+            <li>
+                <p>Default huge page size of 1 GB on the KVM host, <b>with a sufficient number of
+                        hugepages that can be allocated to the VMs</b>. In our example, we'll be
+                    setting up eight 1-GB hugepages on the worker (w1), so you must configure the
+                    KVM host to at least accommodate that.</p>
+            </li>
+        </ul>
+        <p><xref format="dita" href="#xd_b57ec3e11a771659-723ccab0-18ea33ae17c--7eab/fig_ypm_hqz_y1c"/> shows the setup used in this example. The entire setup is running on
+            a single KVM/ESXi host.</p>
+        <fig id="fig_ypm_hqz_y1c">
+            <title>Kubernetes Cluster in this Example</title>
+            <image href="../../images/jcnr-example.png" id="image_qpf_f5p_1bc"/>
+        </fig>
+        <note id="note_e3y_fs1_z1c">
+            <p>The rest of this example refers to these VMs as nodes.</p>
+        </note>
+    </tmbody>
+    <related-links><?oxy-placeholder content="Use the related-links element to include any topic-map level related links. Delete the related-links element if you are not using it."?></related-links>
+    <task id="task_e15_krd_qjb">
+        <title>Prepare All Nodes (h1, cp1, w1)</title>
+        <taskbody>
+            <context id="context_vk1_btz_y1c">This procedure performs configuration common to all
+                nodes. <p>Log in as root to each node and perform the following:</p></context>
+            <steps id="steps_zqh_btz_y1c">
+                <step>
+                    <cmd>Configure NTP (chrony) to use the appropriate NTP server. In this example,
+                        we're using the <codeph>anyntp.juniper.net</codeph> server, but you can use
+                        any other NTP server recommended for your lab.</cmd>
+                    <info><codeblock id="codeblock_txk_gtz_y1c">sed -i 's/^pool 2.rocky.pool.ntp.org/server anyntp.juniper.net/' /etc/chrony.conf</codeblock><codeblock id="codeblock_b4k_htz_y1c">systemctl restart chronyd</codeblock>Check
+                        that the correct NTP server is
+                        used.<codeblock id="codeblock_qtl_htz_y1c">chronyc sources</codeblock></info>
+                </step>
+                <step>
+                    <cmd>Stop and disable firewalld.</cmd>
+                    <info>
+                        <codeblock id="codeblock_qnl_ptz_y1c">systemctl stop firewalld</codeblock>
+                        <codeblock id="codeblock_njc_rtz_y1c">systemctl disable firewalld</codeblock>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_sv1_bf1_z1c">
+        <title>Prepare the Worker Node (w1)</title>
+        <taskbody>
+            <context id="context_cck_df1_z1c">
+                <p>Prepare the worker node (w1) for JCNR. The steps in this procedure generally
+                    follow what is described in <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.4/cloud-native-router-deployment-guide/topics/concept/system-resource-requirements-bms.html" scope="external"/>.</p>
+                <p>In our example, we have a cluster with a single control plane node and a single
+                    worker node. We plan to install Cloud-Native Router only on the worker node.
+                    That's why we're running this procedure on the worker node (w1) only.</p>
+                <p>If you have multiple worker nodes in your setup, then perform this procedure on
+                    all your worker nodes. If you're running Cloud-Native Router on your control
+                    plane node(s), then perform this procedure on your control plane node(s) as
+                    well.</p>
+                <p>Log in as root on worker node (w1) and perform the following:</p>
+            </context>
+            <steps id="steps_p2p_df1_z1c">
+                <step>
+                    <cmd>Set up huge pages.</cmd>
+                    <substeps id="substeps_kcd_b5z_y1c">
+                        <substep>
+                            <cmd>Configure grub to allocate eight 1-GB huge pages:</cmd>
+                            <info><codeblock id="codeblock_xmf_c5z_y1c" scale="70">echo GRUB_CMDLINE_LINUX_DEFAULT=\"default_hugepagesz=1G hugepagesz=1G hugepages=8 intel_iommu=on iommu=pt\" &gt;&gt; /etc/default/grub</codeblock>Ensure
+                                your KVM host has sufficient hugepages to back this request.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Rocky Linux 8.9 does not come with an update-grub utility, so we'll
+                                create one.</cmd>
+                            <info><codeblock id="codeblock_vh1_n5z_y1c">tee -a /usr/sbin/update-grub &lt;&lt; EOF
+#!/bin/sh
+set -e
+exec grub2-mkconfig -o /boot/grub2/grub.cfg "$@"
+EOF
+</codeblock><codeblock id="codeblock_egg_r5z_y1c">chmod +x /usr/sbin/update-grub</codeblock>This
+                                utility simply calls grub2-mkconfig.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Update grub.</cmd>
+                            <info>
+                                <codeblock id="codeblock_ivl_v5z_y1c">update-grub</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Install iproute.</cmd>
+                    <info>
+                        <codeblock id="codeblock_lsm_ntz_y1c">dnf install -y iproute-tc</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Configure the OS to load VLAN kernel modules.</cmd>
+                    <info>
+                        <codeblock id="codeblock_mrc_bwz_y1c">tee -a /etc/modules-load.d/vlan.conf &lt;&lt; EOF
+8021q
+EOF</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Configure the OS to load VFIO kernel modules.</cmd>
+                    <info>
+                        <codeblock id="codeblock_oxg_mwz_y1c">tee -a /etc/modules-load.d/vfio.conf &lt;&lt; EOF
+vfio
+vfio-pci
+EOF</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Configure the OS to load the kernel modules required by CRPD.</cmd>
+                    <info>
+                        <codeblock id="codeblock_l1l_qwz_y1c">tee -a /etc/modules-load.d/crpd.conf &lt;&lt; EOF
+tun
+fou
+fou6
+ipip
+ip_tunnel
+ip6_tunnel
+mpls_gso
+mpls_router
+mpls_iptunnel
+vrf
+vxlan
+EOF</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Exclude Cloud-Native Router interfaces from NetworkManager control. In our
+                        example, this is the enp2s0 interface. If you have multiple interfaces to
+                        exclude, simply add them to the same line and separate each by a
+                        space.</cmd>
+                    <info><codeblock id="codeblock_qbg_wwz_y1c">tee -a /etc/NetworkManager/conf.d/crpd.conf &lt;&lt; EOF
+[keyfile]
+unmanaged-devices+=interface-name:enp2s0
+EOF</codeblock>In our example, the enp1s0 interface attaches to the 10.16.0.0/24
+                        network and the enp2s0 is the Cloud-Native Router fabric interface. We want
+                        NetworkManager to control enp1s0 but not enp2s0.</info>
+                </step>
+                <step>
+                    <cmd>Configure sysctl.conf.</cmd>
+                    <info>
+                        <codeblock id="codeblock_lds_hxz_y1c">tee -a /etc/sysctl.conf &lt;&lt; EOF
+kernel.core_pattern=/var/crash/core_%e_%p_%i_%s_%h_%t.gz
+net.ipv6.conf.default.addr_gen_mode=0
+net.ipv6.conf.all.addr_gen_mode=0
+net.ipv6.conf.default.autoconf=0
+net.ipv6.conf.all.autoconf=0
+EOF</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Reboot.</cmd>
+                    <info>
+                        <codeblock id="codeblock_spq_3xz_y1c">reboot</codeblock>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_ykm_zxz_y1c">
+        <title>Install Kubespray and Create the Cluster (h1)</title>
+        <taskbody>
+            <context id="context_etj_dyz_y1c">There are different ways to create a Kubernetes
+                cluster. In this example, we'll use kubespray.</context>
+            <steps id="steps_bxx_dyz_y1c">
+                <step>
+                    <cmd>Generate an SSH key to use to log in to the cluster nodes.</cmd>
+                    <substeps id="substeps_tfc_vzz_y1c">
+                        <substep>
+                            <cmd>Generate an SSH key.</cmd>
+                            <info>
+                                <codeblock id="codeblock_irb_wzz_y1c">ssh-keygen</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Copy the key to the cluster nodes.</cmd>
+                            <info>
+                                <codeblock id="codeblock_uc2_xzz_y1c">ssh-copy-id -i ~/.ssh/id_rsa.pub root@10.16.0.11</codeblock>
+                                <codeblock id="codeblock_yv1_yzz_y1c">ssh-copy-id -i ~/.ssh/id_rsa.pub root@10.16.0.14</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Install git.</cmd>
+                    <info>
+                        <codeblock id="codeblock_etq_2yz_y1c">dnf install -y git</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Clone the kubespray repository. In this example, we're using kubespray
+                        version 2.22.</cmd>
+                    <info>
+                        <codeblock id="codeblock_ffm_gyz_y1c">git clone https://github.com/kubernetes-sigs/kubespray -b release-2.22</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Install python.</cmd>
+                    <info>
+                        <codeblock id="codeblock_cjt_jyz_y1c">dnf install -y python38</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Install the packages required by this version of kubespray. We'll perform
+                        this step in a Python virtual environment.</cmd>
+                    <substeps id="substeps_o5v_nyz_y1c">
+                        <substep>
+                            <cmd>Set up the virtual environment.</cmd>
+                            <info><codeblock id="codeblock_axf_pyz_y1c">cd kubespray</codeblock><codeblock id="codeblock_gyj_qyz_y1c">python3 -m venv env</codeblock><codeblock id="codeblock_csb_ryz_y1c">source env/bin/activate</codeblock>The
+                                    <filepath>(env)</filepath> prepended to your usual Linux command
+                                prompt indicates that you're in a virtual environment.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Install the required packages.</cmd>
+                            <info>
+                                <codeblock id="codeblock_hls_tyz_y1c">pip3 install -r requirements.txt</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                    <info>Continue in this Python virtual environment for the rest of this
+                            procedure.<note id="note_jcz_gmq_1bc">
+                            <p>The remainder of this procedure assumes you're in the
+                                    <filepath>kubespray</filepath> directory.</p>
+                        </note></info>
+                </step>
+                <step>
+                    <cmd>Use the inventory builder to create the inventory file that describes the
+                        cluster. Make sure you specify the correct IP addresses for your
+                        setup.</cmd>
+                    <info><codeblock id="codeblock_bys_yyz_y1c">cp -r inventory/sample inventory/mycluster</codeblock><codeblock id="codeblock_nrj_zyz_y1c">declare -a IPS=(10.16.0.11 10.16.0.14)</codeblock><codeblock id="codeblock_jg1_1zz_y1c" scale="80">CONFIG_FILE=inventory/mycluster/hosts.yml python3 contrib/inventory_builder/inventory.py ${IPS[@]}</codeblock>This
+                        creates an inventory file in <filepath>inventory/mycluster</filepath> called
+                            <filepath>hosts.yml</filepath>. This is a working inventory file that
+                        you can customize to your needs. </info>
+                </step>
+                <step>
+                    <cmd>Customize the inventory file that you just created.</cmd>
+                    <info><codeblock id="codeblock_os2_hzz_y1c">vi inventory/mycluster/hosts.yml</codeblock>Here's
+                        an example of the inventory file we're
+                            using:<codeblock id="codeblock_hjt_jzz_y1c">all:
+  hosts:
+    node1:
+      ansible_host: 10.16.0.11
+      ip: 10.16.0.11
+      access_ip: 10.16.0.11
+    node2:
+      ansible_host: 10.16.0.14
+      ip: 10.16.0.14
+      access_ip: 10.16.0.14
+  vars:
+    ansible_host: root
+    host_key_checking: false
+  children:
+    kube_control_plane:
+      hosts:
+        node1:
+    kube_node:
+      hosts:
+        node1:
+        node2:
+    etcd:
+      hosts:
+        node1:
+    k8s_cluster:
+      children:
+        kube_control_plane:
+        kube_node:
+    calico_rr:
+      hosts: {}
+</codeblock><codeph>node1</codeph> is the cp1 node and
+                            <codeph>node2</codeph> is the w1 node.<note id="note_uz5_rw2_dbc">
+                            <p>We modified the generated inventory file by adding a couple of
+                                ansible <codeph>vars</codeph> and removing <codeph>node2</codeph>
+                                from the <codeph>kube_control_plane</codeph>.</p>
+                        </note></info>
+                </step>
+                <step>
+                    <cmd>Check that ansible can reach and log in to the nodes specified in the
+                        inventory file.</cmd>
+                    <info>
+                        <codeblock id="codeblock_ndr_nzz_y1c">ansible -i inventory/mycluster/hosts.yml -m ping all</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Configure the cluster.</cmd>
+                    <info>Set the following in
+                            <filepath>inventory/mycluster/group_vars/k8s_cluster/k8s-cluster.yml</filepath>.
+                        The following lines are not contiguous in the file. Look for and modify them
+                        in
+                        place.<codeblock id="codeblock_ust_f11_z1c">kube_network_plugin_multus: true
+cluster_name: mycluster.local
+enable_nodelocaldns: false
+kubeconfig_localhost: true
+kubectl_localhost: true
+</codeblock>Keep all other parameters at their defaults.</info>
+                </step>
+                <step>
+                    <cmd>Create the cluster.</cmd>
+                    <info>
+                        <codeblock id="codeblock_ogk_j11_z1c">ansible-playbook -i inventory/mycluster/hosts.yml cluster.yml</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>After the cluster comes up (30 mins or more), copy the resulting artifacts
+                        to the appropriate directories.</cmd>
+                    <substeps id="substeps_sxl_n11_z1c">
+                        <substep>
+                            <cmd>Copy the kubeconfig to the default kubeconfig directory.</cmd>
+                            <info>
+                                <codeblock id="codeblock_sfv_411_z1c">mkdir ~/.kube</codeblock>
+                                <codeblock id="codeblock_bgg_q11_z1c">cp inventory/mycluster/artifacts/admin.conf ~/.kube/config</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Copy the kubectl binary.</cmd>
+                            <info>
+                                <codeblock id="codeblock_o5g_v11_z1c">cp inventory/mycluster/artifacts/kubectl /usr/local/bin</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Check that you've copied the artifacts correctly and that the cluster is
+                        up.</cmd>
+                    <info>
+                        <codeblock id="codeblock_gq1_1b1_z1c">kubectl get pods -A</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>If everything is up and running, deactivate the Python virtual
+                        environment.</cmd>
+                    <info><codeblock id="codeblock_x1d_ly1_z1c">deactivate</codeblock>The
+                            <filepath>(env)</filepath> should no longer appear in the Linux command
+                        prompt.</info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_l1g_2b1_z1c">
+        <title>Install JCNR (h1)</title>
+        <taskbody>
+            <context id="context_t3m_fb1_z1c">Prior to installing JCNR, we recommend that you take
+                snapshots of the cluster node VMs (cp1, w1) so you can easily roll back to a clean
+                Kubernetes cluster if the Cloud-Native Router installation goes awry.<note id="note_ddm_vs2_dbc">
+                    <p>The Juniper Networks <uicontrol>enterprise-hub</uicontrol> repository is
+                            <codeph>enterprise-hub.juniper.net</codeph> when accessed from outside
+                        the Juniper Networks intranet. When accessed from inside Juniper Networks
+                        (for example, from our labs), use <codeph>enterprise-hub.jnpr.net</codeph>.
+                        Make sure to update the <uicontrol>enterprise-hub</uicontrol> reference in
+                        the installation Helm chart <filepath>values.yaml</filepath> accordingly
+                        (step <xref format="dita" href="#task_l1g_2b1_z1c/step_ujk_vt2_dbc"/>).</p>
+                </note></context>
+            <steps id="steps_v2s_fb1_z1c">
+                <step>
+                    <cmd>Download the <uicontrol>JCNR Tarball with helm charts</uicontrol> from the
+                        Juniper Networks Software Download <xref format="html" href="https://support.juniper.net/support/downloads/?p=juniper-cloud-native-router" scope="external">site</xref>.</cmd>
+                    <substeps id="substeps_tkr_rz2_dbc">
+                        <substep>
+                            <cmd>Install wget.</cmd>
+                            <info>
+                                <codeblock id="codeblock_vjl_sz2_dbc">dnf install -y wget</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Follow the instructions on the download site. Ensure you enclose
+                                the download URL in double quotes:</cmd>
+                            <info>
+                                <codeblock id="codeblock_ddy_wz2_dbc">wget "<varname>&lt;download_url&gt;</varname>"</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Gunzip the downloaded software package.</cmd>
+                    <info><codeblock id="codeblock_gts_3b1_z1c">tar -xzvf Juniper_Cloud_Native_Router_24.1-108.tar.gz</codeblock><note id="note_vgl_cfq_1bc">
+                            <p>Cloud-Native Router release 24.1 is not generally available at the
+                                time of the writing of this procedure. Use release 23.4 if release
+                                24.1 is not available.</p>
+                        </note>Change into the
+                            <filepath>Juniper_Cloud_Native_Router_24.1-108</filepath>
+                        directory.<codeblock id="codeblock_ish_nxq_1bc">cd Juniper_Cloud_Native_Router_24.1-108</codeblock>The
+                        rest of this procedure assumes you're in this directory.</info>
+                </step>
+                <step>
+                    <cmd>Populate <filepath>secrets/jcnr-secrets.yaml</filepath> with your
+                        base64-encoded root password.</cmd>
+                    <substeps id="substeps_cbd_bnq_1bc">
+                        <substep>
+                            <cmd>Encode your root password in base64.</cmd>
+                            <info><codeblock id="codeblock_htb_cnq_1bc">echo <varname>&lt;root_password&gt;</varname> | base64 -w0</codeblock>where
+                                    <varname>&lt;root_password&gt;</varname> is the root password of
+                                the nodes (cp1, w1) in your cluster. The output of this command is
+                                your base64-encoded root password.<note id="note_nls_lnq_1bc">
+                                    <p>We don't recommend using this method in a real system because
+                                        the root password will be visible in the Linux command
+                                        history.</p>
+                                </note></info>
+                        </substep>
+                        <substep>
+                            <cmd>Copy and paste the output into
+                                    <filepath>secrets/jcnr-secrets.yaml</filepath>.</cmd>
+                            <info>
+                                <codeblock id="codeblock_dxp_3nq_1bc">root-password: &lt;add your password in base64 format&gt;</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Populate <filepath>secrets/jcnr-secrets.yaml</filepath> with your
+                        base64-encoded CRPD license.</cmd>
+                    <info><p>Your license might look something like
+                        this:</p><codeblock id="codeblock_tzr_4gq_1bc">
+Issue Date          : yyyy
+Expiry Date         : yyyy
+HW Serial Number    : N/A
+SSRN                : yyyy
+Feature             : yyyy
+Quantity            : 1
+License Type        : yyyy
+License Key         :
+
+xxxxxxxxxxxxxxxxxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx
+                      xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx
+                      xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx
+                      xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx
+                      xxxxxx x
+</codeblock>Encode and copy it into
+                            <filepath>secrets/jcnr-secrets.yaml</filepath> as follows:</info>
+                    <substeps id="substeps_fks_2hq_1bc">
+                        <substep>
+                            <cmd>Create a file that contains the license key on a single line. In
+                                this example, we'll name the file
+                                    <filepath>license-key-single-line.txt</filepath>.</cmd>
+                            <info>
+                                <codeblock id="codeblock_uzr_4gq_1bc" scale="80">xxxxxxxxxxxxxxxxxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx ...</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Encode your single-line license in base64:</cmd>
+                            <info><codeblock id="codeblock_ppb_tgq_1bc">base64 -w0 license-key-single-line.txt</codeblock>The
+                                output of this command is your base64-encoded license key. </info>
+                        </substep>
+                        <substep>
+                            <cmd>Copy and paste the output into
+                                    <filepath>secrets/jcnr-secrets.yaml</filepath>.</cmd>
+                            <info>
+                                <codeblock id="codeblock_cyw_qhq_1bc">  crpd-license: |
+    &lt;add your license in base64 format&gt;</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Apply the Cloud-Native Router secrets to your cluster.</cmd>
+                    <info>
+                        <codeblock id="codeblock_adj_xhq_1bc">kubectl apply -f secrets/jcnr-secrets.yaml</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Encode your <codeph>enterprise-hub.jnpr.net</codeph> credentials in
+                        base64.</cmd>
+                    <info>
+                        <note id="note_hjd_m3d_dbc">
+                            <p>Follow this step only if you want your cluster to pull Cloud-Native
+                                Router images from the <codeph>enterprise-hub.jnpr.net</codeph>
+                                repository. If you want your cluster to use the images included in
+                                the downloaded Cloud-Native Router software package instead, then
+                                skip this step and follow the instuctions in <xref format="dita" href="#task_vcb_tzc_dbc"/>.</p>
+                        </note>
+                        <p>The Cloud-Native Router Helm chart uses your
+                                <codeph>enterprise-hub.jnpr.net</codeph> credentials to pull images
+                            from the <codeph>enterprise-hub.jnpr.net</codeph> repository.</p>
+                        <p>The Cloud-Native Router Helm chart expects your credentials to be in a
+                            specific format. One way of ensuring your credentials are in the proper
+                            format is to use docker (podman).</p>
+                    </info>
+                    <substeps id="substeps_bz2_trq_1bc">
+                        <substep>
+                            <cmd>Install docker (podman).</cmd>
+                            <info>
+                                <codeblock id="codeblock_rwh_dtq_1bc">dnf install -y docker</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Create a <filepath>.docker</filepath> directory. This is where
+                                we'll store our credentials.</cmd>
+                            <info>
+                                <codeblock id="codeblock_xwr_lsq_1bc">mkdir ~/.docker</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Log in to <codeph>enterprise-hub.jnpr.net</codeph>.</cmd>
+                            <info><codeblock id="codeblock_nby_nsq_1bc">docker login enterprise-hub.jnpr.net --authfile=/root/.docker/config.json</codeblock>Enter
+                                your <codeph>enterprise-hub.jnpr.net</codeph> username and password
+                                when prompted. Your credentials are now stored in
+                                    <filepath>~/.docker/config.json</filepath>.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Encode your credentials in base64.</cmd>
+                            <info><codeblock id="codeblock_mcq_ysq_1bc">base64 -w0 ~/.docker/config.json</codeblock>The
+                                output of this command is your base64-encoded credentials. You'll
+                                use this in the next step.</info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step id="step_ujk_vt2_dbc">
+                    <cmd>Configure the main helm chart.</cmd>
+                    <info>In <filepath>helmchart/values.yaml</filepath>, look for the following
+                        lines and configure as follows:<note id="note_qyh_23q_1bc">
+                            <p>We're only showing relevant excerpts from
+                                    <filepath>helmchart/values.yaml</filepath>. The lines below are
+                                not necessarily contiguous in the file nor should you make them
+                                contiguous. Just search for the indicated parameters and modify them
+                                in place within the file. Leave other parameters at their default
+                                values.</p>
+                        </note><codeblock id="codeblock_b1f_4b1_z1c">registry: enterprise-hub.jnpr.net/
+  imagePullSecret:
+    registryCredentials: <varname>&lt;base64-encoded credentials for enterprise-hub.jnpr.net&gt;</varname>
+    secretName: regcred
+  replicas: "1"
+  fabricInterface:
+  - enp2s0:
+      ddp: "off"
+  nodeAffinity:
+  - key: kubernetes.io/hostname
+    operator: In
+    values:
+    - node2
+  vRouterDeployerPort: 8082
+  telemetryExporter:
+    metricsPort: 8070
+    logLevel: info</codeblock><note id="note_b3d_bjd_dbc">
+                            <p>If you want your cluster to pull images from
+                                    <codeph>enterprise-hub.jnpr.net</codeph>, then replace
+                                        <codeph><varname>&lt;base64-encoded credentials for
+                                        enterprise-hub.jnpr.net&gt;</varname></codeph> with your
+                                base64-encoded <codeph>enterprise-jnpr.net</codeph> credentials from
+                                the previous step.</p>
+                            <p>If you want your cluster to use the images included in the downloaded
+                                Cloud-Native Router software package, comment out
+                                    <codeph>imagePullSecret</codeph>,
+                                    <codeph>registryCredentials</codeph>, and
+                                    <codeph>secretName</codeph> as below (but continue to leave
+                                    <codeph>registry: enterprise-hub.jnpr.net/</codeph>
+                                uncommented):</p>
+                            <codeblock id="codeblock_xw1_sjd_dbc">registry: enterprise-hub.jnpr.net/
+  #imagePullSecret:
+    #registryCredentials: <varname>&lt;base64-encoded credentials for enterprise-hub.jnpr.net&gt;</varname>
+    #secretName: regcred</codeblock>
+                        </note><note id="note_fh2_djq_1bc">
+                            <p>The <codeph>telemetryExporter</codeph> section is supported starting
+                                in release 24.1. Don't add it if you're running release 23.4.</p>
+                        </note></info>
+                </step>
+                <step>
+                    <cmd>Install the Cloud-Native Router helm chart.</cmd>
+                    <substeps id="substeps_gw2_ntq_1bc">
+                        <substep>
+                            <cmd>First, install Helm by downloading the
+                                    <filepath>get_helm.sh</filepath> script to a temporary directory
+                                of your choosing.</cmd>
+                            <info><codeblock id="codeblock_j5p_4tq_1bc">curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3</codeblock><codeblock id="codeblock_k5p_4tq_1bc">chmod +x get_helm.sh</codeblock>Run
+                                this script to install
+                                Helm.<codeblock id="codeblock_l5p_4tq_1bc">./get_helm.sh</codeblock></info>
+                        </substep>
+                        <substep>
+                            <cmd>Install JCNR.</cmd>
+                            <info>
+                                <codeblock id="codeblock_vts_rb1_z1c">cd helmchart</codeblock>
+                                <codeblock id="codeblock_oy1_wb1_z1c">helm install jcnr .</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>If the vrouter doesn't come up after a few minutes, then this may indicate
+                        that no iommu is available in your system. Log in to the worker node (w1)
+                        and enable noiommu:</cmd>
+                    <substeps id="substeps_mcv_bc1_z1c">
+                        <substep>
+                            <cmd>Log in to the worker node (w1) and enable noiommu:</cmd>
+                            <info>
+                                <codeblock id="codeblock_bc1_fc1_z1c">ssh 10.16.0.14</codeblock>
+                            </info>
+                            <info>
+                                <codeblock id="codeblock_zsv_yb1_z1c">echo 1 &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Back on h1, delete the vrouter pod, so that the cluster can create
+                                a new one.</cmd>
+                            <info>
+                                <codeblock id="codeblock_fth_3c1_z1c">kubectl delete pod contrail-vrouter-nodes-vrdpdk-<varname>&lt;xxx&gt;</varname> -n contrail</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Check your cluster again.</cmd>
+                    <info>
+                        <codeblock id="codeblock_u1t_p21_z1c">kubectl get pods -A</codeblock>
+                        <codeblock id="codeblock_ltn_rck_1bc" scale="90">
+NAMESPACE         NAME                                      READY   STATUS    RESTARTS       AGE
+contrail-deploy   contrail-k8s-deployer-59df6699c4-tgpzk    1/1     Running   0              5d
+contrail          contrail-vrouter-nodes-8xkgt              2/2     Running   5 (5d ago)     5d
+contrail          contrail-vrouter-nodes-vrdpdk-ntsvt       1/1     Running   0              5d
+jcnr              kube-crpd-worker-sts-0                    1/1     Running   7 (5d ago)     5d
+jcnr              syslog-ng-qz46t                           1/1     Running   0              5d
+kube-system       calico-kube-controllers-6dfcdfb99-xbkgt   1/1     Running   1 (5d1h ago)   5d3h
+kube-system       calico-node-v7pxr                         1/1     Running   1 (5d1h ago)   5d3h
+kube-system       calico-node-zvd7c                         1/1     Running   1 (5d1h ago)   5d3h
+kube-system       coredns-645b46f4b6-6dt4z                  1/1     Running   1 (5d1h ago)   5d3h
+kube-system       coredns-645b46f4b6-fgwr5                  1/1     Running   1 (5d1h ago)   5d3h
+kube-system       dns-autoscaler-659b8c48cb-kl995           1/1     Running   1 (5d1h ago)   5d3h
+kube-system       kube-apiserver-node1                      1/1     Running   3 (5d1h ago)   5d3h
+kube-system       kube-controller-manager-node1             1/1     Running   4 (5d1h ago)   5d3h
+kube-system       kube-multus-ds-amd64-j8rfn                1/1     Running   1 (5d1h ago)   5d2h
+kube-system       kube-multus-ds-amd64-tf2zn                1/1     Running   1 (5d1h ago)   5d2h
+kube-system       kube-proxy-jxb4x                          1/1     Running   1 (5d1h ago)   5d1h
+kube-system       kube-proxy-tpx2d                          1/1     Running   1 (5d1h ago)   5d1h
+kube-system       kube-scheduler-node1                      1/1     Running   2 (5d1h ago)   5d3h
+kube-system       nginx-proxy-node2                         1/1     Running   1 (5d1h ago)   5d3h
+kube-system       nodelocaldns-497z5                        1/1     Running   1 (5d1h ago)   5d3h
+kube-system       nodelocaldns-mqmwj                        1/1     Running   1 (5d1h ago)   5d3h
+</codeblock>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+        <task id="task_vcb_tzc_dbc">
+            <title>Import Cloud-Native Router Images from the Downloaded Software Package
+                (w1)</title>
+            <taskbody>
+                <context id="context_s4j_xzc_dbc">Use this procedure to import Cloud-Native Router
+                    images from the downloaded Cloud-Native Router software package to the
+                    containerd runtime.<p>Your cluster can pull Cloud-Native Router images from the
+                            <codeph>enterprise-hub.jnpr.net</codeph> repository or your cluster can
+                        use the Cloud-Native Router images that are included in the downloaded
+                        Cloud-Native Router software package.</p><p>This latter option is useful if
+                        your cluster doesn't have access to the Internet or if you want to set up
+                        your own repository.</p><p>Setting up your own repository is beyond the
+                        scope of this document, but your cluster can still use the included images
+                        if you manually import them to the containerd runtime on each cluster node
+                        running JCNR. We show you how to do this in the procedure below.</p><note id="note_rfr_nfd_dbc">
+                        <p>We'll import the images to the containerd runtime on the w1 node only
+                            because that's the only node where we're installing JCNR. If you're
+                            installing Cloud-Native Router on the control plane node or on other
+                            worker nodes, then repeat this procedure on all other nodes where you're
+                            installing JCNR.</p>
+                    </note>
+                </context>
+                <steps id="steps_hst_ldd_dbc">
+                    <step>
+                        <cmd>SSH to the w1 node as root.</cmd>
+                    </step>
+                    <step>
+                        <cmd>Make an <filepath>images</filepath> directory to hold the images.</cmd>
+                        <info>
+                            <codeblock id="codeblock_rnt_dgd_dbc">mkdir ~/images</codeblock>
+                        </info>
+                    </step>
+                    <step>
+                        <cmd>Copy the images from h1.</cmd>
+                        <info>Assuming the images are in
+                                <filepath>/root/Juniper_Cloud_Native_Router_24.1-108/images/jcnr-images.tar.gz</filepath>
+                            on
+                            h1:<codeblock id="codeblock_dky_fgd_dbc" scale="80">scp root@10.16.0.10:/root/Juniper_Cloud_Native_Router_24.1-108/images/jcnr-images.tar.gz ~/images</codeblock></info>
+                    </step>
+                    <step>
+                        <cmd>Gunzip the images package.</cmd>
+                        <info>
+                            <codeblock id="codeblock_syg_kgd_dbc">gunzip ~/images/jcnr-images.tar.gz</codeblock>
+                            <codeblock id="codeblock_ep1_pgd_dbc">ls ~/images
+jcnr-images.tar</codeblock>
+                        </info>
+                    </step>
+                    <step>
+                        <cmd>Import the images to the containerd runtime.</cmd>
+                        <info>
+                            <codeblock id="codeblock_yqr_sgd_dbc">ctr -n k8s.io images import /root/images/jcnr-images.tar</codeblock>
+                        </info>
+                    </step>
+                    <step>
+                        <cmd>Check that the images have been imported.</cmd>
+                        <info>
+                            <codeblock id="codeblock_j3s_vgd_dbc">ctr -n k8s.io images ls</codeblock>
+                        </info>
+                    </step>
+                </steps>
+            </taskbody>
+        </task>
+    </task>
+    <task id="task_nlc_tck_1bc">
+        <title>Verify Your Installation (h1)</title>
+        <taskbody>
+            <context id="context_wcc_yck_1bc">We'll use basic kubectl commands to check our
+                installation.</context>
+            <steps id="steps_rgj_zck_1bc">
+                <step>
+                    <cmd>Check the pods using the wide option.</cmd>
+                    <info>
+                        <codeblock id="codeblock_c4s_22k_1bc">kubectl get pods -A -owide</codeblock>
+                        <codeblock id="codeblock_t5c_22k_1bc" scale="60">
+NAMESPACE         NAME                                      READY   STATUS    RESTARTS       AGE    IP               NODE    NOMINATED NODE   READINESS GATES
+contrail-deploy   contrail-k8s-deployer-59df6699c4-tgpzk    1/1     Running   0              5d1h   10.16.0.14       node2   &lt;none&gt;           &lt;none&gt;
+contrail          contrail-vrouter-nodes-8xkgt              2/2     Running   5 (5d ago)     5d1h   10.16.0.14       node2   &lt;none&gt;           &lt;none&gt;
+contrail          contrail-vrouter-nodes-vrdpdk-ntsvt       1/1     Running   0              5d     10.16.0.14       node2   &lt;none&gt;           &lt;none&gt;
+jcnr              kube-crpd-worker-sts-0                    1/1     Running   7 (5d ago)     5d1h   10.16.0.14       node2   &lt;none&gt;           &lt;none&gt;
+jcnr              syslog-ng-qz46t                           1/1     Running   0              5d1h   10.16.0.14       node2   &lt;none&gt;           &lt;none&gt;
+kube-system       calico-kube-controllers-6dfcdfb99-xbkgt   1/1     Running   1 (5d1h ago)   5d3h   10.233.75.4      node2   &lt;none&gt;           &lt;none&gt;
+kube-system       calico-node-v7pxr                         1/1     Running   1 (5d1h ago)   5d3h   10.16.0.14       node2   &lt;none&gt;           &lt;none&gt;
+kube-system       calico-node-zvd7c                         1/1     Running   1 (5d1h ago)   5d3h   10.16.0.11       node1   &lt;none&gt;           &lt;none&gt;
+kube-system       coredns-645b46f4b6-6dt4z                  1/1     Running   1 (5d1h ago)   5d3h   10.233.75.3      node2   &lt;none&gt;           &lt;none&gt;
+kube-system       coredns-645b46f4b6-fgwr5                  1/1     Running   1 (5d1h ago)   5d3h   10.233.102.132   node1   &lt;none&gt;           &lt;none&gt;
+kube-system       dns-autoscaler-659b8c48cb-kl995           1/1     Running   1 (5d1h ago)   5d3h   10.233.102.131   node1   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-apiserver-node1                      1/1     Running   3 (5d1h ago)   5d3h   10.16.0.11       node1   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-controller-manager-node1             1/1     Running   4 (5d1h ago)   5d3h   10.16.0.11       node1   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-multus-ds-amd64-j8rfn                1/1     Running   1 (5d1h ago)   5d2h   10.16.0.14       node2   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-multus-ds-amd64-tf2zn                1/1     Running   1 (5d1h ago)   5d2h   10.16.0.11       node1   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-proxy-jxb4x                          1/1     Running   1 (5d1h ago)   5d2h   10.16.0.11       node1   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-proxy-tpx2d                          1/1     Running   1 (5d1h ago)   5d2h   10.16.0.14       node2   &lt;none&gt;           &lt;none&gt;
+kube-system       kube-scheduler-node1                      1/1     Running   2 (5d1h ago)   5d3h   10.16.0.11       node1   &lt;none&gt;           &lt;none&gt;
+kube-system       nginx-proxy-node2                         1/1     Running   1 (5d1h ago)   5d3h   10.16.0.14       node2   &lt;none&gt;           &lt;none&gt;
+kube-system       nodelocaldns-497z5                        1/1     Running   1 (5d1h ago)   5d3h   10.16.0.14       node2   &lt;none&gt;           &lt;none&gt;
+kube-system       nodelocaldns-mqmwj                        1/1     Running   1 (5d1h ago)   5d3h   10.16.0.11       node1   &lt;none&gt;           &lt;none&gt;
+</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Check the daemonsets.</cmd>
+                    <info><codeblock id="codeblock_hxs_cdk_1bc">kubectl get ds -A</codeblock><codeblock id="codeblock_t4d_ddk_1bc" scale="70">
+NAMESPACE     NAME                              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR              AGE
+contrail      contrail-vrouter-masters          0         0         0       0            0           &lt;none&gt;                     5d
+contrail      contrail-vrouter-masters-vrdpdk   0         0         0       0            0           &lt;none&gt;                     5d
+contrail      contrail-vrouter-nodes            1         1         1       1            1           &lt;none&gt;                     5d
+contrail      contrail-vrouter-nodes-vrdpdk     1         1         1       1            1           &lt;none&gt;                     5d
+jcnr          syslog-ng                         1         1         1       1            1           &lt;none&gt;                     5d
+kube-system   calico-node                       2         2         2       2            2           kubernetes.io/os=linux     5d3h
+kube-system   kube-multus-ds-amd64              2         2         2       2            2           kubernetes.io/arch=amd64   5d2h
+kube-system   kube-proxy                        2         2         2       2            2           kubernetes.io/os=linux     5d3h
+kube-system   nodelocaldns                      2         2         2       2            2           kubernetes.io/os=linux     5d3h
+</codeblock>From the output, you can see that there is no
+                            <codeph>contrail-vrouter-masters</codeph> daemonset because we installed
+                        Cloud-Native Router on the worker node only.</info>
+                </step>
+                <step>
+                    <cmd>Check the statefulsets.</cmd>
+                    <info><codeblock id="codeblock_fmt_ldk_1bc">kubectl get sts -A</codeblock><codeblock id="codeblock_wlj_mdk_1bc">
+NAMESPACE   NAME                   READY   AGE
+jcnr        kube-crpd-worker-sts   1/1     5d
+</codeblock>CRPD is implemented as a statefulset.</info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_ms2_cv1_z1c">
+        <title>Check the CRPD License (h1)</title>
+        <taskbody>
+            <context id="context_zny_2v1_z1c"/>
+            <steps id="steps_wsn_fv1_z1c">
+                <step>
+                    <cmd>Access the CRPD pod.</cmd>
+                    <info>
+                        <codeblock id="codeblock_hmr_nkk_1bc">kubectl exec -it kube-crpd-worker-sts-0 -n jcnr -- bash</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Once you're in the pod, go into CLI mode.</cmd>
+                    <info>
+                        <codeblock id="codeblock_uk4_nv1_z1c">cli</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Verify that the CRPD license has been installed successfully.</cmd>
+                    <info>
+                        <codeblock id="codeblock_dh1_qv1_z1c">show system license</codeblock>
+                        <p>If this command does not return a valid license, then go to the next step
+                            to add your license.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Add your CRPD license if your license wasn't installed properly.</cmd>
+                    <substeps id="substeps_fn3_mfk_1bc">
+                        <substep>
+                            <cmd>Edit your license key to be all on a single line.</cmd>
+                            <info>Your license file might look like
+                                this:<codeblock id="codeblock_amz_yfk_1bc">
+Issue Date          : yyyy
+Expiry Date         : yyyy
+HW Serial Number    : N/A
+SSRN                : yyyy
+Feature             : yyyy
+Quantity            : 1
+License Type        : yyyy
+License Key         :
+
+xxxxxxxxxxxxxxxxxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx
+                      xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx
+                      xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx
+                      xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx
+                      xxxxxx x
+</codeblock>Create a file that contains the license key on a single
+                                line:<codeblock id="codeblock_g2h_3gk_1bc" scale="80">xxxxxxxxxxxxxxxxxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx xxxxxx ...</codeblock></info>
+                        </substep>
+                        <substep>
+                            <cmd>Apply your license key.</cmd>
+                            <info>From the CLI, enter license input
+                                mode:<codeblock id="codeblock_ahv_hfk_1bc">request system license add terminal</codeblock>Then
+                                copy and paste your single-line license key and follow that with a
+                                    <codeph>&lt;cr&gt;</codeph>. Then use <codeph>&lt;ctrl&gt;
+                                    d</codeph> to exit license input mode.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Confirm that your license was applied.</cmd>
+                            <info>
+                                <codeblock id="codeblock_u4k_ghk_1bc">show system license</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_kkh_pbk_1bc">
+        <title>Configure the Fabric Interface (h1)</title>
+        <taskbody>
+            <context id="context_lkh_pbk_1bc">The fabric interface is the interface that we want
+                Cloud-Native Router to control. We can configure it using CRPD.</context>
+            <steps id="steps_mkh_pbk_1bc">
+                <step>
+                    <cmd>Access the CRPD pod.</cmd>
+                    <info>
+                        <codeblock id="codeblock_ehj_4kk_1bc">kubectl exec -it kube-crpd-worker-sts-0 -n jcnr -- bash</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Once you're in the pod, go into CLI mode.</cmd>
+                    <info>
+                        <codeblock id="codeblock_nkh_pbk_1bc">cli</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Configure the IP address of the fabric interface (enp2s0).</cmd>
+                    <info>For
+                        example:<codeblock id="codeblock_pkh_pbk_1bc">config</codeblock><codeblock id="codeblock_qkh_pbk_1bc">set interfaces enp2s0 unit 0 family inet address 10.17.0.14/24</codeblock><codeblock id="codeblock_ulq_shk_1bc">commit</codeblock></info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

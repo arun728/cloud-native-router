@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b38af575324e42a4-2678ef71-18a5bf4f261--7fe7" xml:lang="en-US">
+  <title>EVPN Type 5 Routing over VXLAN Tunnels</title>
+  <prolog>
+    <author>dgv</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Ethernet Virtual Private Network (EVPN) with Virtual Extensible LAN (VXLAN) Type 5 routing is
+      designed for use in data center and cloud environments to provide efficient and scalable
+      network connectivity for virtualized workloads. It combines the benefits of EVPN and VXLAN to
+      enable flexible and seamless communication between virtual machines (VMs) and physical devices
+      across different IP subnets and locations. Starting with Juniper Cloud-Native Router (JCNR)
+      Release 23.3, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports EVPN Type 5 Routing over VXLAN tunnels.</p>
+    <p>Ethernet Virtual Private Network (EVPN) technology provides a scalable and efficient way to
+      extend Layer 2 and Layer 3 connectivity across multiple sites. EVPN uses Border Gateway
+      Protocol (BGP) to exchange information between Provider Edge (PE) routers, allowing them to
+      learn the location of Ethernet segments and IP prefixes. This allows for the creation of
+      virtual networks that can span multiple sites, while providing traffic separation and
+      isolation through the use of virtual routing and forwarding (VRF) instances. EVPN supports
+      several encapsulation methods, including VXLAN and MPLS, which can be used to transport
+      traffic across the service provider network. </p>
+    <p>VXLAN is a network overlay technology that allows the creation of virtual Layer 2 networks on
+      top of an existing Layer 3 network infrastructure. It extends the reach of Layer 2 segments
+      beyond the confines of a single physical network, which is especially useful in large-scale
+      virtualized environments.</p>
+    <p>EVPN supports two types of routes: MAC Advertisement Route (Type 2) and IP Prefix Route (Type
+      5). Type 2 routes are used to exchange MAC addresses and VLANs between PE routers, while Type
+      5 routes are used to exchange Layer 3 network routes. In EVPN VXLAN, Type 5 routes are used to
+      advertise IP prefixes and their associated MAC addresses. To reach a tenant using connectivity
+      provided by the EVPN VXLAN Type 5 IP prefix route, data packets are sent as Layer 2 Ethernet
+      frames encapsulated in the VXLAN header over the IP network across the data centers.</p>
+    <p>EVPN VXLAN Type 5 routing allows for efficient distribution of MAC and IP routing
+      information, enabling large-scale networks with numerous virtualized workloads to operate
+      seamlessly. The technology supports secure isolation of tenant traffic in shared environments,
+      providing a virtual network overlay that maintains separation between tenants.</p>
+    <p>To learn more about EVPN VXLAN Type 5 routing, see <xref keyref="evpn-vxlan.evpn-route-type5-understanding">EVPN VXLAN Type 5 Routing</xref>
+      topic.</p>
+    <note>
+      <p>Transit router functionality should be enabled for <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>to support EVPN VXLAN Type 5
+        routing. See, <xref href="l3-jcnr-transit-gateway.dita"/>.</p>
+    </note>
+    <section id="section_mdk_sfg_ryb">
+      <title>Enabling EVPN Type 5 Routing over VXLAN Tunnels</title>
+      <note id="note_vq4_y5n_sbc">
+        <p>Use the <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">configlet resource</xref> to configure the cRPD pods.</p>
+      </note>
+      <p>An example EVPN VXLAN Type 5 configuration snippet is provided below:</p>
+      <codeblock>routing-instances {
+    EVPN-TYPE5-VXLAN-VRF {
+        instance-type vrf;
+            protocols {
+                evpn {
+                    ip-prefix-routes {
+                        advertise direct-nexthop;
+                        encapsulation vxlan;
+                        vni 1000;
+                        export EVPN-TYPE5-VXLAN-VRF-EXPORT-POLICY;
+                    }
+                }
+            }
+            interface ge-0/0/1.0;
+            route-distinguisher 10.255.0.1:100;
+            vrf-target target:100:100;
+        }
+    }
+}</codeblock>
+      <p>To learn about EVPN Type 5 configuration in Junos, see <xref keyref="evpn-vxlan.evpn-virtual-switch-configuring">EVPN Type 5 Configuration</xref>
+        topic.</p>
+    </section>
+    <section id="section_i1k_t3x_gzb"><title>Configuration Example and CLI Commands for EVPN Type 5
+        Routing over VXLAN Setup</title><image align="left" href="../../images/jn-000746.png" id="image_lp3_zph_pzb"/><p>The topology shown above describes a simple setup
+        with two JCNRs deployed as provider edge routers PE1 and PE2. The CE1 and CE2 represent
+        hosts behind each of the PEs. As a pre-requisite, a BGP session must exist between PE1 and
+        PE2. </p><note id="note_irc_lvn_sbc">
+        <p>Use the <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">configlet resource</xref> to configure the cRPD pods.</p>
+      </note><p>Consider the following EVPN-VXLAN configuration on PE1, with the interface
+          <codeph>enp4s0</codeph> towards
+        CE1:</p><codeblock id="codeblock_d2z_xvz_jzb">routing-instances {
+    orange {
+        instance-type vrf;
+        routing-options {
+            rib orange.inet6.0 {
+                multipath;
+            }
+            multipath;
+        }
+        protocols {
+            evpn {
+                ip-prefix-routes {
+                     advertise direct-nexthop;
+                     encapsulation vxlan;
+                     vni 10010;
+                }
+            }
+        }
+        interface enp4s0;
+        route-distinguisher 1.1.1.1:4;
+        vrf-target target:4:4;
+     }
+}</codeblock><p>A VXLAN tunnel is created between routers PE1 and PE2. The 10.10.14.0/24
+        network routes are locally learnt on PE1 and are advertised via EVPN Type 5 to the remote
+        PE. Similarly, the 10.10.24.0/24 network routes are locally learnt on PE2 and advertised via
+        EVPN Type 5 to the remote PE. All traffic between CE1 and CE2 is forwarded between PE1 and
+        PE2 over the VXLAN tunnel.</p><p>Use the commands listed in the sections below to
+        troubleshoot a EVPN VXLAN Type 5 routing setup.</p><subsection id="subsection_t2k_nnx_gzb">
+        <title>cRPD CLI Commands</title>
+        <p>The following CLI commands can be executed on the cRPD CLI. To access the cRPD CLI, see
+            <xref href="accessing-crpd-cli.dita"/>.</p>
+        <ul id="ul_bcw_fjx_gzb">
+          <li>
+            <p>
+              <codeph>show bgp &lt;summary | neighbor&gt;</codeph>: Provides a summary of the EVPN
+              connection to the peer and the status of the connection.</p>
+            <p>A sample output is shown below:</p>
+            <codeblock id="codeblock_jmk_4ht_jzb"><b>host@pe1&gt; show bgp summary</b>
+Threading mode: BGP I/0
+Default eBGP mode: advertise - accept, receive - accept
+Groups: 1 Peers: 2 Down peers: 1
+Table                Tot Paths  Act Paths  Suppressed  History Damp  State     Pending
+bgp. evpn. 0         2          2          0           0             0         0 
+
+Peer                           AS     InPkt    OutPkt    OutQ  Flaps   Last   Up/Dwn     State|#Active/Received/Accepted/Damped…
+2.2.2.2            	     4      10345    10336     0      2      3d     5:32:50    Establ   
+bgp.evpn.0: 2/2/2/0
+orange.evpn.0: 2/2/2/0
+3.3.3.3                        4      0       0          0      0      4w4d   13:28:22   Connect</codeblock>
+          </li>
+          <li>
+            <p><codeph> show route &lt;summary | table | prefix&gt;</codeph>: Displays the active
+              entries in the routing tables.</p>
+          </li>
+          <li>
+            <p><codeph> show evpn instance</codeph>: Displays information about the EVPN routing
+              instance.</p>
+          </li>
+          <li>
+            <p><codeph>show evpn l3-context</codeph>: Displays the configured L3 context on the
+              local box.</p>
+            <p>A sample output is shown below:</p>
+            <codeblock id="codeblock_e3s_tfs_jzb"><b>host@pe1&gt; show evpn l3-context </b>
+L3 context                      Type  Adv      Encap  VNI/Label  Router MAC/GW intf
+orange                          Cfg   Direct   VXLAN  10010      48:5a:0d:78:78:d7
+</codeblock>
+          </li>
+          <li>
+            <p><codeph>show evpn ip-prefix-database</codeph>: Provides a list of exported and
+              imported EVPN route prefixes and the status of these routes.</p>
+            <p>A sample output is shown below:</p>
+            <codeblock id="codeblock_rbj_y3t_jzb"><b>root@evpn-pe1-node&gt; show evpn ip-prefix-database</b> 
+L3 context: orange
+
+IPv4-&gt;EVPN Exported Prefixes                                    
+Prefix                                       EVPN route status
+2.55.1.0/24                                  Created
+4.1.1.4/30                                   Created
+10.10.14.0/24                                Created
+
+IPv6-&gt;EVPN Exported Prefixes
+Prefix                                       EVPN route status
+1234::a0a:e00/120                            Created
+abcd::401:104/126                            Created
+abcd::2:55:1:0/120                           Created
+
+EVPN-&gt;IPv4 Imported Prefixes
+Prefix                                       Etag
+2.55.2.0/24                                  0       
+  Route distinguisher    VNI/Label  Router MAC         Nexthop/Overlay GW/ESI   Route-Status  Reject-Reason
+  2.2.2.2:4              10020      48:5a:0d:49:fc:63  2.2.2.2                   Accepted      n/a 
+10.10.24.0/24                                0       
+  Route distinguisher    VNI/Label  Router MAC         Nexthop/Overlay GW/ESI   Route-Status  Reject-Reason
+  2.2.2.2:4              10020      48:5a:0d:49:fc:63  2.2.2.2                   Accepted      n/a     
+
+EVPN-&gt;IPv6 Imported Prefixes
+Prefix                                       Etag
+1234::a0a:1800/120                           0       
+  Route distinguisher    VNI/Label  Router MAC         Nexthop/Overlay GW/ESI   Route-Status  Reject-Reason
+  2.2.2.2:4              10020      48:5a:0d:49:fc:63  2.2.2.2                   Accepted      n/a     
+abcd::2:55:2:0/120                           0       
+  Route distinguisher    VNI/Label  Router MAC         Nexthop/Overlay GW/ESI   Route-Status  Reject-Reason
+  2.2.2.2:4              10020      48:5a:0d:49:fc:63  2.2.2.2                   Accepted      n/a
+</codeblock>
+          </li>
+          <li>
+            <p><codeph>show route table &lt;VRF&gt;.evpn.0</codeph>: Displays the route entries in
+              the specified routing table.</p>
+            <p>A sample output is shown below.</p>
+            <codeblock id="codeblock_djk_3jt_jzb"><b>host@pe1&gt; show route table orange.evpn.0</b>
+
+orange.evpn.0: 4 destinations, 0 routes (4 active, 0 holddown, 0 hidden)
++ = Active Route,  - = Last Active,  * = Both                    
+
+5:1.1.1.1:4::0::10.10.14.0::24/248
+                            *[EVPN/170] 4W4d 13:29:25
+                                Fictitious
+5:2.2.2.2:4::0::10.10.24.0::24/248
+                              *[BGP/170] 3d 05:33:52, localpref 100, from 2.2.2.2
+                                    AS path: I, validation-state: unverified
+                                     to 10.10.1.20 via enp2s0
+5:1.1.1.1:4::0::1234::00a:000::120/248
+                              *[EVPN/170] 4w4d 13:29:25
+                                    Fictitious
+5:2.2.2.2:4::0::1234::a0a:1800::120/248
+                              *[BGP/170] 3d 05:33:52, localpref 100, from 2.2.2.2
+                                    AS path: I, validation- state: unverified
+                                     to 10.10.1.20 via enp2s0</codeblock>
+          </li>
+          <li>
+            <p><codeph>show route table &lt;VRF&gt;.inet.0</codeph>: Displays the route entries in
+              the specified routing table.</p>
+          </li>
+          <li>
+            <p><codeph>show route table bgp.evpn.0</codeph>: Displays the route entries in the
+              specified routing table.</p>
+            <p>A sample output with a local prefix is shown below.</p>
+            <codeblock id="codeblock_znc_2jt_jzb"><b>host@pe1&gt; show route table bgp.evpn.0 match-prefix 5:1.1.1.1:4::0::10.10.14.0::24 </b>
+
+bgp.evpn.0: 10 destinations, 10 routes (10 active, 0 holddown, 0 hidden)
++ = Active Route, - = Last Active, * = Both
+5:1.1.1.1:4::0::10.10.14.0::24/248               
+                   *[EVPN/170] 2w1d 05:11:43
+                       Fictitious
+</codeblock>
+            <p>A sample output with a remote prefix is shown below.</p>
+            <codeblock id="codeblock_zyh_vwz_jzb"><b>host@pe1&gt; show route table bgp.evpn.0 match-prefix 5:2.2.2.2:4::0::10.10.24.0::24 </b>   
+bgp.evpn.0: 10 destinations, 10 routes (10 active, 0 holddown, 0 hidden)
++ = Active Route, - = Last Active, * = Both
+5:2.2.2.2:4::0::10.10.24.0::24/248               
+                   *[BGP/170] 2w1d 05:11:48, localpref 100, from 2.2.2.2
+                      AS path: I, validation-state: unverified
+                    &gt;  to 10.10.1.20 via enp2s0
+</codeblock>
+          </li>
+          <li>
+            <p><codeph>show krt next-hop</codeph>: Displays the configured next hop. </p>
+          </li>
+        </ul>
+      </subsection><subsection id="subsection_qjg_tnx_gzb">
+        <title>vRouter CLI Commands</title>
+        <p>The following CLI commands can be executed on the vRouter CLI. To access the vRouter CLI,
+          see <xref href="accessing-vrouter-cli.dita"/>.</p>
+        <ul id="ul_kyh_24x_gzb">
+          <li>
+            <p><codeph>rt --get &lt;prefix&gt; --vrf &lt;vrf-id&gt; --family
+                &lt;inet4/inet6&gt;</codeph>: Provides the route which is pointing to the specified
+              IPv4 address.</p>
+            <p>A sample output is shown below.</p>
+            <codeblock id="codeblock_fzx_5jt_jzb"><b>[host@pe1 /]# rt --get 10.10.24.0/24 --vrf 1</b>
+Match 10.10.24.0/24 in vRouter inet4 table 0/1/unicast
+Flags: L=Label Valid, P=Proxy ARP, T=Trap ARP, F=Flood ARP, Ml=MAC-IP learnt route
+vRouter inet4 routing table 0/1/unicast
+Destination           PPL        Flags        Label         Nexthop    Stitched MAC(Index)
+10.10.24.0/24           0          LPT      10020             30        -
+</codeblock>
+          </li>
+          <li>
+            <p><codeph>vxlan --dump</codeph>: Provides information regarding the VNIs that are
+              configured and the next hop.</p>
+            <p>A sample output is shown below.</p>
+            <codeblock id="codeblock_ddl_tjt_jzb"><b>[host@pe1 /]# vxlan --dump</b>
+VXLAN Table
+VNID    NextHop
+----------------
+  10010    25
+</codeblock>
+          </li>
+          <li>
+            <p><codeph>nh --get &lt;nh-id&gt;</codeph>: Provides the next hop details.</p>
+            <p>A sample output is shown below.</p>
+            <codeblock id="codeblock_k4h_zjt_jzb"><b>[root@evpn-pe1-node /]# nh --get 30</b>
+Id:30         Type:Tunnel         Fmly: AF_INET  Rid:0  Ref_cnt:5          Vrf:0
+              Flags:Valid, Policy, Vxlan, Etree Root, l3_vxlan, 
+              Oif:1 Len:14 Data:52 54 00 78 c8 f2 52 54 00 ee 83 cd 08 00 Sip:1.1.1.1 Dip:2.2.2.2
+              L3_Vxlan_SMac:48:5a:0d:78:78:d7 L3_Vxlan_DMac:48:5a:0d:49:fc:63
+</codeblock>
+          </li>
+          <li>
+            <p><codeph>vif --list</codeph>: Provides a list of enterprises configured with the
+                <codeph>vif</codeph>.</p>
+          </li>
+          <li>
+            <p><codeph>flow --l</codeph>: Displays all the active flows in the system.</p>
+            <p>Use this command to verify the traffic flowing between CE1 and CE2 on the vRouter. A
+              sample output is shown below.</p>
+            <codeblock id="codeblock_cwd_gkt_jzb"><b>[host@pe1 /]# flow -l</b>
+Flow table(size 161218560, entries 629760)
+
+Entries: Created 11 Added 11 Deleted 20 Changed 26Processed 11 Used Overflow entries 0
+(Created FlOwS/CPU: 0 0 0 0 0 0 0 0 0 0 11 0 (oflows 0)
+
+Action: F-Forward, D=Drop N=NAT(S-SNAT, D=DNAT, PS=SPAT, Pd=DPAT, L=Link Local Port)
+ Other: K(nh)=Key Nexthop, S(nh)=RPF Nexthop
+ Flags: E-Evicted, Ec-Evict Candidate, N=New Flow, M-Modified Dm=Delete Marked
+TCP(r=reverse): S-SYN, F=FIN, R=RST, C-HalfClose, E-Established, D=Dead
+ Stats: Packets/Bytes
+
+Index                   Source: Port/Destination: Port                       Proto(V)
+------------------------------------------------------------------------------------
+95644&lt;=&gt;443840          10.10.24.21:30                                       1 (1)
+                        10.10.14.11:0
+ (Gen: 1, K(nh): 8, Action:F, Flags:, 005: -1, S(nh):30, Stats: 16/1344,
+  SPort 56932, TTL 0. Sinfo 2.2.2.2)
+
+443840&lt;=&gt;95644          10.10.14.11:30                                       1 (1)     
+                        10.10.24.21:0
+ (Gen: 1, K(nh):8, Action:F, Flags:, Q0S: -1, S(nh):41, Stats: 16/1344,
+  SPort 53983, TTL 0, Sinfo 0.0.0.0)
+</codeblock>
+          </li>
+          <li>
+            <p><codeph>vifdump &lt;vif-number&gt;</codeph>: Displays all the packet details for the
+              specified <codeph>vif</codeph>.</p>
+            <p>A sample output is shown below.</p>
+            <codeblock id="codeblock_mhp_2kt_jzb"><b>[host@pe1 /]# vifdump 3 -nevv</b>
+vif0/3      PCI: 0000:04:00.0 NH: 8 MTU: 9000
+dropped privs to tcpdump
+tcpdump: listening on mon3, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+20:15:15.611827 52:54:00:2c:f6:16 &gt; 52:54:00:ef:3c:4d, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 64, id 1764, offset 0, flags [DF], proto ICMP (1), length 84)
+    10.10.14.11 &gt; 10.10.24.21: ICMP echo request, id 16, seq 25, length 64
+20:15:15.612472 52:54:00:ef:3c:4d &gt; 52:54:00:2c:f6:16, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 62, id 14142, offset 0, flags [none], proto ICMP (1), length 84)
+    10.10.24.21 &gt; 10.10.14.11: ICMP echo reply, id 16, seq 25, length 64
+20:15:16.626773 52:54:00:2c:f6:16 &gt; 52:54:00:ef:3c:4d, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 64, id 1863, offset 0, flags [DF], proto ICMP (1), length 84)
+    10.10.14.11 &gt; 10.10.24.21: ICMP echo request, id 16, seq 26, length 64
+20:15:16.627404 52:54:00:ef:3c:4d &gt; 52:54:00:2c:f6:16, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 62, id 14187, offset 0, flags [none], proto ICMP (1), length 84)
+    10.10.24.21 &gt; 10.10.14.11: ICMP echo reply, id 16, seq 26, length 64
+</codeblock>
+          </li>
+        </ul>
+      </subsection></section>
+  </conbody>
+
+  <related-links/>
+</concept>

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_97ca4427c072890e-38403db6-189f3ce8904--7cd5" xml:lang="en-US">
+    <title>Install Juniper Cloud-Native Router on Amazon EKS  (Juniper Support Package)</title>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <task id="task_rdw_nj5_mpb">
+        <title>Install Juniper Cloud-Native Router Using Juniper Support Site Package</title>
+        <taskbody>
+            <context id="context_zdt_npy_wtb">
+                <p>Read this section to learn the steps required to install the cloud-native router
+                    components using Helm charts.</p>
+            </context>
+            <steps id="steps_gn1_m3l_gxb">
+                <step>
+                    <cmd>Review the <xref href="../concept/system-resource-requirements-eks.dita">System Requirements for EKS Deployment</xref> to ensure the setup has
+                        all the required configuration. </cmd>
+                </step>
+                <step>
+                    <cmd>Download the desired Cloud-Native Router software package to the directory
+                        of your choice. </cmd>
+                    <info>You have the option of downloading the package to install Cloud-Native
+                        Router only or downloading the package to install JNCR together with Juniper
+                        cSRX. See <xref href="../ref/jcnr-sw-download-packages.dita"/> for a description of the packages available. If you don't want to install
+                        Juniper cSRX now, you can always choose to install Juniper cSRX on your
+                        working Cloud-Native Router installation later.</info>
+                </step>
+                <step>
+                    <cmd>Expand the file
+                                <filepath>Juniper_Cloud_Native_Router_<varname>&lt;release-number&gt;</varname>.tgz</filepath>.</cmd>
+                    <info>
+                        <codeblock>tar xzvf Juniper_Cloud_Native_Router_<varname>&lt;release-number&gt;</varname>.tgz</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change directory to the main installation directory.</cmd>
+                    <info>
+                        <ul id="ul_rkw_yf4_xbc">
+                            <li><p>If you're installing Cloud-Native Router only,
+                                then:</p><codeblock id="codeblock_eq4_cfj_1bc">cd Juniper_Cloud_Native_Router_<varname>&lt;release&gt;</varname></codeblock>This
+                                directory contains the Helm chart for Cloud-Native Router only.</li>
+                            <li><p>If you're installing Cloud-Native Router and cSRX at the same
+                                    time, then:
+                                </p><codeblock id="codeblock_ut5_l2j_1bc">cd Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname></codeblock>This
+                                directory contains the combination Helm chart for Cloud-Native
+                                Router and cSRX.</li>
+                        </ul>
+                        <note id="note_uxn_fg4_xbc">
+                            <p>All remaining steps in the installation assume that your current
+                                working directory is now either
+                                        <filepath>Juniper_Cloud_Native_Router_<varname>&lt;release&gt;</varname></filepath>
+                                or
+                                        <filepath>Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname>.</filepath></p>
+                        </note>
+                    </info>
+                </step>
+                <step>
+                    <cmd>View the contents in the current directory.</cmd>
+                    <info>
+                        <codeblock>ls
+helmcharts  images  README.md  secrets</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change to the <filepath>helmchart</filepath> directory and expand the Helm
+                        chart.</cmd>
+                    <info>
+                        <codeblock id="codeblock_pjq_21q_sbc">cd helmchart</codeblock>
+                        <ul id="ul_anj_224_xbc">
+                            <li><p>For Cloud-Native Router
+                                only:</p><codeblock id="codeblock_c2t_mfq_sbc">ls
+jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_cpv_n1q_sbc">tar -xzvf jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_ukc_1bq_sbc">ls
+jcnr   jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock>The
+                                Helm chart is located in the <filepath>jcnr</filepath>
+                                directory.</li>
+                            <li><p>For the combined Cloud-Native Router and
+                                cSRX:</p><codeblock id="codeblock_c33_xd4_xbc">ls
+jcnr_csrx-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_d33_xd4_xbc">tar -xzvf jcnr_csrx-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_e33_xd4_xbc">ls
+jcnr_csrx   jcnr_csrx-<varname>&lt;release&gt;</varname>.tgz</codeblock>The
+                                Helm chart is located in the <filepath>jcnr_csrx</filepath>
+                                directory.</li>
+                        </ul>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Follow the steps in <xref href="jcnr-licensing.dita#task_tk3_jgp_41c"/> to
+                        install your Cloud-Native Router license.</cmd>
+                </step>
+                <step id="step_vtx_pzw_kxb">
+                    <cmd>Enter the root password for your host server into the
+                            <filepath>secrets/jcnr-secrets.yaml</filepath> file at the following
+                        line:</cmd>
+                    <info>
+                        <codeblock id="codeblock_dqx_kyz_51c">  root-password: &lt;add your password in base64 format&gt;</codeblock>
+                    </info>
+                    <info>You must enter the password in base64-encoded format. Encode your password
+                        as follows:
+                        <codeblock id="codeblock_eqx_kyz_51c">echo -n "<varname>password</varname>" | base64 -w0</codeblock>Copy
+                        the output of this command into
+                            <filepath>secrets/jcnr-secrets.yaml</filepath>.</info>
+                </step>
+                <step>
+                    <cmd>Apply <filepath>secrets/jcnr-secrets.yaml</filepath> to the cluster.</cmd>
+                    <info>
+                        <codeblock id="codeblock_qxz_skm_51c">kubectl apply -f secrets/jcnr-secrets.yaml
+namespace/jcnr created
+secret/jcnr-secrets created</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Create the <xref href="../concept/system-resource-requirements-eks.dita#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/section_b5d_xzg_vyb">JCNR ConfigMap</xref> if using the Virtual Router Redundancy Protocol
+                        (VRRP) for your Cloud-Native Router cluster. A sample
+                            <codeph>jcnr-aws-config.yaml</codeph> manifest is provided in
+                            <codeph>cRPD_examples</codeph> directory in the installation bundle.
+                        Apply the <codeph>jcnr-aws-config.yaml</codeph> to the Kubernetes
+                        system.</cmd>
+                    <info>
+                        <codeblock>kubectl apply -f jcnr-aws-config.yaml
+configmap/jcnr-aws-config created</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>If desired, configure how cores are assigned to the vRouter DPDK
+                        containers. See <xref href="jcnr-configure-vrouter-performance.dita"/>.</cmd>
+                </step>
+                <step>
+                    <cmd>Customize the Helm chart for your deployment using the
+                            <filepath>helmchart/jcnr/values.yaml</filepath> or
+                            <filepath>helmchart/jcnr_csrx/values.yaml</filepath> file.</cmd>
+                    <info>
+                        <p>See <xref href="../concept/deployment-config-files-eks.dita">Customize JCNR Helm Chart for EKS Deployment</xref> for
+                            descriptions of the helm chart configurations and a sample helm chart
+                            for EKS deployment.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Optionally, customize Cloud-Native Router configuration.</cmd>
+                    <info>See, <xref href="../concept/crpd-customization-node-configlet.dita"/>
+                        for creating and applying the cRPD customizations.</info>
+                </step>
+                <step>
+                    <cmd>If you're installing Juniper cSRX now, then follow the procedure in <xref href="jcnr-deploy-csrx.dita#task_zly_rd3_1bc"/>.</cmd>
+                </step>
+                <step>
+                    <cmd>Install Multus CNI using the following command:</cmd>
+                    <info>
+                        <codeblock>kubectl apply -f https://raw.githubusercontent.com/aws/amazon-vpc-cni-k8s/master/config/multus/v3.7.2-eksbuild.1/aws-k8s-multus.yaml</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Install the Amazon Elastic Block Storage (EBS) Container Storage Interface
+                        (CSI) driver.</cmd>
+                </step>
+                <step>
+                    <cmd>Label the nodes where you want Cloud-Native Router to be installed based on
+                        the <codeph>nodeaffinity</codeph> configuration (if defined in the
+                            <codeph>values.yaml</codeph>). For example:</cmd>
+                    <info>
+                        <codeblock id="codeblock_q1c_zgn_sbc">kubectl label nodes ip-10.0.100.17.us-east-2.compute.internal key1=jcnr --overwrite</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Deploy the Juniper Cloud-Native Router using the Helm chart. </cmd>
+                    <info>Navigate to the <filepath>helmchart/jcnr</filepath> or the
+                            <filepath>helmchart/jcnr_csrx</filepath> directory and run the following
+                        command:<codeblock id="codeblock_hbl_j44_xbc">helm install jcnr .</codeblock>or<codeblock id="codeblock_x5b_vk4_xbc">helm install jcnr-csrx .</codeblock><codeblock id="codeblock_nbg_yk4_xbc">NAME: jcnr
+LAST DEPLOYED: Fri Dec 22 06:04:33 2023
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None</codeblock>
+                    </info>
+                </step>
+                <step id="ds-v-jcnr-cni">
+                    <cmd>Confirm Juniper Cloud-Native Router deployment.</cmd>
+                    <info>
+                        <codeblock>helm ls</codeblock>
+                        <p>Sample output:</p>
+                        <codeblock>
+NAME		NAMESPACE	REVISION		UPDATED                                	STATUS  		CHART                  	APP VERSION
+jcnr		default  	1       		2023-12-22 06:04:33.144611017 -0400 EDT	deployed		jcnr-<varname>&lt;version&gt;</varname>   <varname>&lt;version&gt;</varname></codeblock>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

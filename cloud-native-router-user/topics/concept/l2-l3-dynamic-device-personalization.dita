@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7ddb" xml:lang="en-US">
+  <title>Enabling Dynamic Device Personalization (DDP) on Individual Interfaces</title>
+  <shortdesc>Dynamic Device Personalization (DDP) is a technology that enables programmable packet
+    processing pipeline provided by Intel as a profile to their NICs. <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports enabling Dynamic
+    Device Personalization (DDP) on individual interfaces.</shortdesc>
+  <prolog>
+    <author>dgv</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Starting with Juniper Cloud-Native Router (JCNR) Release 23.2, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports enabling Dynamic
+      Device Personalization (DDP) on individual interfaces. This feature is available on <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>in
+      L2, L3, and L2-L3 modes.</p>
+    <p>Dynamic Device Personalization (DDP) is a technology that enables programmable packet
+      processing pipeline provided by Intel as a profile to their NICs. Multiple Intel NICs support
+      this technology. The support varies based on the Intel NIC type. DDP is used in packet
+      classification where the profiles applied to the NIC can classify multiple packet formats on
+      the NIC enabling speeds and feeds to the Data Plane Development Kit (DPDK).</p>
+    <p>Juniper cloud native router (JCNR) provides routing and switching functionality. <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports interfaces from different NIC cards. Some of the Intel NICs support DDP and some of
+      them don’t support DDP. Therefore, in a deployment scenario, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>might have one interface
+      from one NIC that supports DDP and another interface from a different NIC that does not
+      support DDP. <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports enabling DDP per interface to overcome such issues.</p>
+    <note>
+      <p>For E810 PF, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>loads the DDP package which is bundled with JCNR. However, for other
+        NICs, ensure you load the DDP package on the NICs before starting JCNR. </p>
+    </note>
+    <p>A DDP configuration is available per interface. This configuration option overrides global
+      DDP (<codeph>ddp</codeph>) configuration for that interface. If you do not configure an
+      interface DDP, then the global configuration value serves as the value for that interface. If
+      you do not configure the global DDP configuration, then the default value for the global
+      configuration which is <codeph>off</codeph> takes effect.</p>
+    <note>
+      <p>DDP is supported on the following NICs:</p>
+      <ul id="ul_ufc_qtn_kyb">
+        <li>
+          <p>E810 VF</p>
+        </li>
+        <li>
+          <p>E810 PF</p>
+        </li>
+        <li>
+          <p>X710 PF</p>
+        </li>
+        <li>
+          <p>XXV710 PF</p>
+        </li>
+      </ul>
+      <p>DDP support is not available when interfaces are defined under subnets.</p>
+    </note>
+    <p>You should configure DDP in the helm chart before deployment. Configuring the DDP
+      configurations in the helm charts for both global and at interface levels is optional. If you
+      do not configure the DDP keys, then the default value for global DDP which is
+        <codeph>off</codeph> takes effect.</p>
+    <p>The global DDP configuration is available in the <codeph>values.yaml</codeph> file as shown
+      below:</p>
+    <codeblock>  # Set ddp to enable Dynamic Device Personalization (DDP)
+  # Provides datapath optimization at NIC for traffic like GTPU, SCTP etc.
+  # Options include auto or on or off; default: off
+  ddp: "auto" 
+</codeblock>
+    <p>You can configure one of the following options for <codeph>ddp</codeph> at the interface
+      level:</p>
+    <ol id="ol_zx1_hyg_kxb">
+      <li>
+        <p>Auto—when set to auto, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>checks if the NIC supports DDP or not during deployment and
+          configures DPDK accordingly. Detecting whether a NIC supports DDP at run time makes is
+          easier to deploy <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>in volumes.</p>
+      </li>
+      <li>
+        <p>On—option enables DDP on the interface without validating the NIC. Use this option only
+          if you are sure that the NIC supports DDP.</p>
+      </li>
+      <li>
+        <p>Off—is the default option at the interface level. This option disables DDP on the
+          interface.</p>
+      </li>
+    </ol>
+    <p>For example,</p>
+    <codeblock>
+–    eth1:
+        ddp: "off" ## auto or on or off
+</codeblock>
+    <note>
+      <p>Each interface can have a different configuration for <codeph>ddp</codeph>. DDP is enabled
+        for a bond interface only if all the slave interface NICs support DDP.</p>
+    </note>
+  </conbody>
+</concept>

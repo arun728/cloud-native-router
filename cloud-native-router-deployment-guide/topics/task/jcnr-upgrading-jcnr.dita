@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE task PUBLIC "-//Juniper//DTD DITA 1.3 General Task//EN" "/SysSchema/dita13/dtd/subsection/dtd/generalTask.dtd">
+<task xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_73c1001ccde8abf9-1ccac70-18dea8feb50--7fd8" xml:lang="en-US">
+ <title>Upgrading JCNR</title>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+ <taskbody>
+  <context>
+      <p>Use this procedure to upgrade <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>to the current release.</p>
+    </context>
+<steps>
+ <step>
+        <cmd>Download the tarball,
+              <filepath>Juniper_Cloud_Native_Router_<varname>release_number</varname>.tgz</filepath>,
+          to the directory of your choice. You must perform the file transfer in binary mode when
+          transferring the file to your server so that the compressed tar file expands
+          properly.</cmd>
+      </step>
+      <step>
+        <cmd>Expand the file
+            <filepath>Juniper_Cloud_Native_Router_<varname>release-number</varname>.tgz</filepath>.</cmd>
+        <info>
+          <codeblock id="codeblock_ib3_2bp_41c">tar xzvf Juniper_Cloud_Native_Router_<varname>release-number</varname>.tgz</codeblock>
+        </info>
+      </step>
+      <step>
+        <cmd>Change directory to
+          Juniper_Cloud_Native_Router_<varname>release-number</varname>.</cmd>
+        <info>
+          <codeblock id="codeblock_ldf_hbp_41c">cd Juniper_Cloud_Native_Router_<varname>release-number</varname></codeblock>
+          <note id="note_mdf_hbp_41c">All remaining steps in the upgrade assume that your current
+            working directory is now
+                <filepath>Juniper_Cloud_Native_Router_<varname>release-number</varname></filepath>.</note>
+        </info>
+      </step>
+      <step>
+        <cmd>Customize the helm chart for your deployment using the
+            <filepath>helmchart/values.yaml</filepath> file to match the helm chart configuration in
+          your current installation.</cmd>
+      </step>
+      <step>
+        <cmd>Deploy the Juniper Cloud-Native Router using the helm chart. Navigate to the
+            <filepath>helmchart</filepath> directory and run the following command:</cmd>
+        <info>
+          <codeblock id="codeblock_wqm_lbp_41c">helm upgrade jcnr .
+Release "jcnr" has been upgraded. Happy Helming!
+NAME: jcnr
+LAST DEPLOYED: <varname>&lt;date&gt;</varname>
+NAMESPACE: default
+STATUS: deployed
+REVISION: <varname>&lt;revision&gt;</varname>
+TEST SUITE: None</codeblock>
+        </info>
+      </step>
+      <step>
+        <cmd>Confirm that Juniper Cloud-Native Router has been deployed by looking for the
+            <uicontrol>deployed</uicontrol> STATUS in the output.</cmd>
+        <info>
+          <codeblock id="codeblock_awq_pbp_41c">helm ls</codeblock>
+        </info>
+      </step>
+</steps>
+</taskbody>
+</task>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE task PUBLIC "-//Juniper//DTD DITA 1.3 General Task//EN" "/SysSchema/dita13/dtd/subsection/dtd/generalTask.dtd">
+<task xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7e69" xml:lang="en-US">
+  <title>Before You Install</title>
+  <shortdesc>This topic provides a list of pre-requisities for installing the Juniper Cloud-Native
+    Router including the required host configuration and licenses.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <taskbody>
+    <context>
+      <p>The Juniper Cloud-Native Router (JCNR) is a container-based software solution, orchestrated
+        by Kubernetes(K8s). It combines the containerized routing protocol process (cRPD) and a Data
+        Plane Development Kit (DPDK)-enabled virtual router (vRouter). Using the JCNR, you can
+        enable full Junos routing control plane with enhanced forwarding capabilities. </p>
+      <p>This section provides a list of pre-requisites for installing JCNR.</p>
+    </context>
+    <steps>
+      <step>
+        <cmd>Review the JCNR <xref href="system-resource-requirements-bms.dita"/> to setup
+          and configure the host machines.</cmd>
+      </step>
+      <step>
+        <cmd><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports an all-in-one or multinode Kubernetes cluster, with master and worker
+          nodes running on virtual machines (VMs) or bare metal servers (BMS). Kubernetes
+          installation or management instructions are not provided in this documentation. Please see
+            <xref format="html" href="https://kubernetes.io" scope="external">https://kubernetes.io</xref> for Kubernetes documentation. </cmd>
+        <info>
+          <note>
+            <p>It is not recommended to deploy Juniper Cloud-Native Router if Kubernetes cpumanager
+              is enabled in your Kubernetes cluster.</p>
+          </note>
+        </info>
+      </step>
+      <step>
+        <cmd>Ensure the host is enabled with SR-IOV and VT-d in the system's BIOS.</cmd>
+      </step>
+      <step>
+        <cmd>Hugepage and iommu setting is mandatory for the vRouter to come up. You can set them at
+          grub level with the below options:</cmd>
+        <substeps id="substeps_hlx_dqk_gxb">
+          <substep>
+            <cmd>Add below params by adjusting the no of hugepages (64 here is just an example) in
+                <codeph>/etc/default/grub</codeph> and reboot the host: "</cmd>
+            <info>
+              <codeblock>GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 default_hugepagesz=1G hugepagesz=1G hugepages=64 intel_iommu=on iommu=pt</codeblock>
+              <p>Update grub and reboot the host. For example:</p>
+              <codeblock>grub2-mkconfig -o /boot/grub2/grub.cfg</codeblock>
+            </info>
+          </substep>
+          <substep>
+            <cmd>To verify hugepage is set , execute these commands on the host:</cmd>
+            <info>
+              <codeblock>cat /proc/cmdline
+grep -i hugepages /proc/meminfo</codeblock>
+            </info>
+          </substep>
+        </substeps>
+      </step>
+      <step>
+        <cmd>Ensure VLAN driver is enabled on the host machine at startup. You can verify it by
+          issuing the <codeph>lsmod | grep 8021q</codeph> command.</cmd>
+      </step>
+      <step>
+        <cmd>Enable virtual functions (VFs) on host NICs at startup. (Only for L2 deployments)</cmd>
+      </step>
+      <step>
+        <cmd>Enable Trust and Disable Spoofcheck on VF's assigned to vRouter using the commands
+          (Only for L2 deployments):</cmd>
+        <info>
+          <codeblock>ip link set &lt;interfacename&gt; vf 1 spoofchk off
+ip link set &lt;interfacename&gt; vf 1 trust on</codeblock>
+        </info>
+      </step>
+      <step>
+        <cmd>Ensure you have the latest version of <codeph>helm3</codeph> installed.</cmd>
+      </step>
+      <step>
+        <cmd>Download the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>tarball,
+              <filepath>Juniper_Cloud_Native_Router_<varname>release_nunber</varname>.tgz</filepath>
+          from the <xref format="html" href="https://support.juniper.net/support/downloads/?p=jcnr" scope="external">Juniper Support Site</xref>, to a directory on your host machine. You
+          must perform the file transfer in binary mode when transferring the file to your server,
+          so that the compressed tar file expands properly.</cmd>
+      </step>
+      <step>
+        <cmd>Ensure you have a valid cRPD license available. The <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>license format has changed,
+          you must request a new license key before deploying or upgrading to 23.2 release. See
+            <xref href="system-resource-requirements-bms.dita#xd_a80d54bf200c39a9--49174253-179093887e2--7892/section_jm3_ggk_gxb"/> for more information.</cmd>
+      </step>
+      <step>
+        <cmd>Review the <xref keyref="cloud-native-router-user.jcnr-deployment-modes"/> topic to
+          understand the various deployment modes supported by JCNR.</cmd>
+      </step>
+    </steps>
+  </taskbody>
+</task>

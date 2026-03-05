@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_7dcfbfe1ba4dc5dc-7ebe5c88-193f1fa3b32--7faf" xml:lang="en-US">
+  <!--Use the Concept template to introduce a new product or functionality. Also use this template to provide high-level explanations, definitions of key concepts, terminology, or general background information. Limit one topic to one theme or subject.-->
+  <!--For <title>, follow these guidelines:
+- Avoid the gerund form and minimize the use of “Understanding.” 
+- Use "[Feature] Overview" if the topic is indeed an overview. 
+- Use the feature name as the topic title for very long feature names. 
+- Use the Who, What, Where, When, Why, or How (not How to) phrase to describe a specific aspect of a product, feature, or user scenario.-->
+  <title>Loop Detection in Pure L2 Mode</title>
+  <shortdesc>Juniper Cloud-Native Router supports Layer 2 loop detection mechanisms by detecting
+    frequent MAC address movements between ports. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>Juniper Cloud-Native Router supports Layer 2 loop detection mechanism in the vRouter data
+      path. Frequent MAC address movements between ports, many a times resulting from incorrect
+      wiring, can result in L2 loops, resulting in network instability, broadcast storms, and
+      degragded performance. Traditional loop detection mechanisms such as Spanning Tree Protocol
+      (STP) may not always be feasible in modern data center environments. </p>
+    <p>Cloud-Native Router implements a loop detection mechanism that identifies MAC address
+      learning loops by monitoring the frequency of MAC address movements between ports. The vRouter
+      uses the MAC-MOVE table to track these MAC movemements, including source MAC, VLAN tag, hit
+      count, and timestamp. The vRouter detects high hit counts on the same MAC address entry in the
+      MAC_MOVE table, indicating continuous movement of the MAC address between two ports within a
+      short interval of time.</p>
+    <p>You can use the <b><codeph>rt --show-mac-move --family bridge</codeph></b> command on the
+        <xref href="accessing-vrouter-cli.dita">vRouter shell</xref> to view
+      the MAC move:</p>
+    <codeblock id="codeblock_yzl_j4j_rdc">bash-5.1# <b>rt --family bridge --show-mac-move</b>
+
+MAC Move Detection Table
+==========================================================
+MAC Address          BDID         Hit Count    Timestamp           
+==========================================================
+00:01:01:01:01:03    12          46           1731038878                    
+==========================================================
+Total Entries: 1 / 10000 (Used/Capacity)</codeblock>
+    <p>The vRouter also logs the detected loop and shuts down affected ports. </p>
+    <codeblock id="codeblock_f4x_q3n_xdc">2024-11-18 06:14:19,130 DPCORE: NOTIFICATION, CRIT, Purel2 Macmove Loop Detected, mac 00:01:01:01:01:03, vlan 1221, Current Port 5, Older Port 1, hitcount 52
+2024-11-18 06:14:19,130 VROUTER: Func: dpdk_port_shutdown, Line 1296, Shutting Down Port 0 of Vif 5
+2024-11-18 06:14:19,343 lcore 17 called tx_pkt_burst for not ready port (
+2024-11-18 06:14:23,242 VROUTER: Port ID: 4 Link Status: DOWN intf _name:0000:d8:00.0 drv_name:net_ixgbe
+
+2024-11-18 06:14:23,242 VROUTER: Notifed Link status update to agent for interface 0000: d8:00.0 as 0
+2024-11-18 06:14:36,299 DPCORE: vr_purel2_mac_move_table_req_process vr_purel2_mac_move_table_req 456 received OP 1
+
+2024-11-18 06 14:38,133 DPCORE: vr_purel2_mac_move_table_req_process vr_purel2_mac_move_table_req 456 received OP 1</codeblock>
+    <p>A Syslog notification is also generated when the loop is detected:</p>
+    <codeblock id="codeblock_cfy_fjn_xdc">{"jcnr": {"header": {"sysUpTime": "40 days, 11 hours, 35 minutes, 45 seconds" 45 "program": "vrouter-dpdk", "notificationType": "DPCORE: ", "eventDate": "2024-12-02T21:32:23-08:00"} , "body": "NOTIFICATION, CRIT, Purel2 Macmove Loop Detected, mac 00:01:01:01:01:03, vlan 1221. Current Port 4, Older Port 2, hitcount 51"}}</codeblock>
+  </conbody>
+</concept>

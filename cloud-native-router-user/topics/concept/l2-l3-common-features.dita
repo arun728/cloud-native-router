@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7de0" xml:lang="en-US">
+  <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Common Features</title>
+  <shortdesc>Read this topic to learn about the Juniper Cloud-Native Router common features for all
+    deployment modes.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <div>
+      <p>The Juniper Cloud-Native Router supports multiple <xref href="jcnr-deployment-modes.dita">deployment modes</xref>.</p>
+    </div>
+    <p>This chapter explains the common features for all deployment modes.</p>
+  </conbody>
+</concept>

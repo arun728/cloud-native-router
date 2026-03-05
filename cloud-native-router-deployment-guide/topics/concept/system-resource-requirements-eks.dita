@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_97ca4427c072890e-38403db6-189f3ce8904--7d13" xml:lang="en-US">
+  <title>System Requirements for EKS Deployment</title>
+  <abstract>Read this section to understand the system, resource, port, and licensing requirements
+    for installing Juniper Cloud-Native Router on Amazon Elastic Kubernetes Service
+    (EKS).</abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <section id="section_kh4_wdk_gxb">
+      <title>Minimum Host System Requirements for EKS</title>
+      <p><xref format="dita" href="#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/table_jsl_zdk_gxb"/> lists the host
+        system requirements for installing Cloud-Native Router on EKS. </p>
+      <table colsep="1" frame="all" id="table_jsl_zdk_gxb" rowsep="1">
+        <title>Minimum Host System Requirements for EKS</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1.32*"/>
+          <colspec colname="newCol6" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry align="center" valign="bottom">Component</entry>
+              <entry>Value/Version</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>EKS Deployment</entry>
+              <entry>Self-managed nodes or managed node group</entry>
+            </row>
+            <row>
+              <entry>Host OS</entry>
+              <entry>
+                <p>Amazon Linux 2</p>
+              </entry>
+            </row>
+            <row>
+              <entry>EKS version / Kubernetes</entry>
+              <entry>1.26.3, 1.28.x, 1.29.x</entry>
+            </row>
+            <row>
+              <entry>EC2 Instance Type</entry>
+              <entry>Any instance type with ENA adapters<note id="note_it4_32d_y2c">There is no
+                  minimum instance type imposed by Juniper Cloud-Native Router, but a typical
+                  deployment runs c5.4xlarge or m5.4xlarge or larger (depending on performance
+                  requirements).</note></entry>
+            </row>
+            <row>
+              <entry>Kernel Version</entry>
+              <entry>5.10.x, 5.15.x</entry>
+            </row>
+            <row>
+              <entry>NIC</entry>
+              <entry>Elastic Network Adapter (ENA)</entry>
+            </row>
+            <row>
+              <entry>AWS CLI version</entry>
+              <entry>2.11.9</entry>
+            </row>
+            <row>
+              <entry>VPC CNI</entry>
+              <entry>v1.14.0-eksbuild.3</entry>
+            </row>
+            <row>
+              <entry>EBS CSI Driver</entry>
+              <entry>v1.28.0-eksbuild.1</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Node Role</p>
+              </entry>
+              <entry>
+                <p>AmazonEBSCSIDriverPolicy</p>
+                <p>AmazonEKS_CNI_Policy</p>
+              </entry>
+            </row>
+            <row>
+              <entry>Multus</entry>
+              <entry>3.7.2<p>(<codeph>kubectl apply -f
+                    https://raw.githubusercontent.com/aws/amazon-vpc-cni-k8s/master/config/multus/v3.7.2-eksbuild.1/aws-k8s-multus.yaml)</codeph></p></entry>
+            </row>
+            <row>
+              <entry>Helm</entry>
+              <entry>3.11</entry>
+            </row>
+            <row>
+              <entry>Container-RT</entry>
+              <entry>containerd 1.7.x</entry>
+            </row>
+            <row>
+              <entry nameend="newCol6" namest="c1">
+                <note id="note_k2g_l5f_zcc">
+                  <p>The component versions listed in this table are expected to work with JCNR, but
+                    not every version or combination is tested in every release.</p>
+                </note>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_sz1_d2k_gxb">
+      <title>Resource Requirements for EKS</title>
+      <p><xref format="dita" href="#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/table_owl_sxr_wtb"/> lists the
+        resource requirements for installing Cloud-Native Router on EKS. </p>
+      <table colsep="1" frame="all" id="table_owl_sxr_wtb" rowsep="1">
+        <title>Resource Requirements for EKS</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="1.37*"/>
+          <colspec colname="newCol4" colnum="2" colwidth="1*"/>
+          <colspec colname="newCol5" colnum="3" colwidth="3.99*"/>
+          <thead>
+            <row>
+              <entry align="center" valign="bottom">Resource</entry>
+              <entry>Value</entry>
+              <entry>Usage Notes</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>Data plane forwarding cores</entry>
+              <entry>1 core (1P + 1S)</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Service/Control Cores</entry>
+              <entry>0</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>UIO Driver</entry>
+              <entry>VFIO-PCI</entry>
+              <entry>
+                <p>To enable, follow the steps below:</p>
+                <codeblock>cat /etc/modules-load.d/vfio.conf
+vfio
+vfio-pci</codeblock>
+                <p>Enable Unsafe IOMMU mode</p>
+                <codeblock>echo Y &gt; /sys/module/vfio_iommu_type1/parameters/allow_unsafe_interrupts
+echo Y &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>Hugepages (1G)</entry>
+              <entry>6 Gi</entry>
+              <entry>See <xref href="../topic-map/jcnr-configure-hugepages.dita#task_yml_55h_vcc"/>.</entry>
+            </row>
+            <row>
+              <entry>Cloud-Native Router Controller cores</entry>
+              <entry>.5</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Cloud-Native Router vRouter Agent cores</entry>
+              <entry>.5</entry>
+              <entry/>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_ekg_f2k_gxb">
+      <title>Miscellaneous Requirements for EKS</title>
+      <p><xref format="dita" href="#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/table_op3_bbm_wtb"/> lists
+        additional requirements for installing Cloud-Native Router on EKS. </p>
+      <table colsep="1" frame="all" id="table_op3_bbm_wtb" rowsep="1">
+        <title id="title_ttx_dyg_yxb">Miscellaneous Requirements for EKS</title>
+        <tgroup cols="2">
+          <colspec colname="newCol1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Requirement</p>
+              </entry>
+              <entry>
+                <p>Example</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>Disable source/destination checks.</p>
+              </entry>
+              <entry>Disable source/destination checks on the AWS Elastic Network Interfaces (ENI)
+                interfaces attached to JCNR. JCNR, being a transit router, is neither the source nor
+                the destination of any traffic that it receives.</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Attach IAM policy.</p>
+              </entry>
+              <entry>Attach the <codeph>AmazonEBSCSIDriverPolicy</codeph> IAM policy to the role
+                assigned to the EKS cluster.</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Set IOMMU and IOMMU-PT in GRUB.</p>
+              </entry>
+              <entry>Add the following line to
+                  <filepath>/etc/default/grub</filepath>.<codeblock id="codeblock_i53_n1l_xbc">GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 default_hugepagesz=1G hugepagesz=1G hugepages=64 <b>intel_iommu=on iommu=pt</b>"</codeblock><p>Update
+                  grub and
+                reboot.</p><codeblock id="codeblock_j53_n1l_xbc">grub2-mkconfig -o /boot/grub2/grub.cfg </codeblock><codeblock id="codeblock_uyr_gmk_xbc">reboot</codeblock></entry>
+            </row>
+            <row>
+              <entry>
+                <p>Additional kernel modules need to be loaded on the host before deploying
+                  Cloud-Native Router in L3 mode. These modules are usually available in
+                    <codeph>linux-modules-extra</codeph> or <codeph>kernel-modules-extra</codeph>
+                  packages. </p>
+                <note id="note_ff4_ncw_vbc">
+                  <p>Applicable for L3 deployments only.</p>
+                </note>
+              </entry>
+              <entry>
+                <p>Create a <filepath>/etc/modules-load.d/crpd.conf</filepath> file and add the
+                  following kernel modules to it:</p>
+                <codeblock id="codeblock_gf4_ncw_vbc">tun
+fou
+fou6
+ipip
+ip_tunnel
+ip6_tunnel
+mpls_gso
+mpls_router
+mpls_iptunnel
+vrf
+vxlan</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Verify the core_pattern value is set on the host before deploying JCNR.</p>
+              </entry>
+              <entry>
+                <codeblock id="codeblock_ihl_pdw_vbc">sysctl kernel.core_pattern
+kernel.core_pattern = |/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h %e</codeblock>
+                <!--Removed as per Vinod Nair since it is not persistent - You may change the value with the following commands:<codeblock>sysctl -w kernel.core_pattern="&lt;path&gt;"</codeblock> For example:<codeblock>sysctl -w kernel.core_pattern="/var/crash/%p.core") </codeblock>-->
+                <p>You can update the core_pattern in <codeph>/etc/sysctl.conf</codeph>. For
+                  example:</p>
+                <codeblock id="codeblock_jhl_pdw_vbc">kernel.core_pattern=/var/crash/core_%e_%p_%i_%s_%h_%t.gz</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>Set adequate send and receive buffer sizes.</entry>
+              <entry>
+                <codeblock id="codeblock_oqc_d3t_w2c">sysctl -w net.core.rmem_default=67108864
+sysctl -w net.core.rmem_max=67108864
+sysctl -w net.core.wmem_default=67108864
+sysctl -w net.core.wmem_max=6710886</codeblock>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+        <!--dgv: Removed the last note as it is fixed for 23.4 - "If you are installing JCNR on Amazon EKS, then update the dpdkCommandAdditionalArgs key in the helmchart/charts/jcnr-vrouter/values.yaml file and set tx and rx descriptors to 256."-->
+      </table>
+    </section>
+    <section id="section_b5d_xzg_vyb">
+      <title>Cloud-Native Router ConfigMap for VRRP</title>
+      <p>You can enable Virtual Router Redundancy Protocol (VRRP) for your Cloud-Native Router
+        cluster.</p>
+      <note id="note_z4q_wdq_vbc">
+        <p>When running VRRP, the AWS IAM role for the node hosting the Cloud-Native Router instance
+          needs permission to modify the VPC route table. To provide that permission, add the
+            <uicontrol>NetworkAdministrator</uicontrol> policy to that IAM role.</p>
+      </note>
+      <p>You must create a Cloud-Native Router ConfigMap to define the behavior of VRRP for your
+        Cloud-Native Router cluster in an EKS deployment. Considering that AWS VPC supports exactly
+        one next-hop for a prefix, the ConfigMap defines how the VRRP mastership status is used to
+        copy prefixes from routing tables in Cloud-Native Router to specific routing tables in AWS. </p>
+      <p>We provide an example <codeph>jcnr-aws-config.yaml</codeph> manifest below:</p>
+      <codeblock>apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: jcnr-aws-config
+    namespace: jcnr
+data:
+  aws-rttable-map.json: |
+    [
+      {
+        "jcnr-table-name":"default-rt.inet.0",
+        "jcnr-policy-name": "default-rt-to-aws-export",
+        "jcnr-nexthop-interface-name":"eth4",
+        "vpc-table-tag":"jcnr-aws-vpc-internal-table"
+      },
+      {
+        "jcnr-table-name":"default-rt.inet6.0",
+        "jcnr-policy-name":"default-rt-to-aws-export",
+        "jcnr-nexthop-interface-name":"eth4",
+        "vpc-table-tag":"jcnr-aws-vpc-internal-table"
+      }
+    ]</codeblock>
+      <p><xref format="dita" href="#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/table_gbd_gvg_vyb"/> describes the ConfigMap elements:</p>
+      <table colsep="1" frame="all" id="table_gbd_gvg_vyb" rowsep="1">
+        <title>Cloud-Native Router ConfigMap Elements</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>Element</entry>
+              <entry>Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry><codeph>jcnr-table-name</codeph></entry>
+              <entry>The routing table in Cloud-Native Router from which prefixes should be
+                copied.</entry>
+            </row>
+            <row>
+              <entry><codeph>jcnr-policy-name</codeph></entry>
+              <entry>A routing policy in Cloud-Native Router that imports the prefixes in the named
+                routing table to copy to the AWS routing table.</entry>
+            </row>
+            <row>
+              <entry><codeph>jcnr-nexthop-interface-name</codeph></entry>
+              <entry>Name of the Cloud-Native Router interface which should be used as the next-hop
+                by the AWS VPC route table when this instance of the Cloud-Native Router is VRRP
+                master.</entry>
+            </row>
+            <row>
+              <entry><codeph>vpc-table-tag</codeph></entry>
+              <entry>A freeform tag applied to the VPC route table in AWS to which the prefixes
+                should be copied.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <p>Apply <codeph>jcnr-aws-config.yaml</codeph> to the cluster before installing JCNR. The
+        Cloud-Native Router CNI deployer renders the cRPD configuration based on the ConfigMap.</p>
+      <note>
+        <p>When not using VRRP, provide an empty list as the data for
+            <codeph>aws-rttable-map.json</codeph>.</p>
+      </note>
+    </section>
+    <section id="section_ufy_y2k_gxb">
+      <title>Port Requirements</title>
+      <p>Juniper Cloud-Native Router listens on certain TCP and UDP ports. This section lists the
+        port requirements for the cloud-native router.</p>
+      <table>
+        <title>Cloud-Native Router Listening Ports</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <colspec colname="c3" colnum="3" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>Protocol</entry>
+              <entry>Port</entry>
+              <entry>Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>TCP</entry>
+              <entry>8085</entry>
+              <entry>vRouter introspect–Used to gain internal statistical information about
+                vRouter</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8070</entry>
+              <entry>Telemetry Information- Used to see telemetry data from the Cloud-Native Router
+                vRouter</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8072</entry>
+              <entry>Telemetry Information-Used to see telemetry data from Cloud-Native Router
+                control plane</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8075, 8076</entry>
+              <entry>Telemetry Information- Used for gNMI requests</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>9091</entry>
+              <entry>vRouter health check–cloud-native router checks to ensure the vRouter agent is
+                running.</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>9092</entry>
+              <entry>vRouter health check–cloud-native router checks to ensure the vRouter DPDK is
+                running.</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>50052</entry>
+              <entry>gRPC port–Cloud-Native Router listens on both IPv4 and IPv6</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8081</entry>
+              <entry>Cloud-Native Router Deployer Port</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>24</entry>
+              <entry>cRPD SSH</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>830</entry>
+              <entry>cRPD NETCONF</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>666</entry>
+              <entry><filepath>rpd</filepath></entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>1883</entry>
+              <entry>Mosquito mqtt–Publish/subscribe messaging utility</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>9500</entry>
+              <entry><filepath>agentd</filepath> on cRPD</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>21883</entry>
+              <entry><filepath>na-mqttd</filepath></entry>
+            </row>
+            <row>
+              <entry>
+                <p>TCP</p>
+              </entry>
+              <entry>
+                <p>50053</p>
+              </entry>
+              <entry>
+                <p>Default gNMI port that listens to the client subscription request</p>
+              </entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>51051</entry>
+              <entry><filepath>jsd</filepath> on cRPD</entry>
+            </row>
+            <row>
+              <entry>UDP</entry>
+              <entry>50055</entry>
+              <entry>Syslog-NG</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_byw_r32_qyb">
+      <title>Download Options</title>
+      <p>To deploy Cloud-Native Router on an EKS cluster, you can either download the Helm charts
+        from the Juniper Networks software download site (see <xref href="../ref/jcnr-sw-download-packages.dita"/>) or subscribe via the <xref format="html" href="https://aws.amazon.com/marketplace/search/results?searchTerms=jcnr" scope="external">AWS Marketplace</xref>.</p>
+      <note id="note_lhp_vdf_wbc">Before deploying Cloud-Native Router on an EKS cluster via Helm
+        charts downloaded from the Juniper Networks software download site, you must whitelist the
+          <xref format="html" href="https://enterprise-hub.juniper.net" scope="external">enterprise-hub.juniper.net</xref> URL as the Cloud-Native Router image repository.</note>
+    </section>
+    <section id="section_jm3_ggk_gxb">
+      <title>Cloud-Native Router Licensing</title>
+      <p audience="internal">You can purchase BYOL licenses for the Juniper Cloud-Native Router
+        software through your Juniper Account Team or you can subscribe to a pay-as-you-go (PAYG)
+        license for a Cloud-Native Router product through the AWS Marketplace. A usage-based (or
+        pay-as-you-go) subscription bills you for the actual throughput used. </p>
+      <p>You can purchase BYOL licenses for the Juniper Cloud-Native Router software through your
+        Juniper Account Team.</p>
+      <p>For information on BYOL licenses, see <xref href="../topic-map/jcnr-licensing.dita"/>.</p>
+      <p audience="internal">For information on AWS Marketplace subscriptions, see <xref format="html" href="https://docs.aws.amazon.com/marketplace/latest/buyerguide/what-is-marketplace.html" scope="external"/>.</p>
+    </section>
+  </conbody>
+</concept>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "/SysSchema/dita13/dtd/technicalContent/dtd/map.dtd">
+<map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" outputclass="quick-start-guide" xml:lang="en-US">
+    <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>23.1 - User Guide Updates</title>
+    <!-- Use the Review Map template to assemble topics that you wish to send for technical or editorial review. The review maps must be created in the /Content/internal/<username>/review/ folder. After the review is completed, please delete the review map file you created. -->
+    <topicmeta>
+        <author/>
+    </topicmeta>
+    <!--The following topics have been updated as a part of the documentation impact of the RLI 44482.-->
+    <data>
+        <title>Introduction</title>
+        <?This book is created for the purpose of reviewing the documentation updates made for the Juniper Cloud-Native Router Release 23.1.?>
+    </data><topichead><topicmeta><navtitle><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>User Guide Updates</navtitle></topicmeta><topicref href="JCNR2690.dita"/><topicref href="JCNR1776.dita"/></topichead>
+</map>

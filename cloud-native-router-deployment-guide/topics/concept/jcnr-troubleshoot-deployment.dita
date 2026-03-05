@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_e7657e4b3894a22b-6d37e9ea-17bbf727914--7d7c" xml:lang="en-US">
+    <title>Troubleshoot Deployment Issues</title>
+    <shortdesc>This topic provides information about how to troubleshoot deployment issues using
+        Kubernetes commands and how to view the cloud-native router configuration files.</shortdesc>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <concept id="concept_d1d_qzv_45b">
+        <title>Troubleshoot Deployment Issues</title>
+        <conbody>
+            <p>This topic provides information on some of the issues that might be seen during
+                deployment of the cloud-native router components and provides a number of Kubernetes
+                (K8s) and shell commands that you run on the host server to help determine the cause
+                of deployment issues. </p>
+            <table frame="all" rowsep="1" colsep="1" id="table_bny_r1w_45b">
+                <title>Investigate Deployment Issues</title>
+                <tgroup cols="3">
+                    <colspec colname="c1" colnum="1" colwidth="1*"/>
+                    <colspec colname="c2" colnum="2" colwidth="1*"/>
+                    <colspec colname="c3" colnum="3" colwidth="1*"/>
+                    <thead>
+                        <row>
+                            <entry>Potential issue</entry>
+                            <entry>What to check</entry>
+                            <entry>Related Commands</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>Image not found</entry>
+                            <entry>Check if the images are uploaded to the local docker using the
+                                command <codeph>docker images</codeph>. If not, then the registry
+                                configured in <codeph>values.yaml</codeph> should be accessible.
+                                Ensure image tags are correct.</entry>
+                            <entry>
+                                <ul id="ul_kxg_d2w_45b">
+                                    <li>
+                                        <codeblock>kubectl -n jcnr describe pod &lt;crpd-pod-name&gt;</codeblock>
+                                    </li>
+                                </ul>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>Initialization errors</entry>
+                            <entry>Check if jcnr-secrets is loaded and has a valid license
+                                key</entry>
+                            <entry><codeblock>[root@jcnr-01]# kubectl get secrets -n jcnr
+NAME                  TYPE                                  DATA   AGE
+crpd-token-zp8kc      kubernetes.io/service-account-token   3      29d
+default-token-zn6p9   kubernetes.io/service-account-token   3      29d
+jcnr-secrets          Opaque                                2      29d</codeblock>Confirm
+                                that root password and license key are present in
+                                    <codeph>/var/run/jcnr/juniper.conf</codeph></entry>
+                        </row>
+                        <row>
+                            <entry>cRPD Pod in CrashLoopBackOff state</entry>
+                            <entry>
+                                <ul id="ul_xwj_dbw_45b">
+                                    <li>Check if startup/liveness probe is failing or vrouter pod
+                                        not running</li>
+                                    <li>rpd-vrouter-agent gRPC connection not UP</li>
+                                    <li>Composed configuration is invalid or config template is
+                                        invalid</li>
+                                </ul>
+                            </entry>
+                            <entry>
+                                <ul id="ul_ks5_hbw_45b">
+                                    <li>
+                                        <codeblock>kubectl get pods -A</codeblock>
+                                        <codeblock>kubectl -n jcnr describe pod &lt;crpd-pod-name&gt;</codeblock>
+                                        <codeblock>tail –f /var/log/jcnr/jcnr-cni.log​</codeblock>
+                                        <codeblock>tail –f /var/log/jcnr/jcnr_notifications.json</codeblock>
+                                    </li>
+                                    <li>
+                                        <p>See <xref keyref="cloud-native-router-user.accessing-crpd-cli"/> to enter the cRPD CLI and run the following
+                                            command:</p>
+                                        <codeblock>show krt state channel vrouter</codeblock>
+                                    </li>
+                                    <li>
+                                        <codeblock>cat /var/run/jcnr/juniper.conf</codeblock>
+                                    </li>
+                                </ul>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>vRouter Pod in CrashLoopBackOff state</p>
+                            </entry>
+                            <entry>Check the contail-k8s-deployer pod for errors</entry>
+                            <entry>
+                                <codeblock>kubectl logs contrail-k8s-deployer-&lt;pod-hash&gt; -n contrail-deploy</codeblock>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <section id="section_pxs_sh3_yxb">
+                <title>Verify Cloud-Native Router Controller Configuration</title>
+                <p>The cloud-native router deployment process creates a configuration file for the
+                    cloud-native router controller (cRPD) as a result of entries in the
+                        <filepath>values.yaml</filepath> file for L2 mode and custom configuration
+                    via node annotations in L3 mode. You can view this configuration file to see the
+                    details of the cRPD configuration. To view the cRPD configuration, navigate to
+                    the <codeph>/var/run/jcnr</codeph> folder to access the configuration file
+                    details and view the contents of the configuration file. </p>
+                <codeblock>[root@jcnr-01]# ls
+cni  config  containers  envars  juniper.conf  reboot-canary
+[root@jcnr-01]# cat juniper.conf </codeblock>
+                <p>The cRPD configuration may be customized using node annotations. The cRPD pod
+                    will stay in <codeph>pending</codeph> state if the applied configuration is
+                    invalid. </p>
+                <p>You can view the rendered custom configuration in the <codeph>/etc/crpd/</codeph>
+                    directory.</p>
+                <codeblock>[root@jcnr-01]# cat /etc/crpd/juniper.conf.master</codeblock>
+                <p>In an AWS EKS deployment you can review the rendered custom configuration by
+                        <xref keyref="cloud-native-router-user.accessing-crpd-cli">accessing the
+                        cRPD CLI</xref> and reviewing the contents of the <codeph>/config</codeph>
+                    directory.</p>
+            </section>
+            <section id="section_fmb_b33_yxb"><!--<title>The show route Command</title><p>The <codeph>show route</codeph> command displays the active entries in the routing tables. For example:</p><codeblock>show route 172.68.20.2/32 table nad1.inet</codeblock><codeblock>nad1.inet.0: 11 destinations, 15 routes (11 active, 0 holddown, 0 hidden)
+@ = Routing Use Only, # = Forwarding Use Only
++ = Active Route, - = Last Active, * = Both
+
+172.68.20.2/32     @[BGP/170] 00:00:23, localpref 100, from 1.1.1.220
+                      AS path: I, validation-state: unverified
+                    &gt;  via Tunnel Composite, UDP (src 1.1.1.35 dest 1.1.1.220), Push 48
+                    [BGP/170] 00:13:18, localpref 100, from 1.1.24.24
+                      AS path: I, validation-state: unverified
+                    &gt;  via Tunnel Composite, UDP (src 1.1.1.35 dest 1.1.24.24), Push 16
+                   <b>#[Multipath/255] 00:00:23, metric2 2
+                       via Tunnel Composite, UDP (src 1.1.1.35 dest 1.1.1.220), Push 48
+                    &gt;  via Tunnel Composite, UDP (src 1.1.1.35 dest 1.1.24.24), Push 16
+</b></codeblock>--></section>
+            <section id="section_pgg_wh3_yxb">
+                <title>View Log Files</title>
+                <p>You can view the jcnr log files in the default log_path directory,
+                        <filepath>/var/log/jcnr/</filepath>. You can change the location of the log
+                    files by changing the value of the <filepath>log_path:</filepath> or<filepath>
+                        syslog_notifications:</filepath> keys in the
+                        <filepath>values.yaml</filepath> file prior to deployment.</p>
+                <p>Navigate to the following path and issue the <codeph>ls</codeph> command to list
+                    the log files for each of the cloud-native router components.</p>
+                <codeblock>cd /var/log/jcnr/</codeblock>
+                <codeblock>[root@jcnr-01 jcnr]# ls
+action.log                    contrail-vrouter-dpdk-init.log  filter                   l2cos.log      __policy_names_rpdc__
+contrail-vrouter-agent.log    contrail-vrouter-dpdk.log       filter.log               license        mgd-api        
+__policy_names_rpdn__         cos                             jcnr-cni.log             messages       mosquitto                 
+vrouter-kernel-init.log       cscript.log                     jcnr_notifications.json  messages.0.gz  na-grpcd</codeblock>
+            </section>
+            <section id="section_kjg_yvh_scc">
+                <title>Check the vRouter and cRPD</title>
+                <p>To check the vRouter daemonset:</p>
+                <codeblock id="codeblock_egv_cwh_scc">kubectl get ds -n contrail</codeblock>
+                <p>Sample output:</p>
+                <codeblock id="codeblock_lp3_cwh_scc">
+NAME                                   DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+jcnr-0-contrail-vrouter-nodes          1         1         1       1            1           &lt;none&gt;          24h
+jcnr-0-contrail-vrouter-nodes-vrdpdk   1         1         1       1            1           &lt;none&gt;          24h
+</codeblock>
+                <p/>
+            </section>
+            <section id="section_xr5_nj3_yxb">
+                <title>Uninstallation Issues</title>
+                <p>After the triggering of helm uninstall command, please wait for all Kubernetes
+                    resources to be fully deleted before attempting a re-installation. Premature
+                    re-installation can lead to installation stalls and may require manual steps for
+                    recovery. ​The recovery steps are provided below:</p>
+                <codeblock>helm uninstall jcnr –no-hooks​
+kubectl delete &lt;ds/name&gt;​
+kubectl delete &lt;job/jobname&gt;​
+kubectl delete ns jcnrops​</codeblock>
+            </section>
+        </conbody>
+    </concept>
+</topic-map>

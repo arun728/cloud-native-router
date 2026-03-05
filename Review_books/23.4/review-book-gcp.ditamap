@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "/SysSchema/dita13/dtd/technicalContent/dtd/map.dtd">
+<map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" outputclass="quick-start-guide" xml:lang="en-US">
+    <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>23.4 - Documentation Review Book GCP</title>
+    <!-- Use the Review Map template to assemble topics that you wish to send for technical or editorial review. The review maps must be created in the /Content/internal/<username>/review/ folder. After the review is completed, please delete the review map file you created. -->
+    <topicmeta>
+        <author>tkaur</author>
+    </topicmeta>
+    <data>
+        <title>Introduction</title>
+        <?This book is created for the purpose of reviewing the documentation updates made for the Juniper Cloud-Native Router Release 23.4.?>
+    </data>
+    <!--<topichead><topicmeta><navtitle>JCNR Release Notes Updates</navtitle></topicmeta><topicref href="/Content/jcnr-23.1-release-notes_xi872463_1_1.ditamap" format="ditamap"/></topichead>-->
+    <topichead><topicmeta><navtitle><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>GCP Updates</navtitle></topicmeta>
+        <topicref href="../../cloud-native-router-deployment-guide/topics/concept/system-resource-requirements-gcp.dita"/>
+        <topicref href="../../cloud-native-router-deployment-guide/topics/concept/deployment-config-files-gcp.dita"/>
+        <topicref href="../../cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configlet.dita"/>
+        <topicref href="../../cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configmap-gcp.dita"/>
+        <topicref href="../../cloud-native-router-deployment-guide/topics/concept/install-jcnr-gcp.dita"/></topichead>
+    <!--<topichead><topicmeta><navtitle>JCNR Deployment Guide Updates</navtitle></topicmeta><topicref href="/Content/jcnr-install-jcnr-orig_xi585280_1_1.dita"/><topicref href="/Content/sample-configuration-files-orig_xi589160_1_1.dita"/></topichead>-->
+</map>

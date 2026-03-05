@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE reference PUBLIC "-//Juniper//DTD DITA 1.3 Reference//EN" "/SysSchema/dita13/dtd/subsection/dtd/reference.dtd">
+<reference xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_ecb85dde2f443ac7-43b744e2-19038178042--7f6b" xml:lang="en-US">
+    <title>Cloud-Native Router Default Helm Chart</title>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <refbody>
+        <section conref="../concept/sample-helm-charts.dita#xd_1a8e069a06657f97--7cd600da-188de57988f--79f0/section_bty_2hb_v1c" id="section_dtq_5pt_5bc"><title/><p/></section>
+    </refbody>
+    <related-links/>
+</reference>

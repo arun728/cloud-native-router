@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_23cac8778b5b970f--2dc94744-18b7029ae73--7510" xml:lang="en-US">
+  <title>Customize <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Helm Chart for Azure Deployment</title>
+  <abstract>
+    <shortdesc>Read this topic to learn about the deployment configuration available for the Juniper
+      Cloud-Native Router when deployed on Microsoft Azure Cloud Platform. </shortdesc>
+  </abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+      <p>You can deploy and operate Juniper Cloud-Native Router in L3 mode on Azure. You configure
+      the deployment mode by editing the appropriate attributes in the <codeph>values.yaml</codeph>
+      file prior to deployment. </p>
+    <section conref="../ref/jcnr-helm-chart-container.dita#xd_aa1b6500adc67cb2-c89f836-18ff470b581--7fff/section_vxs_rwn_xbc" id="section_kyn_syn_xbc"><title/><p/></section>
+  </conbody>
+</concept>

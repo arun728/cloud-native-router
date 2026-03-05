@@ -1,0 +1,958 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b34235ef5cbae677-50581e8b-18fc47a5fa7--7df0" xml:lang="en-US">
+    <title>Cloud-Native Router Operator Service Module: VPC Gateway</title>
+    <shortdesc>The Cloud-Native Router Operator Service Module is an operator framework that we use
+        to develop cRPD applications and solutions. This section describes how to use the Service
+        Module to implement a VPC gateway between your Amazon EKS cluster and your on-premises
+        Kubernetes cluster.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <concept id="concept_ilc_krd_qjb">
+        <title>Cloud-Native Router VPC Gateway Overview</title>
+        <conbody>
+            <p>We provide the Cloud-Native Router Operator Service Module to install JCNR (with a
+                BYOL license) on an Amazon EKS cluster and to configure it to act as an EVPN-VXLAN
+                VPC Gateway between a separate Amazon EKS cluster running MetalLB and an on-premises
+                Kubernetes cluster (<xref format="dita" href="#concept_ilc_krd_qjb/fig_vrj_ccw_sbc"/>). </p>
+            <p>Once you configure the VPC Gateway custom resource with information on your MetalLB
+                cluster and your on-premises Kubernetes cluster, the VPC Gateway establishes a BGP
+                session with your MetalLB cluster and establishes a BGP EVPN session with your
+                on-premises Kubernetes cluster. Routes learned from the MetalLB cluster are
+                re-advertised to the on-premises cluster using EVPN Type 5 routes. Routes learned
+                from the on-premises cluster are leaked into the route tables of the routing
+                instance for the MetalLB cluster.</p>
+            <p>The configuration example we'll use in this section connects workloads at
+                10.4.230.4/32 in the on-premises cluster to services at 10.14.220.1/32 in the
+                MetalLB cluster.</p>
+            <note id="note_vhj_5bx_sbc">
+                <p>Configuring the connectivity between the AWS Cloud and the Customer Data Center
+                    is not covered in this procedure. Use your preferred AWS method for
+                    connectivity.</p>
+            </note>
+            <fig id="fig_vrj_ccw_sbc">
+                <title>Cloud-Native Router VPC Gateway<image href="../../images/jn-000973.png" id="image_nnb_vll_vbc"/></title>
+            </fig>
+            <note id="note_qnl_hyz_rbc">
+                <p>The VPC Gateway custom resource automatically installs Cloud-Native Router with a
+                    configuration that is specific to this application. You don't need to install
+                    Cloud-Native Router explicitly and you don't need to configure the Cloud-Native
+                    Router installation Helm chart.</p>
+            </note>
+        </conbody>
+    </concept>
+    <task id="task_e15_krd_qjb">
+        <title>Install the Cloud-Native Router VPC Gateway</title>
+        <taskbody>
+            <context id="context_fxj_lhp_qbc">
+                <p>This is the main procedure. Start here.</p>
+            </context>
+            <steps id="steps_in4_lhp_qbc">
+                <step>
+                    <cmd>Prepare the clusters.</cmd>
+                    <substeps id="substeps_csc_lf5_5bc">
+                        <substep>
+                            <cmd>Prepare the Cloud-Native Router VPC Gateway cluster. See <xref format="dita" href="#task_fzc_ztz_rbc"/>.</cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Prepare the MetalLB cluster. See <xref format="dita" href="#task_u5f_ymz_rbc"/>.</cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Prepare the on-premises cluster. See <xref format="dita" href="#task_vnh_stz_rbc"/></cmd>
+                        </substep>
+                    </substeps>
+                    <stepresult>After preparing the clusters, you can start installation of the
+                        Cloud-Native Router VPC Gateway. Execute the remaining steps in the
+                        Cloud-Native Router VPC Gateway cluster.</stepresult>
+                </step>
+                <step>
+                    <cmd>Download and install the Cloud-Native Router Service Module Helm chart on
+                        the cluster.</cmd>
+                    <info>
+                        <p>You can download the Cloud-Native Router Service Module Helm chart from
+                            the Juniper Networks software download site. See <xref href="../ref/jcnr-sw-download-packages.dita"/>.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Install the downloaded Helm chart.</cmd>
+                    <info>
+                        <codeblock id="codeblock_fgw_gpp_qbc">helm install vpcgwy Juniper_Cloud_Native_Router_Service_Module_<varname>&lt;release&gt;</varname>.tgz</codeblock>
+                        <note id="note_cwd_fk5_5bc">
+                            <p>The provided Helm chart installs the Cloud-Native Router VPC Gateway
+                                on cores 2, 3, 22, and 23. Therefore ensure that the nodes in your
+                                cluster have at least 24 cores and that the specified cores are free
+                                to use.</p>
+                        </note>
+                        <p>Check that the controller-manager and the contrail-k8s-deployer pods are
+                            up.</p>
+                        <codeblock id="codeblock_abg_dnf_sbc">kubectl get pods -A</codeblock>
+                        <codeblock id="codeblock_sms_wmf_sbc">NAMESPACE         NAME                                                       READY   STATUS
+svcmodule-system  controller-manager-67898d794d-4cpsw                        2/2     Running
+cert-manager      cert-manager-5bd57786d4-mf7hq                              1/1     Running
+cert-manager      cert-manager-cainjector-57657d5754-5d2xc                   1/1     Running
+cert-manager      cert-manager-webhook-7d9f8748d4-p482n                      1/1     Running
+contrail-deploy   contrail-k8s-deployer-546587dcbc-bjbrg                     1/1     Running
+kube-system       aws-node-dhsgv                                             2/2     Running
+kube-system       aws-node-n6kcx                                             2/2     Running
+kube-system       coredns-54d6f577c6-m7q8h                                   1/1     Running
+kube-system       coredns-54d6f577c6-qc76c                                   1/1     Running
+kube-system       eks-pod-identity-agent-6k6xj                               1/1     Running
+kube-system       eks-pod-identity-agent-rvqz7                               1/1     Running
+kube-system       kube-proxy-nqpsd                                           1/1     Running
+kube-system       kube-proxy-vzbnv                                           1/1     Running</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Configure the Cloud-Native Router VPC Gateway custom resource.</cmd>
+                    <info>This custom resource contains information on the MetalLB cluster and the
+                        on-premises cluster.</info>
+                    <substeps id="substeps_kfq_qpp_qbc">
+                        <substep>
+                            <cmd>Create a YAML file that contains the desired configuration. We'll
+                                put our Cloud-Native Router VPC Gateway pods into a namespace that
+                                we'll call <codeph>gateway</codeph>.</cmd>
+                            <info>The YAML file has the following
+                                    format:<codeblock id="codeblock_p5g_4yv_sbc">apiVersion: v1
+kind: Namespace
+metadata:
+  name: gateway
+---
+apiVersion: workflow.svcmodule.juniper.net/v1
+kind: VpcGateway
+metadata:
+  name: vpc-gw
+  namespace: gateway
+spec:
+  &lt;see table&gt;</codeblock><xref format="dita" href="#task_e15_krd_qjb/table_o5r_tpp_qbc"/> describes the main
+                                configuration fields for the <codeph>spec</codeph> section. In the
+                                    <codeph>spec</codeph> definition, <codeph>application</codeph>
+                                refers to the MetalLB cluster and <codeph>client</codeph> refers to
+                                the on-premises cluster.<table colsep="1" frame="all" id="table_o5r_tpp_qbc" rowsep="1">
+                                    <title>Spec Descriptions</title>
+                                    <tgroup cols="4">
+                                        <colspec colname="c1" colnum="1" colwidth="0.5*"/>
+                                        <colspec colname="newCol2" colnum="2" colwidth="0.5*"/>
+                                        <colspec colname="newCol3" colnum="3" colwidth="1.5*"/>
+                                        <colspec colname="c2" colnum="4" colwidth="3*"/>
+                                        <thead>
+                                            <row>
+                                                <entry nameend="newCol3" namest="c1">
+                                                  <p>Spec Field</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>Description</p>
+                                                </entry>
+                                            </row>
+                                        </thead>
+                                        <tbody>
+                                            <row>
+                                                <entry nameend="newCol3" namest="c1">
+                                                  <p>applicationTopology</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>This section contains information on the
+                                                  MetalLB cluster.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0">
+                                                  <p/>
+                                                </entry>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>applicationInterface</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>The name of the interface connecting to the
+                                                  MetalLB cluster.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0">
+                                                  <p/>
+                                                </entry>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>bgpSpeakerType</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>Specify metallb when connecting to the MetalLB
+                                                  cluster.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0"/>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>clusters</p>
+                                                </entry>
+                                                <entry/>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0"/>
+                                                <entry colsep="0"/>
+                                                <entry>
+                                                  <p>kubeconfigSecretName</p>
+                                                </entry>
+                                                <entry>The secret containing the kubeconfig of the
+                                                  MetalLB cluster.</entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0"/>
+                                                <entry colsep="0"/>
+                                                <entry>name</entry>
+                                                <entry>The name of the MetalLB cluster.</entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0"/>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>enableV6</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>(Optional) True or false.</p>
+                                                  <p>Enables or disables IPv6 in the MetalLB
+                                                  cluster. Default is false.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0">
+                                                  <p/>
+                                                </entry>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>neighbourDiscovery</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>(Optional) True or false.</p>
+                                                  <p>Governs how BGP neighbors (BGP speakers from
+                                                  the MetalLB cluster) are determined.</p>
+                                                  <p>When set to true, BGP neighbors with addresses
+                                                  specified in sessionPrefix or with addresses in
+                                                  the application interface's subnet are
+                                                  accepted.</p>
+                                                  <p>When set to false, the remote MetalLB cluster's
+                                                  cRPD pod IP is used as the BGP neighbor. Default
+                                                  is false.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0">
+                                                  <p/>
+                                                </entry>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>routePolicyOverride</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>(Optional) True or false.</p>
+                                                  <p>When set to true, a route policy called
+                                                  "export-onprem" is used to govern what MetalLB
+                                                  cluster routes are exported to the on-premises
+                                                  cluster. This gives you the opportunity to create
+                                                  your own export policy. You must create this
+                                                  policy manually and call it "export-onprem".</p>
+                                                  <p>Default is false, which means that all MetalLB
+                                                  cluster routes are exported to the on-premises
+                                                  cluster.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0">
+                                                  <p/>
+                                                </entry>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>sessionPrefix</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>(Optional) Used when neighbourDiscovery is set
+                                                  to true.</p>
+                                                  <p>When present, it indicates the CIDR from which
+                                                  BGP sessions from the MetalLB cluster are
+                                                  accepted.</p>
+                                                  <p>Default is to accept BGP sessions from BGP
+                                                  neighbors in the application interface's
+                                                  subnet.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry nameend="newCol3" namest="c1">
+                                                  <p>client</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>Information related to the on-premises
+                                                  cluster.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0"/>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>address</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>The BGP speaker IP address of the on-premises
+                                                  cluster.</p>
+                                                  <p>The Cloud-Native Router VPC Gateway establishes
+                                                  a direct eBGP session with this address. This eBGP
+                                                  session is used to learn the route to the loopback
+                                                  address, which is used to establish the subsequent
+                                                  BGP EVPN session.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0"/>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>asn</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>The AS number of the eBGP speaker in the client
+                                                  cluster.</p>
+                                                  <p>The Cloud-Native Router VPC Gateway validates
+                                                  this when establishing the direct eBGP session
+                                                  with the BGP speaker in the on-premises
+                                                  cluster.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0"/>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>loopbackAddress</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>The loopback address of the BGP speaker in the
+                                                  on-premises cluster.</p>
+                                                  <p>The Cloud-Native Router VPC Gateway uses this
+                                                  IP address to establish a BGP EVPN session with
+                                                  the BGP speaker in the on-premises cluster.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0"/>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>myASN</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>The local AS number that the Cloud-Native
+                                                  Router VPC Gateway uses for the direct eBGP
+                                                  session with the BGP speaker in the on-premises
+                                                  cluster.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0"/>
+                                                <entry nameend="newCol3" namest="newCol2">
+                                                  <p>routeTarget</p>
+                                                </entry>
+                                                <entry>The route target for the EVPN routes in the
+                                                  on-premises cluster.</entry>
+                                            </row>
+                                            <row>
+                                                <entry colsep="0"/>
+                                                <entry nameend="newCol3" namest="newCol2">vrrp</entry>
+                                                <entry>
+                                                  <p>Always set to true.</p>
+                                                  <p>This enables VRRP on interfaces towards the
+                                                  on-premises cluster.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry nameend="newCol3" namest="c1">
+                                                  <p>clientInterface</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>The name of the interface connecting to the
+                                                  on-premises cluster.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry nameend="newCol3" namest="c1">
+                                                  <p>dpdkDriver</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>Set to vfio-pci.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry nameend="newCol3" namest="c1">
+                                                  <p>loopbackIPPool</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>The IP address pool used for assigning IP
+                                                  addresses to the cRPD instances created in the
+                                                  cluster (in CIDR format).</p>
+                                                  <note id="note_h53_zk5_5bc">
+                                                  <p>The number of addresses in the pool must be at
+                                                  least one more than the number of replicas.</p>
+                                                  </note>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry nameend="newCol3" namest="c1">
+                                                  <p>nodeSelector</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>(Optional) Used in conjunction with a node's
+                                                  labels to determine whether the VPC Gateway pod
+                                                  can run on a node.</p>
+                                                  <p>This selector must match a node's labels for
+                                                  the pod to be scheduled on that node.</p>
+                                                </entry>
+                                            </row>
+                                            <row>
+                                                <entry nameend="newCol3" namest="c1">
+                                                  <p>replicas</p>
+                                                </entry>
+                                                <entry>
+                                                  <p>(Optional) The number of JCNRs created. Default
+                                                  is 1.</p>
+                                                </entry>
+                                            </row>
+                                        </tbody>
+                                    </tgroup>
+                                </table><note id="note_zrz_s1x_sbc">
+                                    <p>Armed with the MetalLB kubeconfig, the Cloud-Native Router
+                                        VPC Gateway has sufficient information to configure BGP
+                                        sessions automatically with the MetalLB cluster. You don't
+                                        need to provide any parameters other than what's listed in
+                                        the table.</p>
+                                </note>Here's an example of a working
+                                configuration:<codeblock id="codeblock_bkg_pnf_sbc">apiVersion: v1
+kind: Namespace
+metadata:
+  name: jcnr-gateway
+---
+apiVersion: workflow.svcmodule.juniper.net/v1
+kind: VpcGateway
+metadata:
+  name: vpc-gw
+  namespace: gateway
+spec:
+  dpdkDriver: vfio-pci
+  replicas: 1
+  clientInterface: eth3
+  loopbackIPPool: 10.14.140.0/28
+  applicationTopology:
+    applicationInterface: eth2
+    bgpSpeakerType: metallb
+    clusters:
+      - name: metallb-1
+        kubeconfigSecretName: metallb-cluster-kubeconfig
+  client:
+    asn: 65010
+    myASN: 65000
+    address: 10.14.205.158
+    loopbackAddress: 10.14.140.200
+    routeTarget: target-1-4
+    vrrp: true</codeblock></info>
+                        </substep>
+                        <substep>
+                            <cmd>Apply the YAML file to the cluster.</cmd>
+                            <info><codeblock id="codeblock_a4f_sxt_sbc">kubectl apply -f vpcGateway.yaml</codeblock>where
+                                    <filepath>vpcGateway.yaml</filepath> is the YAML file defining
+                                the Cloud-Native Router VPC Gateway.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Check the pods.</cmd>
+                            <info>
+                                <codeblock id="codeblock_aqm_hcm_wbc">kubectl get pods -A</codeblock>
+                                <codeblock id="codeblock_llw_wxt_sbc">NAMESPACE         NAME                                                       READY   STATUS
+svcmodule-system  controller-manager-67898d794d-4cpsw                        2/2     Running
+cert-manager      cert-manager-5bd57786d4-mf7hq                              1/1     Running
+cert-manager      cert-manager-cainjector-57657d5754-5d2xc                   1/1     Running
+cert-manager      cert-manager-webhook-7d9f8748d4-p482n                      1/1     Running
+contrail-deploy   contrail-k8s-deployer-546587dcbc-bjbrg                     1/1     Running
+contrail          vpc-gw-crpdgroup-0-x-contrail-vrouter-nodes-s9wkk          2/2     Running
+contrail          vpc-gw-crpdgroup-0-x-contrail-vrouter-nodes-vrdpdk-jczh5   1/1     Running
+jcnr              jcnr-gateway-vpc-gw-crpdgroup-0-0                          2/2     Running
+kube-system       aws-node-dhsgv                                             2/2     Running
+kube-system       aws-node-n6kcx                                             2/2     Running
+kube-system       coredns-54d6f577c6-m7q8h                                   1/1     Running
+kube-system       coredns-54d6f577c6-qc76c                                   1/1     Running
+kube-system       eks-pod-identity-agent-6k6xj                               1/1     Running
+kube-system       eks-pod-identity-agent-rvqz7                               1/1     Running
+kube-system       kube-proxy-nqpsd                                           1/1     Running
+kube-system       kube-proxy-vzbnv                                           1/1     Running</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Verify your installation.</cmd>
+                    <info>Find the name of the
+                        configlet:<codeblock id="codeblock_fvp_rgw_vbc">kubectl get nodeconfiglet -n jcnr</codeblock><codeblock id="codeblock_sb1_wgw_vbc">NAME                 AGE
+vpc-gw-crpdgroup-0   8h</codeblock>See how the configlet is configured. For
+                        example:<codeblock id="codeblock_gwc_ygw_vbc">kubectl describe nodeconfiglet -n jcnr vpc-gw-crpdgroup-0</codeblock><codeblock id="codeblock_j52_qgw_vbc">Name:         vpc-gw-crpdgroup-0
+Namespace:    jcnr
+Labels:       core.juniper.net/nodeName=ip-10-75-66-162.us-west-2.compute.internal
+Annotations:  &lt;none&gt;
+API Version:  configplane.juniper.net/v1
+Kind:         NodeConfiglet
+Metadata:
+  Creation Timestamp:  2024-06-24T23:32:35Z
+  Finalizers:
+    node-configlet.finalizers.deployer.juniper.net
+  Generation:  26
+  Managed Fields:
+    API Version:  configplane.juniper.net/v1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:status:
+        .:
+        f:message:
+        f:status:
+    Manager:      manager
+    Operation:    Update
+    Subresource:  status
+    Time:         2024-06-24T23:32:36Z
+    API Version:  configplane.juniper.net/v1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:finalizers:
+          .:
+          v:"node-configlet.finalizers.deployer.juniper.net":
+        f:ownerReferences:
+          .:
+          k:{"uid":"00c67217-87e7-434d-8d6a-8256f2d9d206"}:
+      f:spec:
+        .:
+        f:clis:
+        f:nodeName:
+    Manager:    manager
+    Operation:  Update
+    Time:       2024-06-25T02:22:26Z
+  Owner References:
+    API Version:           configplane.juniper.net/v1
+    Block Owner Deletion:  true
+    Controller:            true
+    Kind:                  JcnrInstance
+    Name:                  vpc-gw-crpdgroup-0
+    UID:                   00c67217-87e7-434d-8d6a-8256f2d9d206
+  Resource Version:        133907
+  UID:                     340a19d0-9de5-414d-b2ac-c3831203877c
+Spec:
+  Clis:
+    set interfaces eth2 unit 0 family inet address 10.14.207.30/22
+    set interfaces eth2 mac 52:54:00:a4:c3:85
+    set interfaces eth2 mtu 9216
+    set interfaces eth3 unit 0 family inet address 10.14.205.159/22
+    set interfaces eth3 mac 52:54:00:ee:4b:3f
+    set interfaces eth3 mtu 9216
+    set interfaces lo0 unit 0 family inet address 10.14.140.1/32
+    set interfaces lo0 mtu 9216
+    set policy-options policy-statement default-rt-to-aws-export then reject
+    set policy-options policy-statement default-rt-to-aws-export term awsv4 from family inet
+    set policy-options policy-statement default-rt-to-aws-export term awsv4 from protocol evpn
+    set policy-options policy-statement default-rt-to-aws-export term awsv4 then accept
+    set policy-options policy-statement default-rt-to-aws-export term awsv6 from family inet6
+    set policy-options policy-statement default-rt-to-aws-export term awsv6 from protocol evpn
+    set policy-options policy-statement default-rt-to-aws-export term awsv6 then accept
+    set policy-options policy-statement export-direct then reject
+    set policy-options policy-statement export-direct term directly-connected from protocol direct
+    set policy-options policy-statement export-direct term directly-connected then accept
+    set policy-options policy-statement export-evpn then reject
+    set policy-options policy-statement export-evpn term evpn-connected from protocol evpn
+    set policy-options policy-statement export-evpn term evpn-connected then accept
+    set policy-options policy-statement export-onprem then reject
+    set policy-options policy-statement export-onprem term learned-from-bgp from protocol bgp
+    set policy-options policy-statement export-onprem term learned-from-bgp then accept
+    set routing-instances application-ri protocols bgp group vpc-gw-application local-address 10.14.207.30
+    set routing-instances application-ri protocols bgp group vpc-gw-application export export-evpn
+    set routing-instances application-ri protocols bgp group vpc-gw-application peer-as 64513
+    set routing-instances application-ri protocols bgp group vpc-gw-application local-as 64512
+    set routing-instances application-ri protocols bgp group vpc-gw-application multihop
+    set routing-instances application-ri protocols bgp group vpc-gw-application allow 10.14.207.29/22
+    set routing-instances application-ri protocols evpn ip-prefix-routes advertise direct-nexthop
+    set routing-instances application-ri protocols evpn ip-prefix-routes encapsulation vxlan
+    set routing-instances application-ri protocols evpn ip-prefix-routes vni 4096
+    set routing-instances application-ri protocols evpn ip-prefix-routes export export-onprem
+    set routing-instances application-ri protocols evpn ip-prefix-routes route-attributes community export-action allow
+    set routing-instances application-ri protocols evpn ip-prefix-routes route-attributes community import-action allow
+    set routing-instances application-ri interface eth2
+    set routing-instances application-ri vrf-target target:1:4
+    set routing-instances application-ri instance-type vrf
+    set routing-options route-distinguisher-id 10.14.140.1
+    set routing-options router-id 10.14.140.1
+    set protocols bgp group vpc-gw-client-lo local-address 10.14.140.1
+    set protocols bgp group vpc-gw-client-lo peer-as 64512
+    set protocols bgp group vpc-gw-client-lo local-as 64512
+    set protocols bgp group vpc-gw-client-lo family evpn signaling
+    set protocols bgp group vpc-gw-client-lo neighbor 10.14.140.200
+    set protocols bgp group vpc-gw-client-direct export export-direct
+    set protocols bgp group vpc-gw-client-direct peer-as 65010
+    set protocols bgp group vpc-gw-client-direct local-as 65000
+    set protocols bgp group vpc-gw-client-direct multihop
+    set protocols bgp group vpc-gw-client-direct neighbor 10.14.205.158
+  Node Name:  ip-10-75-66-162.us-west-2.compute.internal
+Status:
+  Message:  Configuration committed
+  Status:   True
+Events:     &lt;none&gt;</codeblock></info>
+                </step>
+                <step>
+                    <cmd>Verify your installation.</cmd>
+                    <substeps id="substeps_q2x_byt_sbc">
+                        <substep>
+                            <cmd>Access the cRPD pod.</cmd>
+                            <info>
+                                <codeblock id="codeblock_omw_cyt_sbc">kubectl exec -n jcnr jcnr-gateway-vpc-gw-crpdgroup-0-0 -c crpd -it -- sh</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Enter CLI mode.</cmd>
+                            <info>
+                                <codeblock id="codeblock_zfl_fyt_sbc">cli</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Check the BGP peers.</cmd>
+                            <info><codeblock id="codeblock_ahx_gyt_sbc">show bgp summary 
+Threading mode: BGP I/O
+Default eBGP mode: advertise - accept, receive - accept
+Groups: 3 Peers: 3 Down peers: 0
+Unconfigured peers: 1
+Table          Tot Paths  Act Paths Suppressed    History Damp State    Pending
+bgp.evpn.0           
+                       2          2          0          0          0          0
+inet.0               
+                       4          1          0          0          0          0
+Peer                     AS      InPkt     OutPkt    OutQ   Flaps Last Up/Dwn State|#Active/Received/Accepted/Damped...
+10.14.140.200         64512       6514       6471       0       1  2d 0:49:34 Establ
+  bgp.evpn.0: 2/2/2/0
+  application-ri.evpn.0: 2/2/2/0
+10.14.205.158         65010       6386       6363       0       3  2d 0:01:56 Establ
+  inet.0: 1/4/4/0
+10.14.207.29          64513       5758       6352       0       0 1d 23:56:40 Establ
+  application-ri.inet.0: 1/1/1/0</codeblock>In the output above, the
+                                Cloud-Native Router VPC Gateway has the following BGP sessions:<ul id="ul_m14_qfw_sbc">
+                                    <li>
+                                        <p>with the iBGP speaker in the on-premises cluster at
+                                            10.14.140.200 for EVPN routes </p>
+                                    </li>
+                                    <li>
+                                        <p>with the eBGP speaker in the on-premises cluster at
+                                            10.14.205.158 for the direct eBGP session</p>
+                                    </li>
+                                    <li>
+                                        <p>with the MetalLB cluster at 10.14.207.29</p>
+                                    </li>
+                                </ul></info>
+                        </substep>
+                        <substep>
+                            <cmd>Check the routes to the MetalLB cluster and the on-premises
+                                cluster.</cmd>
+                            <info>Check the route to the Nginx service in the MetalLB
+                                cluster:<codeblock id="codeblock_wyz_kyt_sbc">show route 10.14.220.1 
+
+application-ri.inet.0: 4 destinations, 4 routes (4 active, 0 holddown, 0 hidden)
++ = Active Route, - = Last Active, * = Both
+
+10.14.220.1/32     *[BGP/170] 1d 00:24:25, localpref 100
+                      AS path: 64513 I, validation-state: unverified
+                    &gt;  to 10.14.207.29 via eth2</codeblock>Check
+                                the route to the workloads in the on-premises
+                                cluster:<codeblock id="codeblock_fl2_ngw_sbc">show route 10.4.230.4      
+
+application-ri.inet.0: 4 destinations, 4 routes (4 active, 0 holddown, 0 hidden)
++ = Active Route, - = Last Active, * = Both
+
+10.4.230.4/32       *[EVPN/170] 1d 17:51:00
+                    &gt;  to 10.14.205.158 via eth3</codeblock>With
+                                the routes successfully exchanged, the on-premises workloads at
+                                10.4.230.4 can access the MetalLB cluster at 10.14.220.1.</info>
+                        </substep>
+                    </substeps>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_u5f_ymz_rbc">
+        <title>Prepare the MetalLB Cluster</title>
+        <taskbody>
+            <context id="context_mfj_zmz_rbc">
+                <p>The MetalLB cluster is the Amazon EKS cluster that you ultimately want to connect
+                    to your on-premises cluster. Follow this procedure to prepare your MetalLB
+                    cluster to establish a BGP session with the Cloud-Native Router VPC Gateway.</p>
+            </context>
+            <steps id="steps_g4n_dnz_rbc">
+                <step>
+                    <cmd>Create the Amazon EKS cluster where you'll be running the MetalLB
+                        service.</cmd>
+                </step>
+                <step>
+                    <cmd>Deploy MetalLB on that cluster. MetalLB provides a network load balancer
+                        implementation for your cluster.</cmd>
+                    <info>See <xref format="html" href="https://metallb.universe.tf/configuration/" scope="external"/> for information on deploying MetalLB.</info>
+                </step>
+                <step>
+                    <cmd>Create the necessary MetalLB resources. As a minimum, you need to create
+                        the MetalLB IPAddressPool resource and the MetalLB BGPAdvertisement
+                        resource.</cmd>
+                    <substeps id="substeps_m1n_zd5_5bc">
+                        <substep>
+                            <cmd>Create the MetalLB IPAddressPool resource.</cmd>
+                            <info><p>Here's an example of a YAML file that defines the IPAddressPool
+                                    resource.</p><codeblock id="codeblock_mnw_wnz_rbc">apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: first-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 10.14.220.0/24
+  avoidBuggyIPs: true</codeblock><p>In this example, MetalLB
+                                    will assign load balancer IP addresses from the 10.14.220.0/24
+                                    range.</p><p>Apply the above YAML to the cluster to create the
+                                    IPAddressPool.</p><codeblock id="codeblock_yft_rjv_sbc">kubectl apply -f ipaddresspool.yaml</codeblock>
+                                where <filepath>ipaddresspool.yaml</filepath> is the name of the
+                                YAML file defining the IPAddressPool resource.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Create the MetalLB BGPAdvertisement resource.</cmd>
+                            <info><p>Here's an example of a YAML file that defines the
+                                    BGPAdvertisement
+                                    resource.</p><codeblock id="codeblock_o2k_g4z_rbc">apiVersion: metallb.io/v1beta1
+kind: BGPAdvertisement
+metadata:
+  name: example
+  namespace: metallb-system</codeblock><p>The BGPAdvertisement
+                                    resource advertises your service IP addresses to external
+                                    routers (for example, to your Cloud-Native Router VPC
+                                    Gateway).</p><p>Apply the above YAML to the cluster to create
+                                    the BGPAdvertisement
+                                resource.</p><codeblock id="codeblock_lb4_ckv_sbc">kubectl apply -f bgpadvertisement.yaml</codeblock>where
+                                    <filepath>bgpadvertisement.yaml</filepath> is the name of the
+                                YAML file defining the BGPAdvertisement resource.</info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Create the LoadBalancer service. The LoadBalancer service provides the
+                        entry point for external workloads to reach the cluster. You can create any
+                        LoadBalancer service of your choice.</cmd>
+                    <info><p>Here's an example YAML for an Nginx LoadBalancer
+                            service.</p><codeblock id="codeblock_ncg_qrz_rbc">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: &lt;image repo URL&gt;
+        ports:
+        - name: http
+          containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: nginx
+  type: LoadBalancer</codeblock><p>Apply the above YAML to the cluster
+                            to create the Nginx LoadBalancer
+                        service.</p><codeblock id="codeblock_ycg_qkv_sbc">kubectl apply -f nginx.yaml</codeblock>where
+                            <filepath>nginx.yaml</filepath> is the name of the YAML file defining
+                        the Nginx service.</info>
+                </step>
+                <step>
+                    <cmd>Verify your installation.</cmd>
+                    <substeps id="substeps_rnb_vsz_rbc">
+                        <substep>
+                            <cmd>Take a look at the pods in your cluster.</cmd>
+                            <info>For
+                                    example:<codeblock id="codeblock_wq2_xsz_rbc">kubectl get pods -A</codeblock><codeblock id="codeblock_r3p_xsz_rbc">NAMESPACE        NAME                           READY   STATUS    RESTARTS      AGE
+default          nginx-6d66d85dc4-h6dng         1/1     Running   0             9d
+kube-system      aws-node-vdhv9                 2/2     Running   2 (28d ago)   28d
+kube-system      coredns-54d6f577c6-lbznn       1/1     Running   1 (28d ago)   29d
+kube-system      coredns-54d6f577c6-stljk       1/1     Running   1 (28d ago)   29d
+kube-system      eks-pod-identity-agent-kqtcb   1/1     Running   1 (28d ago)   28d
+kube-system      kube-proxy-fxcjq               1/1     Running   1 (28d ago)   28d
+metallb-system   controller-5c6b6c8447-2jdzc    1/1     Running   0             28d
+metallb-system   speaker-xhkpd                  1/1     Running   0             28d</codeblock><p>The
+                                    example output shows that both MetalLB and Nginx are
+                                up.</p></info>
+                        </substep>
+                        <substep>
+                            <cmd>Check the assigned external IP address for the Nginx service.</cmd>
+                            <info>For
+                                    example:<codeblock id="codeblock_y2p_fsz_rbc">kubectl get svc nginx</codeblock><codeblock id="codeblock_fqg_gtz_rbc">NAME    TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+nginx   LoadBalancer   10.100.65.169   10.14.220.1   80:30623/TCP   9d</codeblock><p>In
+                                    this example, MetalLB has assigned 10.14.220.1 to the Nginx
+                                    LoadBalancer service. This is the overlay IP address that
+                                    workloads in the on-premises cluster can use to reach services
+                                    in the MetalLB cluster.</p></info>
+                        </substep>
+                    </substeps>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_fzc_ztz_rbc">
+        <title>Prepare the Cloud-Native Router VPC Gateway Cluster</title>
+        <taskbody>
+            <context id="context_gzc_ztz_rbc"/>
+            <steps id="steps_vgx_4c1_sbc">
+                <step>
+                    <cmd>Create the Amazon EKS cluster that you want to act as the Cloud-Native
+                        Router VPC Gateway.</cmd>
+                    <info>The cluster must meet the system requirements described in <xref href="../concept/system-resource-requirements-eks.dita"/>.<p>Since you're not installing Cloud-Native Router explicitly, you
+                            can ignore any requirement that relates to downloading the Cloud-Native
+                            Router software package or configuring the Cloud-Native Router Helm
+                            chart.</p></info>
+                </step>
+                <step>
+                    <cmd>Ensure all worker nodes in the cluster have identical interface names and
+                        identical root passwords.</cmd>
+                    <info>In this example, we'll use eth2 to connect to the MetalLB cluster and eth3
+                        to connect to the on-premises cluster.</info>
+                </step>
+                <step>
+                    <cmd>Once the cluster is up, create a <filepath>jcnr-secrets.yaml</filepath>
+                        file with the below contents.</cmd>
+                    <info>
+                        <codeblock id="codeblock_mlj_4fv_sbc">---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jcnr
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jcnr-secrets
+  namespace: jcnr
+data:
+  root-password: &lt;add your password in base64 format&gt;
+  crpd-license: |
+    &lt;add your license in base64 format&gt;</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Follow the steps in <xref href="jcnr-licensing.dita#task_tk3_jgp_41c"/> to
+                        install your Cloud-Native Router BYOL license in the
+                            <filepath>jcnr-secrets.yaml</filepath> file.</cmd>
+                </step>
+                <step id="step_vtx_pzw_kxb">
+                    <cmd>Enter the base64-encoded form of the root password for your nodes into the
+                            <filepath>jcnr-secrets.yaml</filepath> file at the following line:</cmd>
+                    <info>
+                        <codeblock id="codeblock_jzx_y2v_sbc">  root-password: &lt;add your password in base64 format&gt;</codeblock>
+                    </info>
+                    <info>You must enter the password in base64-encoded format. Encode your password
+                        as follows:
+                        <codeblock id="codeblock_eqx_kyz_51c">echo -n "<varname>password</varname>" | base64 -w0</codeblock>Copy
+                        the output of this command into
+                        <filepath>jcnr-secrets.yaml</filepath>.</info>
+                </step>
+                <step>
+                    <cmd>Apply <filepath>jcnr-secrets.yaml</filepath> to the cluster.</cmd>
+                    <info>
+                        <codeblock id="codeblock_qxz_skm_51c">kubectl apply -f jcnr-secrets.yaml
+namespace/jcnr created
+secret/jcnr-secrets created</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Create the secret for accessing the MetalLB cluster.</cmd>
+                    <substeps id="substeps_ikt_hhf_sbc">
+                        <substep>
+                            <cmd>Base64-encode the MetalLB cluster kubeconfig file.</cmd>
+                            <info><codeblock id="codeblock_hc3_khf_sbc">base64 -w0 <varname>&lt;metalLB-kubeconfig&gt;</varname></codeblock>where
+                                        <codeph><varname>&lt;metalLB-kubeconfig&gt;</varname></codeph>
+                                is the kubeconfig file for the MetalLB cluster.<p>The output of this
+                                    command is the base64-encoded form of the MetalLB cluster
+                                    kubeconfig.</p></info>
+                        </substep>
+                        <substep>
+                            <cmd>Create the YAML defining the MetalLB cluster kubeconfig secret.
+                                We'll use a namespace called <codeph>jcnr-gateway</codeph>, which
+                                we'll define later.</cmd>
+                            <info><codeblock id="codeblock_tz1_thf_sbc">apiVersion: v1
+data:
+  kubeconfig: |-
+<varname>&lt;base64-encoded kubeconfig of MetalLB cluster&gt;</varname>
+kind: Secret
+metadata:
+  name: metallb-cluster-kubeconfig
+  namespace: jcnr-gateway
+type: Opaque</codeblock>where <codeph><varname>&lt;base64-encoded
+                                        kubeconfig of MetalLB cluster&gt;</varname></codeph> is the
+                                base64-encoded output from the previous step.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Apply the YAML.</cmd>
+                            <info><codeblock id="codeblock_pp4_33f_sbc">kubectl apply -f metallb-cluster-kubeconfig-secret.yaml</codeblock>
+                                where <filepath>metallb-cluster-kubeconfig-secret.yaml</filepath> is
+                                the name of the YAML file defining the secret.</info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Install webhooks.</cmd>
+                    <info>
+                        <codeblock id="codeblock_oy4_53f_sbc" scale="80">kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.12.0/cert-manager.yaml</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Create the jcnr-aws-configmap. See <xref href="../concept/system-resource-requirements-eks.dita#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/section_b5d_xzg_vyb"/>.</cmd>
+                </step>
+            </steps>
+            <result id="result_myk_y55_sbc">Your cluster is now ready for you to install the
+                Cloud-Native Router VPC Gateway, but let's prepare the on-premises cluster
+                first.</result>
+        </taskbody>
+    </task>
+    <task id="task_vnh_stz_rbc">
+        <title>Prepare the On-Premises Cluster</title>
+        <taskbody>
+            <context id="context_zt5_vtz_rbc">
+                <p>The Cloud-Native Router VPC Gateway sets up an eBGP session and an iBGP session
+                    with the on-premises cluster:</p>
+                <ul id="ul_kxz_mt4_xbc">
+                    <li>
+                        <p>The Cloud-Native Router VPC Gateway uses the eBGP session to learn the
+                            loopback IP address of the BGP speaker in the on-premises cluster. The
+                            Cloud-Native Router VPC Gateway then uses the loopback IP address to
+                            establish the subsequent iBGP session.</p>
+                    </li>
+                    <li>
+                        <p>The Cloud-Native Router VPC Gateway uses the iBGP session to learn routes
+                            to the workloads in the on-premises cluster. For the iBGP session, you
+                            must configure the local and peer AS number to be 64512.</p>
+                    </li>
+                </ul>
+                <p>The Cloud-Native Router VPC Gateway does not impose any restrictions on the
+                    on-premises cluster as long as you configure it to establish the BGP sessions
+                    with the Cloud-Native Router VPC Gateway as described above and to expose routes
+                    to the desired workloads.</p>
+                <p>We don't cover configuring the on-premises cluster because that's very
+                    device-specific. You should configure the following, however, in order to be
+                    consistent with our ongoing example:</p>
+                <ul id="ul_w35_gl5_5bc">
+                    <li>
+                        <p>an eBGP speaker at 10.14.205.158 for the eBGP session</p>
+                    </li>
+                    <li>
+                        <p>an iBGP speaker at 10.14.140.200 for exchanging EVPN routes </p>
+                    </li>
+                    <li>
+                        <p>workloads reachable at 10.4.230.4/32</p>
+                    </li>
+                </ul>
+            </context>
+        </taskbody>
+    </task>
+</topic-map>

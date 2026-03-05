@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_853cadf3bbccede8--7444e1be-192651e83d1--7fc2" xml:lang="en-US">
+  <title>Resolved Issues</title>
+  <prolog>
+    <author>dgv</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>This section provides information about issues that were resolved in release 24.3.</p>
+    <section id="section_jjb_c2h_xvb">
+      <title>Resolved Issues in Juniper Cloud-Native Router Release 24.3</title>
+      <ul id="ul_uhm_5lx_ycc">
+        <li>
+          <p><b>JCNR-8275: Interface VLAN sensors now supported for L3 VLAN Sub-Interfaces—
+            </b>Interface VLAN sensors for gNMI based telemetry are now supported for L3 VLAN
+            sub-interfaces.</p>
+        </li>
+        <li>
+          <p><b>JCNR-8492: JCNR VPC Gateway now supports exchanging IPv6 routes over IPv4 BGP
+              peers</b>— The JCNR VPC Gateway application now supports exchanging IPv6 routes over
+            IPv4 BGP peers even when enableIPv6 flag is enabled.</p>
+        </li>
+        <li>
+          <p><b>JCNR-8470: JCNR VPC Gateway can now configure route filter and prefix list for
+              Routing Policy</b>— When a routing policy is defined in the VPC Gateway application,
+            it successfully deploys the configuration with the defined <codeph>routeFilter</codeph>
+            and <codeph>prefixList</codeph> parameters.</p>
+        </li>
+        <li>
+          <p><b>JCNR-8448: You can modify the default gRPC server port configuration</b>—
+            Modification of the default gRPC server port configuration using the
+              <codeph>grpcTelemetryPort</codeph> parameter in the helm chart is now supported.</p>
+        </li>
+        <li>
+          <p><b>JCNR-8370: AWS VPC Route table is correctly updated when a route is withdrawn or
+              deleted from the JCNR source routing table</b>— When a route is withdrawn or deleted
+            from the JCNR source routing table, the corresponding AWS VPC route table is now
+            correctly updated.</p>
+        </li>
+        <li>
+          <p><b>JCNR-8332: Loopback interface IP configuration is now removed when the JCNR VPC
+              Gateway application is deleted</b>— The Loopback interface IP configuration is now
+            removed when the JCNR VPC Gateway application is deleted. </p>
+        </li>
+        <li>
+          <p><b>JCNR-8264: TWAMP telemetry data is available via gNMI even if the
+                <codeph>test-count</codeph> is set to the non-default value</b>— The TWAMP telemetry
+            data is available via gNMI even if the <codeph>test-count</codeph> is set to anything
+            other than the default value (0).</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

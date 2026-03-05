@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_ef094a73502120b8--51ca2f83-1889e4c7645--7f88" xml:lang="en-US">
+  <title>Bidirectional Forwarding Detection (BFD)</title>
+  <shortdesc>Read this topic to know about the support for Bidirectional Forwarding Detection (BFD)
+    in the Juniper Cloud-Native router.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>The Bidirectional Forwarding Detection (BFD) protocol is a simple hello mechanism that
+      detects failures in a network. A pair of routing devices exchange BFD packets. The devices
+      send hello packets at a specified, regular interval. The device detects a neighbor failure
+      when the routing device stops receiving a reply after a specified interval. The cloud-native
+      router supports both single-hop and multihop BFD. Review the <xref href="https://www.juniper.net/documentation/us/en/software/junos/high-availability/topics/topic-map/bfd.html" format="html" scope="external">Understanding BFD</xref> topic for more information.</p>
+    <section id="section_mxx_qvm_s2c">
+      <title>Configuration</title>
+      <p>The following configlet configures BFD on internal BGP peer session with BGP neighbor
+          <codeph>192.168.1.3</codeph>.</p>
+      <codeblock id="codeblock_rny_vvm_s2c">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces ens1f2 unit 0 family inet address 10.10.1.26/24
+    set interfaces ens1f2 unit 0 family inet6 address 2001:0db8:192:168:1::2610:10:1::26/64
+    set interfaces ens1f2 unit 0 family mpls
+    set interfaces lo0 unit 0 family inet address 192.168.1.26/32
+    set interfaces lo0 unit 0 family inet6 address 2001:0db8:192:168:1::26/128
+    set protocols ospf area 0 interface lo0.0
+    set protocols ospf area 0 interface ens1f2
+    set protocols ospf3 area 0 interface lo0.0
+    set protocols ospf3 area 0 interface ens1f2
+    set protocols mpls interface ens1f2
+    set protocols mpls interface lo0.0
+    set protocols bgp group BFD type internal
+    set protocols bgp group BFD multihop
+    set protocols bgp group BFD local-address 192.168.1.26
+    set protocols bgp group BFD family inet-vpn unicast
+    set protocols bgp group BFD family inet6-vpn unicast
+    set protocols bgp group BFD local-as 64512
+    set protocols bgp group BFD neighbor 192.168.1.3 bfd-liveness-detection minimum-interval 2500
+    set protocols bgp group BFDv6 type internal
+    set protocols bgp group BFDv6 family inet6-vpn unicast
+    set protocols bgp group BFDv6 local-as 64512
+    set protocols bgp group BFDv6 neighbor 2001:0db8:192:168:1::3 local-address 2001:0db8:192:168:1::26
+    set protocols bgp group BFDv6 neighbor 2001:0db8:192:168:1::3 bfd-liveness-detection minimum-interval 2500
+    set routing-options dynamic-tunnels to_pe source-address 192.168.1.26
+    set routing-options dynamic-tunnels to_pe udp
+    set routing-options dynamic-tunnels to_pe destination-networks 192.168.1.3/32
+    set protocols mpls ipv6-tunneling
+    set protocols bfd traceoptions file bfd.log
+    set protocols bfd traceoptions flag all
+  crpdSelector:
+    matchLabels:
+        node: worker</codeblock>
+    </section>
+    <section id="section_vmq_xym_s2c">
+      <title>Verification</title>
+      <p>You can verify the BFD configuration on the <xref href="accessing-crpd-cli.dita">cRPD shell</xref>. <subsection id="subsection_z4y_2zm_s2c">
+          <title>Verify BGP Summary</title>
+          <p>Verify the BGP summary using the <codeph>show bgp summary</codeph> command.</p>
+          <codeblock id="codeblock_t2t_hzm_s2c">user@host&gt; show bgp summary 
+Threading mode: BGP I/O
+Default eBGP mode: advertise - accept, receive - accept
+Groups: 2 Peers: 2 Down peers: 0
+Table          Tot Paths  Act Paths Suppressed    History Damp State    Pending
+bgp.l3vpn.0          
+                       0          0          0          0          0          0
+bgp.l3vpn-inet6.0    
+                       0          0          0          0          0          0
+Peer                     AS      InPkt     OutPkt    OutQ   Flaps Last Up/Dwn State|#Active/Received/Accepted/Damped...
+192.168.1.3               64512         13         11       0       1        4:02 Establ
+  bgp.l3vpn.0: 0/0/0/0
+  bgp.l3vpn-inet6.0: 0/0/0/0
+2001:0db8:192:168:1::3                  64512         13         12       0       1        4:49 Establ
+  bgp.l3vpn-inet6.0: 0/0/0/0</codeblock>
+        </subsection><subsection id="subsection_et4_jzm_s2c">
+          <title>Verify BFD Sessions</title>
+          <p>Verify BFD sessions between the iBGP peers using the <codeph>show bfd session</codeph>
+            command. </p>
+          <codeblock id="codeblock_pw2_nzm_s2c">user@host&gt; show bfd session 
+                                                      Detect   Transmit
+Address                      State     Interface      Time     Interval    Multiplier
+192.168.1.3                  Up                       0.900     0.300      3   
+2001:0db8:192:168:1::3                 Up             0.900     0.300      3   
+
+2 sessions, 2 clients
+Cumulative transmit rate 6.7 pps, cumulative receive rate 6.7 pps</codeblock>
+        </subsection></p>
+    </section>
+  </conbody>
+
+  <related-links/>
+</concept>

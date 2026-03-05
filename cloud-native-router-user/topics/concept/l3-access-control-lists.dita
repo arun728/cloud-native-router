@@ -1,0 +1,931 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_ceade9bebf8c7210-235601f1-18da2f73dd4--7e4b" xml:lang="en-US">
+  <title>Access Control Lists (Firewall Filters)</title>
+  <shortdesc>Read this topic to learn about the Layer 3-Layer 4 access control lists (firewall
+    filters) in the cloud-native router.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>Juniper Cloud-Native Router Release supports stateless firewall filters. Firewall filters
+      provide a means of protecting the cloud-native router from excessive traffic transiting the
+      router to a network destination or destined for the Routing Engine. A stateless firewall
+      filter, also known as an access control list (ACL), does not statefully inspect traffic.
+      Instead, it evaluates packet contents statically and does not keep track of the state of
+      network connections. The basic purpose of a stateless firewall filter is to enhance security
+      through the use of packet filtering. Packet filtering enables you to inspect the components of
+      incoming or outgoing packets and then perform the actions you specify on packets that match
+      the criteria you specify. The typical use of a stateless firewall filter is to protect the
+      Routing Engine processes and resources from malicious or untrusted packets.</p>
+    <p>To influence which packets are allowed to transit the system and to apply special actions to
+      packets as necessary, you can configure a sequence of one or more packet-filtering rules,
+      called <i>filter terms</i>. A filter term specifies <i>match conditions</i> to use to
+      determine a match and <i>actions</i> to take on a matched packet. A stateless firewall filter
+      enables you to manipulate any packet of a particular protocol family, including fragmented
+      packets, based on evaluation of Layer 3 and Layer 4 header fields. Please review the <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/routing-policy/topics/concept/firewall-filter-overview.html" scope="external">Stateless Firewall Filter Overview</xref> topic for more
+      information. </p>
+    <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>also supports <xref href="l2-access-control-lists.dita">Layer-2
+        access control lists (firewall filter for bridge family)</xref>.</p>
+    <note id="note_e2x_pdx_41c">
+      <p>In <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>you can apply a stateless firewall filter to an ingress interface only. The
+        supported interfaces types include a fabric interface, sub-interface, pod interface and an
+          <codeph>irb</codeph> interface. </p>
+    </note>
+    <note id="note_bpv_g54_q1c">
+      <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports a maximum number of 16 filters per family and 16 terms per filter.</p>
+    </note>
+    <p>
+      <subsection id="subsection_kkp_c1h_qcc">
+        <title>Supported Protocol Families</title>
+      </subsection>
+    </p>
+    <table frame="all" id="table_am5_21h_qcc">
+      <title>Firewall Filter Protocol Families</title>
+      <tgroup cols="2">
+        <colspec colname="c1" colnum="1" colwidth="1*"/>
+        <colspec colname="c2" colnum="2" colwidth="1*"/>
+        <thead>
+          <row>
+            <entry>
+              <p>Type of Traffic to be Filtered</p>
+            </entry>
+            <entry>
+              <p>Configuration Statement</p>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <p>Internet Protocol version 4 (IPv4)</p>
+            </entry>
+            <entry>
+              <p>family inet</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>Internet Protocol version 6 (IPv6)</p>
+            </entry>
+            <entry>
+              <p>family inet6</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>MPLS</p>
+            </entry>
+            <entry>
+              <p>family mpls</p>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <subsection id="subsection_kpv_k1h_qcc">
+      <title>Supported Match Conditions and Actions (IPv4 and IPv6)</title>
+      <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports the IPv4 and IPv6 standard firewall filter with the match conditions and
+        actions provided in the table. </p>
+    </subsection>
+    <table frame="all" id="table_gzb_fh3_m1c">
+      <title>Firewall Filter Match Conditions for IPv4 Traffic</title>
+      <tgroup cols="2">
+        <colspec colname="c1" colnum="1" colwidth="1*"/>
+        <colspec colname="c2" colnum="2" colwidth="1.99*"/>
+        <thead>
+          <row>
+            <entry>
+              <p>Match Condition</p>
+            </entry>
+            <entry>
+              <p>Description</p>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <p>destination-address <varname>address</varname>
+              </p>
+            </entry>
+            <entry>
+              <p>Match the IPv4 destination address field. You can provide a prefix with an optional
+                subnet mask.</p>
+            </entry>
+          </row>
+          <row>
+            <entry>destination-port <varname>number</varname></entry>
+            <entry>
+              <p>Match the UDP or TCP destination port field.</p>
+              <p>When configuring port based matches you must also configure the <codeph>protocol
+                  udp</codeph> or <codeph>protocol tcp</codeph> match statement in the same filter
+                term. Matching only on the port value can result in unexpected matches.</p>
+              <p>In place of the numeric value, you can specify one of the following text synonyms
+                (the port numbers are also listed): <codeph>afs</codeph> (1483),
+                  <codeph>bgp</codeph> (179), <codeph>biff</codeph> (512), <codeph>bootpc</codeph>
+                (68), <codeph>bootps</codeph> (67), <codeph>cmd</codeph> (514),
+                  <codeph>cvspserver</codeph> (2401), <codeph>dhcp</codeph> (67),
+                  <codeph>domain</codeph> (53), <codeph>eklogin</codeph> (2105),
+                  <codeph>ekshell</codeph> (2106), <codeph>exec</codeph> (512),
+                  <codeph>finger</codeph> (79), <codeph>ftp</codeph> (21), <codeph>ftp-data</codeph>
+                (20), <codeph>http</codeph> (80), <codeph>https</codeph> (443),
+                  <codeph>ident</codeph> (113), <codeph>imap</codeph> (143),
+                  <codeph>kerberos-sec</codeph> (88), <codeph>klogin</codeph> (543),
+                  <codeph>kpasswd</codeph> (761), <codeph>krb-prop</codeph> (754),
+                  <codeph>krbupdate</codeph> (760), <codeph>kshell</codeph> (544),
+                  <codeph>ldap</codeph> (389), <codeph>ldp</codeph> (646), <codeph>login</codeph>
+                (513), <codeph>mobileip-agent</codeph> (434), <codeph>mobilip-mn</codeph> (435),
+                  <codeph>msdp</codeph> (639), <codeph>netbios-dgm</codeph> (138),
+                  <codeph>netbios-ns</codeph> (137), <codeph>netbios-ssn</codeph> (139),
+                  <codeph>nfsd</codeph> (2049), <codeph>nntp</codeph> (119), <codeph>ntalk</codeph>
+                (518), <codeph>ntp</codeph> (123), <codeph>pop3</codeph> (110),
+                  <codeph>pptp</codeph> (1723), <codeph>printer</codeph> (515),
+                  <codeph>radacct</codeph> (1813), <codeph>radius</codeph> (1812),
+                  <codeph>rip</codeph> (520), <codeph>rkinit</codeph> (2108), <codeph>smtp</codeph>
+                (25), <codeph>snmp</codeph> (161), <codeph>snmptrap</codeph> (162),
+                  <codeph>snpp</codeph> (444), <codeph>socks</codeph> (1080), <codeph>ssh</codeph>
+                (22), <codeph>sunrpc</codeph> (111), <codeph>syslog</codeph> (514),
+                  <codeph>tacacs</codeph> (49), <codeph>tacacs-ds</codeph> (65),
+                  <codeph>talk</codeph> (517), <codeph>telnet</codeph> (23), <codeph>tftp</codeph>
+                (69), <codeph>timed</codeph> (525), <codeph>who</codeph> (513), or
+                  <codeph>xdmcp</codeph> (177).</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>source-address <varname>address</varname></p>
+            </entry>
+            <entry>
+              <p>Match the IPv4 address of the source node sending the packet. You can provide a
+                prefix with an optional subnet mask.</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>source-port <varname>number</varname></p>
+            </entry>
+            <entry>
+              <p>Match the UDP or TCP source port field.</p>
+              <p>When configuring port based matches you must also configure the <codeph>protocol
+                  udp</codeph> or <codeph>protocol tcp</codeph> match statement in the same filter
+                term. Matching only on the port value can result in unexpected matches.</p>
+              <p>In place of the numeric value, you can specify one of the text synonyms listed with
+                the <codeph>destination-port number</codeph> match condition.</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>protocol <varname>number</varname></p>
+            </entry>
+            <entry>
+              <p>Match the IP protocol type field. In place of the numeric value, you can specify
+                one of the following text synonyms (the field values are also listed):
+                  <codeph>ah</codeph> (51), <codeph>dstopts</codeph> (60), <codeph>egp</codeph> (8),
+                  <codeph>esp</codeph> (50), <codeph>fragment</codeph> (44), <codeph>gre</codeph>
+                (47), <codeph>hop-by-hop</codeph> (0), <codeph>icmp</codeph> (1),
+                  <codeph>icmp6</codeph> (58), <codeph>icmpv6</codeph> (58), <codeph>igmp</codeph>
+                (2), <codeph>ipip</codeph> (4), <codeph>ipv6</codeph> (41), <codeph>ospf</codeph>
+                (89), <codeph>pim</codeph> (103), <codeph>rsvp</codeph> (46), <codeph>sctp</codeph>
+                (132), <codeph>tcp</codeph> (6), <codeph>udp</codeph> (17), or <codeph>vrrp</codeph>
+                (112).</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>tcp-flags <varname>value</varname></p>
+            </entry>
+            <entry>
+              <p>Match one or more of the low-order 6 bits in the 8-bit TCP flags field in the TCP
+                header.</p>
+              <p>To specify individual bit fields, you can specify the following text synonyms or
+                hexadecimal values:</p>
+              <ul id="ul_fvc_2l3_m1c">
+                <li>
+                  <p><codeph>fin</codeph> (0x01)</p>
+                </li>
+                <li>
+                  <p><codeph>syn</codeph> (0x02)</p>
+                </li>
+                <li>
+                  <p><codeph>rst</codeph> (0x04)</p>
+                </li>
+                <li>
+                  <p><codeph>push</codeph> (0x08)</p>
+                </li>
+                <li>
+                  <p><codeph>ack</codeph> (0x10)</p>
+                </li>
+                <li>
+                  <p><codeph>urgent</codeph> (0x20)</p>
+                </li>
+              </ul>
+              <p>In a TCP session, the SYN flag is set only in the initial packet sent, while the
+                ACK flag is set in all packets sent after the initial packet.</p>
+              <p>You can string together multiple flags using the bit-field logical operators.</p>
+              <p>If you configure this match condition, we recommend that you also configure the
+                  <codeph>protocol tcp</codeph> match statement in the same term to specify that the
+                TCP protocol is being used on the port.</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>icmp-type <varname>number</varname></p>
+            </entry>
+            <entry>
+              <p>Match the ICMP message type field. </p>
+              <p>In place of the numeric value, you can specify one of the following text synonyms
+                (the field values are also listed): <codeph>echo-reply</codeph> (0),
+                  <codeph>echo-request</codeph> (8), <codeph>info-reply</codeph> (16),
+                  <codeph>info-request</codeph> (15), <codeph>mask-request</codeph> (17),
+                  <codeph>mask-reply</codeph> (18), <codeph>parameter-problem</codeph> (12),
+                  <codeph>redirect</codeph> (5), <codeph>router-advertisement</codeph> (9),
+                  <codeph>router-solicit</codeph> (10), <codeph>source-quench</codeph> (4),
+                  <codeph>time-exceeded</codeph> (11), <codeph>timestamp</codeph> (13),
+                  <codeph>timestamp-reply</codeph> (14), or <codeph>unreachable</codeph> (3). </p>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <table frame="all" id="table_xb2_bm3_m1c">
+      <title>Firewall Filter Match Conditions for IPv6 Traffic</title>
+      <tgroup cols="2">
+        <colspec colname="c1" colnum="1" colwidth="1*"/>
+        <colspec colname="c2" colnum="2" colwidth="1.99*"/>
+        <thead>
+          <row>
+            <entry>
+              <p>Match Condition</p>
+            </entry>
+            <entry>
+              <p>Description</p>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <p>destination-address <varname>address</varname></p>
+            </entry>
+            <entry>
+              <p>Match the IPv6 destination address field. You can provide a prefix with an optional
+                subnet mask.</p>
+            </entry>
+          </row>
+          <row>
+            <entry>destination-port <varname>number</varname></entry>
+            <entry>
+              <p>Match the UDP or TCP destination port field.</p>
+              <p>When configuring port based matches you must also configure the <codeph>protocol
+                  udp</codeph> or <codeph>protocol tcp</codeph> match statement in the same filter
+                term. Matching only on the port value can result in unexpected matches.</p>
+              <p>In place of the numeric value, you can specify one of the following text synonyms
+                (the port numbers are also listed): <codeph>afs</codeph> (1483),
+                  <codeph>bgp</codeph> (179), <codeph>biff</codeph> (512), <codeph>bootpc</codeph>
+                (68), <codeph>bootps</codeph> (67), <codeph>cmd</codeph> (514),
+                  <codeph>cvspserver</codeph> (2401), <codeph>dhcp</codeph> (67),
+                  <codeph>domain</codeph> (53), <codeph>eklogin</codeph> (2105),
+                  <codeph>ekshell</codeph> (2106), <codeph>exec</codeph> (512),
+                  <codeph>finger</codeph> (79), <codeph>ftp</codeph> (21), <codeph>ftp-data</codeph>
+                (20), <codeph>http</codeph> (80), <codeph>https</codeph> (443),
+                  <codeph>ident</codeph> (113), <codeph>imap</codeph> (143),
+                  <codeph>kerberos-sec</codeph> (88), <codeph>klogin</codeph> (543),
+                  <codeph>kpasswd</codeph> (761), <codeph>krb-prop</codeph> (754),
+                  <codeph>krbupdate</codeph> (760), <codeph>kshell</codeph> (544),
+                  <codeph>ldap</codeph> (389), <codeph>ldp</codeph> (646), <codeph>login</codeph>
+                (513), <codeph>mobileip-agent</codeph> (434), <codeph>mobilip-mn</codeph> (435),
+                  <codeph>msdp</codeph> (639), <codeph>netbios-dgm</codeph> (138),
+                  <codeph>netbios-ns</codeph> (137), <codeph>netbios-ssn</codeph> (139),
+                  <codeph>nfsd</codeph> (2049), <codeph>nntp</codeph> (119), <codeph>ntalk</codeph>
+                (518), <codeph>ntp</codeph> (123), <codeph>pop3</codeph> (110),
+                  <codeph>pptp</codeph> (1723), <codeph>printer</codeph> (515),
+                  <codeph>radacct</codeph> (1813), <codeph>radius</codeph> (1812),
+                  <codeph>rip</codeph> (520), <codeph>rkinit</codeph> (2108), <codeph>smtp</codeph>
+                (25), <codeph>snmp</codeph> (161), <codeph>snmptrap</codeph> (162),
+                  <codeph>snpp</codeph> (444), <codeph>socks</codeph> (1080), <codeph>ssh</codeph>
+                (22), <codeph>sunrpc</codeph> (111), <codeph>syslog</codeph> (514),
+                  <codeph>tacacs</codeph> (49), <codeph>tacacs-ds</codeph> (65),
+                  <codeph>talk</codeph> (517), <codeph>telnet</codeph> (23), <codeph>tftp</codeph>
+                (69), <codeph>timed</codeph> (525), <codeph>who</codeph> (513), or
+                  <codeph>xdmcp</codeph> (177).</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>source-address <varname>address</varname></p>
+            </entry>
+            <entry>
+              <p>Match the IPv6 address of the source node sending the packet. You can provide a
+                prefix with an optional subnet mask.</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>source-port <varname>number</varname></p>
+            </entry>
+            <entry>
+              <p>Match the UDP or TCP source port field.</p>
+              <p>When configuring port based matches you must also configure the <codeph>protocol
+                  udp</codeph> or <codeph>protocol tcp</codeph> match statement in the same filter
+                term. Matching only on the port value can result in unexpected matches.</p>
+              <p>In place of the numeric value, you can specify one of the text synonyms listed with
+                the <codeph>destination-port number</codeph> match condition.</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>tcp-flags <varname>value</varname></p>
+            </entry>
+            <entry>
+              <p>Match one or more of the low-order 6 bits in the 8-bit TCP flags field in the TCP
+                header.</p>
+              <p>To specify individual bit fields, you can specify the following text synonyms or
+                hexadecimal values:</p>
+              <ul id="ul_eq4_3m3_m1c">
+                <li>
+                  <p><codeph>fin</codeph> (0x01)</p>
+                </li>
+                <li>
+                  <p><codeph>syn</codeph> (0x02)</p>
+                </li>
+                <li>
+                  <p><codeph>rst</codeph> (0x04)</p>
+                </li>
+                <li>
+                  <p><codeph>push</codeph> (0x08)</p>
+                </li>
+                <li>
+                  <p><codeph>ack</codeph> (0x10)</p>
+                </li>
+                <li>
+                  <p><codeph>urgent</codeph> (0x20)</p>
+                </li>
+              </ul>
+              <p>In a TCP session, the SYN flag is set only in the initial packet sent, while the
+                ACK flag is set in all packets sent after the initial packet.</p>
+              <p>You can string together multiple flags using the bit-field logical operators.</p>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>icmp-type <varname>message-type</varname></p>
+            </entry>
+            <entry>
+              <p>Match the ICMP message type field. </p>
+              <p>In place of the numeric value, you can specify one of the following text synonyms
+                (the field values are also listed): <codeph>certificate-path-advertisement</codeph>
+                (149), <codeph>certificate-path-solicitation</codeph> (148),
+                  <codeph>destination-unreachable</codeph> (1), <codeph>echo-reply</codeph> (129),
+                  <codeph>echo-request</codeph> (128),
+                  <codeph>home-agent-address-discovery-reply</codeph> (145),
+                  <codeph>home-agent-address-discovery-request</codeph> (144),
+                  <codeph>inverse-neighbor-discovery-advertisement</codeph> (142),
+                  <codeph>inverse-neighbor-discovery-solicitation</codeph> (141),
+                  <codeph>membership-query</codeph> (130), <codeph>membership-report</codeph> (131),
+                  <codeph>membership-termination</codeph> (132),
+                  <codeph>mobile-prefix-advertisement-reply</codeph> (147),
+                  <codeph>mobile-prefix-solicitation</codeph> (146),
+                  <codeph>neighbor-advertisement</codeph> (136), <codeph>neighbor-solicit</codeph>
+                (135), <codeph>node-information-reply</codeph> (140),
+                  <codeph>node-information-request</codeph> (139), <codeph>packet-too-big</codeph>
+                (2), <codeph>parameter-problem</codeph> (4),
+                  <codeph>private-experimentation-100</codeph> (100),
+                  <codeph>private-experimentation-101</codeph> (101),
+                  <codeph>private-experimentation-200</codeph> (200),
+                  <codeph>private-experimentation-201</codeph> (201), <codeph>redirect</codeph>
+                (137), <codeph>router-advertisement</codeph> (134),
+                  <codeph>router-renumbering</codeph> (138), <codeph>router-solicit</codeph> (133),
+                or <codeph>time-exceeded</codeph> (3).</p>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <table frame="all" id="table_svd_lt3_m1c">
+      <title>Firewall Filter Actions (IPv4 and IPv6)</title>
+      <tgroup cols="3">
+        <colspec colname="c1" colnum="1" colwidth="1*"/>
+        <colspec colname="c2" colnum="2" colwidth="1*"/>
+        <colspec colname="c3" colnum="3" colwidth="1*"/>
+        <thead>
+          <row>
+            <entry>
+              <p>Type of Action</p>
+            </entry>
+            <entry>
+              <p>Description</p>
+            </entry>
+            <entry>
+              <p>Supported actions</p>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <p>Terminating</p>
+            </entry>
+            <entry>
+              <p>Halts all evaluation of a firewall filter for a specific packet. The router (or
+                switch) performs the specified action, and no additional terms are used to examine
+                the packet.</p>
+              <p>You can specify only one<i> terminating action</i> in a firewall filter term. If
+                you try to specify more than one <i>terminating action</i> within the filter term
+                then the latest <i>terminating action</i> will replace the existing <i>terminating
+                  action</i>. You can, however, specify one terminating action with one or more
+                  <i>nonterminating actions</i> in a single term. For example, within a term, you
+                can specify <codeph>accept</codeph> with <codeph>count</codeph>. Regardless of the
+                number of terms that contain terminating actions, once the system processes a
+                terminating action within a term, processing of the entire firewall filter
+                halts.</p>
+            </entry>
+            <entry>
+              <ul id="ul_m2v_rlh_qcc">
+                <li><codeph>accept</codeph> —Accept the packet</li>
+              </ul>
+              <ul id="ul_wdz_rlh_qcc">
+                <li><codeph>discard</codeph> —Discard a packet silently, without sending an Internet
+                  Control Message Protocol (ICMP) message. Discarded packets are available for
+                  logging and sampling.</li>
+              </ul>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>Nonterminating</p>
+            </entry>
+            <entry>
+              <p>Performs other functions on a packet (such as incrementing a counter, logging
+                information about the packet header, sampling the packet data, or sending
+                information to a remote host using the system log functionality), but any additional
+                terms are used to examine the packet. </p>
+              <p>Note: <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports <codeph>count</codeph> as a nonterminating action only when
+                added along with a terminating action.</p>
+            </entry>
+            <entry>
+              <ul id="ul_wc4_rlh_qcc">
+                <li>count <varname>counter-name</varname></li>
+              </ul>
+              <ul id="ul_ahc_rlh_qcc">
+                <li>log—Log the packet header information in a buffer within the Packet Forwarding
+                  Engine. You can access this information by issuing the <codeph>show firewall
+                    log</codeph> command at the command-line interface (CLI).</li>
+              </ul>
+              <ul id="ul_bhc_rlh_qcc">
+                <li>syslog—Log the packet to the system log file.</li>
+              </ul>
+              <note id="note_chc_rlh_qcc">
+                <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is preconfigured with the following syslog configuration:</p>
+                <codeblock id="codeblock_dhc_rlh_qcc">set system syslog file jcnr-firewall.log any any 
+set system syslog file jcnr-firewall.log match-strings “JCNR-FIREWALL” </codeblock>
+                <p>You must additionally configure syslog as follows:</p>
+                <codeblock id="codeblock_m3f_5pd_rcc">set system syslog file messages_firewall_any match-strings “JCNR-FIREWALL” </codeblock>
+              </note>
+              <ul id="ul_ehc_rlh_qcc">
+                <li>routing-instance routing-instance-name—Direct packets to the specified routing
+                  instance.</li>
+                <li>
+                  <p>forwarding-class <varname>class-name</varname>—Classify the packet to the named
+                    forwarding class.</p>
+                </li>
+                <li>
+                  <p>policer <varname>policer-name</varname>—Name of policer to use to rate-limit
+                    traffic.</p>
+                </li>
+              </ul>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <subsection id="subsection_owc_v1h_qcc">
+      <title>Supported Match Conditions and Actions (MPLS)</title>
+      <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports the MPLS standard firewall filter with the match conditions and actions
+        provided in the table.</p>
+    </subsection>
+    <table frame="all" id="table_qhc_bbh_qcc">
+      <title>Firewall Filter Match Conditions for MPLS Traffic</title>
+      <tgroup cols="2">
+        <colspec colname="c1" colnum="1" colwidth="1*"/>
+        <colspec colname="c2" colnum="2" colwidth="1*"/>
+        <thead>
+          <row>
+            <entry>
+              <p>Match Condition</p>
+            </entry>
+            <entry>
+              <p>Description</p>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <p>exp <varname>number</varname></p>
+            </entry>
+            <entry>
+              <p>Experimental (EXP) bit number or range of bit numbers in the MPLS header of a
+                packet.</p>
+              <p>For number, you can specify one or more values from 0 through 7 in binary, decimal
+                or hexadecimal format, as given below:</p>
+              <ul id="ul_aly_kbh_qcc">
+                <li>
+                  <p>A single EXP bit—for example, <userinput>exp 3</userinput></p>
+                </li>
+                <li>
+                  <p>Several EXP bits—for example, <userinput>exp 0,4</userinput></p>
+                </li>
+                <li>
+                  <p>A range of EXP bits—for example, <userinput>exp [0-5]</userinput>.</p>
+                </li>
+              </ul>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>label <varname>number</varname></p>
+            </entry>
+            <entry>
+              <p>MPLS label value or range of label values in the MPLS header of a packet.</p>
+              <p>For number, you can specify one or more values from 0 through 1048575 in decimal or
+                hexadecimal format, as given below:</p>
+              <ul id="ul_etx_mbh_qcc">
+                <li>
+                  <p>A single label—for example, <userinput>label 3</userinput></p>
+                </li>
+                <li>
+                  <p>Several labels—for example, <userinput>label 0,4</userinput></p>
+                </li>
+                <li>
+                  <p>A range of labels—for example, <userinput>label [0-5]</userinput></p>
+                </li>
+              </ul>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <table frame="all" id="table_izh_dch_qcc">
+      <title>Firewall Filter Actions (MPLS)</title>
+      <tgroup cols="3">
+        <colspec colname="c1" colnum="1" colwidth="1*"/>
+        <colspec colname="c2" colnum="2" colwidth="1*"/>
+        <colspec colname="c3" colnum="3" colwidth="1*"/>
+        <thead>
+          <row>
+            <entry>
+              <p>Type of Action</p>
+            </entry>
+            <entry>
+              <p>Description</p>
+            </entry>
+            <entry>
+              <p>Supported actions</p>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <p>Terminating</p>
+            </entry>
+            <entry>
+              <p>Halts all evaluation of a firewall filter for a specific packet. The router (or
+                switch) performs the specified action, and no additional terms are used to examine
+                the packet.</p>
+              <p>You can specify only one<i> terminating action</i> in a firewall filter term. If
+                you try to specify more than one <i>terminating action</i> within the filter term
+                then the latest <i>terminating action</i> will replace the existing <i>terminating
+                  action</i>. You can, however, specify one terminating action with one or more
+                  <i>nonterminating actions</i> in a single term. For example, within a term, you
+                can specify <codeph>accept</codeph> with <codeph>count</codeph> and
+                  <codeph>syslog</codeph>. Regardless of the number of terms that contain
+                terminating actions, once the system processes a terminating action within a term,
+                processing of the entire firewall filter halts.</p>
+            </entry>
+            <entry>
+              <ul id="ul_k2w_nkh_qcc">
+                <li><codeph>accept</codeph> —Accept the packet.</li>
+              </ul>
+              <ul id="ul_xt1_4kh_qcc">
+                <li><codeph>discard</codeph> —Discard a packet silently, without sending an Internet
+                  Control Message Protocol (ICMP) message. Discarded packets are available for
+                  logging and sampling.</li>
+              </ul>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>Nonterminating</p>
+            </entry>
+            <entry>
+              <p>Performs other functions on a packet (such as incrementing a counter, logging
+                information about the packet header, sampling the packet data, or sending
+                information to a remote host using the system log functionality), but any additional
+                terms are used to examine the packet. </p>
+              <p>Note: <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports <codeph>count</codeph>, <codeph>log</codeph>,
+                  <codeph>syslog</codeph>, and <codeph>routing-instance</codeph> as nonterminating
+                actions only when added along with a terminating action.</p>
+            </entry>
+            <entry>
+              <ul id="ul_zh3_4kh_qcc">
+                <li>count <varname>counter-name</varname>—Count the packet in the named
+                  counter.</li>
+              </ul>
+              <ul id="ul_krm_4kh_qcc">
+                <li>log—Log the packet header information in a buffer within the Packet Forwarding
+                  Engine. You can access this information by issuing the <codeph>show firewall
+                    log</codeph> command at the command-line interface (CLI).</li>
+              </ul>
+              <ul id="ul_nms_4kh_qcc">
+                <li>syslog—Log the packet to the system log file.</li>
+              </ul>
+              <note id="note_aws_1kh_qcc">
+                <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is preconfigured with the following syslog configuration:</p>
+                <codeblock id="codeblock_rvn_fkh_qcc">set system syslog file jcnr-firewall.log any any 
+set system syslog file jcnr-firewall.log match-strings “JCNR-FIREWALL” </codeblock>
+                <p>You must additionally configure syslog as follows:</p>
+                <codeblock id="codeblock_r2g_vpd_rcc">set system syslog file messages_firewall_any match-strings “JCNR-FIREWALL” </codeblock>
+              </note>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <section>
+      <title>Configuration Example</title>
+      <note id="note_fty_k5n_sbc">
+        <p>Use the <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">configlet resource</xref> to configure the cRPD pods.</p>
+      </note>
+      <p>You can configure the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>controller with a stateless firewall filter under the
+          <codeph>firewall</codeph> hierarchy. </p>
+      <p>Configuration example for IPv4 family is provided below:</p>
+      <codeblock id="codeblock_aj4_cqj_m1c">firewall { 
+    family inet { 
+        filter temp { 
+            term a { 
+                from { 
+                    source-address { 
+                        10.0.0.1/32; 
+                    } 
+                    destination-address { 
+                        10.0.0.2/32; 
+                    } 
+                    protocol icmp; 
+                    icmp-type echo-request; 
+                    source-port http; 
+                    destination-port bgp; 
+                    tcp-flags fin; 
+                } 
+                then { 
+                    count c1; 
+                    accept;           
+                } 
+            } 
+        } 
+    } 
+} 
+</codeblock>
+      <p>Configuration example for IPv6 family is provided below:</p>
+      <codeblock id="codeblock_a4g_dpk_m1c">firewall { 
+    family inet6 { 
+        filter temp6 { 
+            term a { 
+                from { 
+                    source-address { 
+                        2001:db8::1/128; 
+                    } 
+                    destination-address { 
+                        2001:db8::1/128; 
+                    } 
+                    icmp-type echo-request; 
+                    source-port http; 
+                    destination-port bgp; 
+                    tcp-flags fin; 
+                } 
+                then { 
+                    count c1; 
+                    discard;          
+                } 
+            } 
+        } 
+    } 
+} 
+</codeblock>
+      <p>Configuration example for MPLS family is provided below:</p>
+      <codeblock id="codeblock_wfk_44d_rcc">firewall { 
+    family mpls { 
+        filter temp_mpls { 
+            term t1 { 
+                from { 
+                    exp 2-5;
+                    label 1234-4321;
+                } 
+                then { 
+                    accept;
+                    count c1;
+                    log;
+                    syslog;          
+                } 
+            } 
+        } 
+    } 
+} 
+</codeblock>
+      <p>The filter will be applied to the ingress interface. The supported interfaces include a
+        fabric interface, sub-interface, pod interface and an <codeph>irb</codeph> interface. The
+        filter can be applied only on input for an interface:</p>
+      <codeblock id="codeblock_a2c_brk_m1c">user@host &gt; show interfaces enp4s0   
+unit 0 { 
+    family inet { 
+        filter { 
+            input temp; 
+        } 
+        address 10.0.0.1/24; 
+    } 
+    family inet6 { 
+        filter { 
+            input temp6; 
+        } 
+    } 
+} </codeblock>
+    </section>
+    <section id="section_o4k_25k_m1c">
+      <title>Troubleshooting</title>
+      <p><subsection id="subsection_hc3_z5k_m1c">
+          <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Controller Commands</title>
+        </subsection>The following commands may be used on the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>controller to view firewall
+        information:</p>
+      <p><b>Display all firewall filters for family inet (IPv4)</b></p>
+      <codeblock id="codeblock_snf_k5k_m1c">user@host&gt; show firewall family inet 
+Filter: temp                                                    
+Counters: 
+Name                                                                            Bytes              Packets 
+c1                                                                                  0                    0 
+c2                                                                            1532909                22500 
+Filter: temp 2                                                   
+Counters: 
+Name                                                                            Bytes              Packets 
+c3                                                                                 0                    0 
+c4                                                                               100                  100 </codeblock>
+      <p><b><b>Display a specific firewall filter for family inet</b></b></p>
+      <codeblock id="codeblock_nhn_g5k_m1c">user@host&gt; show firewall family inet filter temp 
+Filter: temp                                                    
+Counters: 
+Name                                                                            Bytes              Packets 
+c1                                                                                  0                    0 
+c2                                                                            1532909                22500  </codeblock>
+      <p><b>Display a specific counter for a firewall filter for family inet</b></p>
+      <codeblock id="codeblock_o4z_35k_m1c">user@host&gt; show firewall family inet filter temp counter c2 
+Filter: temp                                                    
+Counters: 
+Name                                                                            Bytes              Packets               
+c2                                                                            1532909                22500 </codeblock>
+      <p><b>Display all firewall filters for family inet6 (IPv6)</b></p>
+      <codeblock id="codeblock_ofc_45k_m1c">user@host&gt; show firewall family inet6 
+Filter: temp6                                                    
+Counters: 
+Name                                                                            Bytes              Packets 
+c1                                                                                  0                    0 
+c2                                                                            1532909                22500 
+Filter: temp6_2                                                   
+Counters: 
+Name                                                                            Bytes              Packets 
+c3                                                                                 0                    0 
+c4                                                                               100                  100 </codeblock>
+      <p><b>Display all firewall filters for family mpls</b></p>
+      <codeblock id="codeblock_qg4_gpd_rcc">user@host&gt; show firewall family mpls 
+Filter: temp_mpls                                                     
+Counters:  
+Name                                                                            Bytes              Packets  
+c1                                                                                  0                    0  
+c2                                                                            1532909                22500                                                                            </codeblock>
+      <p><b>Display a specific firewall filter for family mpls</b></p>
+      <codeblock id="codeblock_vbq_bpd_rcc">user@host&gt; show firewall family mpls filter temp_mpls  
+Filter: temp_mpls                                                     
+Counters:  
+Name                                                                            Bytes              Packets  
+c1                                                                                  0                    0  
+c2                                                                            1532909                22500   </codeblock>
+      <p><b>Clear the counter statistics:</b></p>
+      <codeblock id="codeblock_mdn_cfx_41c">clear firewall family <varname>name</varname> <b>&gt;&gt; clear all counter statistics for inet, inet6 or mpls family</b>
+clear firewall family <varname>name</varname> filter <varname>name</varname> <b>&gt;&gt; clear all counter statistics for a specific filter for inet, inet6 or mpls family</b>
+clear firewall family <varname>name</varname> filter <varname>name</varname> count <varname>counter-name</varname> <b>&gt;&gt; clear statistics for a specific counter for a specific filter for inet, inet6, mpls family</b></codeblock>
+      <p><b>View the firewall logs:</b></p>
+      <codeblock id="codeblock_yjx_npd_rcc">user@host&gt; show firewall log 
+[JCNR-FIREWALL]: Mar 20 08:08:45 hostname feb FW: ge-1/1/0.0 A icmp 192.168.207.222 192.168.207.223  0  0 (1 packets) 
+[JCNR-FIREWALL]: Mar 20 08:18:45 hostname feb FW: ge-1/1/0.0 A icmp 192.168.207.222 192.168.207.223  0  0 (1 packets) 
+[JCNR-FIREWALL]: Mar 20 08:28:45 hostname feb FW: ge-1/1/0.0 A icmp 192.168.207.222 192.168.207.223  0  0 (1 packets) 
+[JCNR-FIREWALL]: Mar 20 08:38:45 hostname feb FW: ge-1/1/0.0 A icmp 192.168.207.222 192.168.207.223  0  0 (1 packets) </codeblock>
+      <p><b>View syslog messages:</b></p>
+      <codeblock id="codeblock_kxh_bqd_rcc">user@host&gt; show log messages_firewall_any 
+[JCNR-FIREWALL]: Mar 20 08:08:45 hostname feb FW: ge-1/1/0.0 A icmp 192.168.207.222 192.168.207.223  0  0 (1 packets) 
+[JCNR-FIREWALL]: Mar 20 08:18:45 hostname feb FW: ge-1/1/0.0 A icmp 192.168.207.222 192.168.207.223  0  0 (1 packets) 
+[JCNR-FIREWALL]: Mar 20 08:28:45 hostname feb FW: ge-1/1/0.0 A icmp 192.168.207.222 192.168.207.223  0  0 (1 packets) 
+[JCNR-FIREWALL]: Mar 20 08:38:45 hostname feb FW: ge-1/1/0.0 A icmp 192.168.207.222 192.168.207.223  0  0 (1 packets)  </codeblock>
+      <p><subsection id="subsection_y5y_z5k_m1c">
+          <title>vRouter Commands</title>
+        </subsection>The following commands may be used on the vRouter to view the firewall
+        configuration:</p>
+      <codeblock id="codeblock_gxz_y5k_m1c">bash-5.1# acl --family  inet  --filter f4  --term  t4 
+======================================= 
+Filter: f4 
+======================================= 
+Term: t4 
+----- 
+Priority:   268420555 
+Dest IP:   10.0.0.1/32 
+Src IP:   10.0.0.2/32 
+Dst ports:   [179 - 179] 
+Src ports:   [179 - 179] 
+Action:   accept (n/a) </codeblock>
+      <codeblock id="codeblock_ozh_hqd_rcc">bash-5.1#  acl --list-filters --family mpls 
+======================================= 
+Filter: temp_mpls 
+======================================= 
+Term: t1 
+----- 
+Priority: 	256 
+Label: 	   [2345 – 4092] 
+Exp:             [3 – 5] 
+Action: 	  discard (n/a) 
+
+======================================= </codeblock>
+      <codeblock id="codeblock_cz3_bvk_m1c">bash-5.1# acl --list-actions 
+[1] inet filter "temp_mpls": Counter "c1" 
+      Rx Packets: 2 
+ 
+ 
+[2] inet filter "temp_mpls": Counter "c2" 
+      Rx Packets: 1 </codeblock>
+      <p>Additional <codeph>acl</codeph> commands include the following:</p>
+      <codeblock id="codeblock_v4c_gvk_m1c">acl --list-filters --family &lt;inet/inet6/mpls&gt; <b>&gt;&gt;Lists the full acl table</b>
+acl --list-actions <b>&gt;&gt;Shows the acl entry corresponding to filter name and term name</b>
+acl --family &lt;inet/inet6/mpls&gt; --filter &lt;name&gt; [--list-terms] <b>&gt;&gt;Shows the ACL term list</b>
+acl --family &lt;inet/inet6/mpls&gt; --filter &lt;name&gt; [--term &lt;name&gt;] <b>&gt;&gt;Shows the ACL term details</b> 
+acl --family &lt;inet/inet6/mpls&gt; --filter &lt;name&gt; [--action &lt;name&gt;] <b>&gt;&gt;Shows the ACL action details</b> 
+acl --family &lt;inet/inet6/mpls&gt; --filter &lt;name&gt; [--action &lt;name&gt;] --clear <b>&gt;&gt;Clears the ACL action details</b> 
+acl --help <b>&gt;&gt;Prints the help messages</b></codeblock>
+      <p>You can view the filter associated with an interface using the <codeph>vif --get</codeph>
+        command: </p>
+      <codeblock id="codeblock_i4k_wvk_m1c">bash-5.1# vif --get 5
+Vrouter Interface Table
+
+
+Flags: P=Policy, X=Cross Connect, S=Service Chain, Mr=Receive Mirror
+       Mt=Transmit Mirror, Tc=Transmit Checksum Offload, L3=Layer 3, L2=Layer 2
+       D=DHCP, Vp=Vhost Physical, Pr=Promiscuous, Vnt=Native Vlan Tagged
+       Mnp=No MAC Proxy, Dpdk=DPDK PMD Interface, Rfl=Receive Filtering Offload, Mon=Interface is Monitored
+       Uuf=Unknown Unicast Flood, Vof=VLAN insert/strip offload, Df=Drop New Flows, L=MAC Learning Enabled
+       Proxy=MAC Requests Proxied Always, Er=Etree Root, Mn=Mirror without Vlan Tag, HbsL=HBS Left Intf
+       HbsR=HBS Right Intf, Ig=Igmp Trap Enabled, Ml=MAC-IP Learning Enabled, Me=Multicast Enabled
+
+
+vif0/5      PCI: 0000:07:00.0 NH: 10 MTU: 9000
+            Type:Physical HWaddr:02:8b:65:44:27:bd IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:L3L2Vof QOS:0 Ref:9
+            RX device packets:8807  bytes:374638 errors:0
+            RX port   packets:8806 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:07:00.0  Status: UP  Driver: 0000:07:00.0
+            RX packets:8806  bytes:374596 errors:0
+            TX packets:2  bytes:240 errors:0
+            Drops:0
+            TX queue  packets:2 errors:0
+            TX port   packets:2 errors:0
+            TX device packets:8  bytes:912 errors:0
+            <b>inet acl f1
+            inet6 acl f1v6</b></codeblock>
+      <codeblock id="codeblock_utg_zt3_rcc">bash-5.1# vif --get 1
+Vrouter Interface Table
+
+
+Flags: P=Policy, X=Cross Connect, S=Service Chain, Mr=Receive Mirror
+       Mt=Transmit Mirror, Tc=Transmit Checksum Offload, L3=Layer 3, L2=Layer 2
+       D=DHCP, Vp=Vhost Physical, Pr=Promiscuous, Vnt=Native Vlan Tagged
+       Mnp=No MAC Proxy, Dpdk=DPDK PMD Interface, Rfl=Receive Filtering Offload, Mon=Interface is Monitored
+       Uuf=Unknown Unicast Flood, Vof=VLAN insert/strip offload, Df=Drop New Flows, L=MAC Learning Enabled
+       Proxy=MAC Requests Proxied Always, Er=Etree Root, Mn=Mirror without Vlan Tag, HbsL=HBS Left Intf
+       HbsR=HBS Right Intf, Ig=Igmp Trap Enabled, Ml=MAC-IP Learning Enabled, Me=Multicast Enabled
+
+vif0/1      PCI: 0000:03:00.0 NH: 6 MTU: 9000
+            Type:Physical HWaddr:02:d7:e7:8c:dc:0b IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:L3Vof Ref:9
+            RX device packets:292  bytes:16204 errors:0
+            RX port   packets:37 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:03:00.0  Status: UP  Driver: net_virtio
+            RX packets:37  bytes:1582 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+            TX device packets:7  bytes:786 errors:0
+            <b>mpls acl testAclFabricWithMplsExp</b></codeblock>
+    </section>
+  </conbody>
+  <related-links/>
+</concept>

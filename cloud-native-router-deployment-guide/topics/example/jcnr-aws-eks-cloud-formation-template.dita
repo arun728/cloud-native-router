@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_27a7ba04b8c81368--469b23e6-18e4d047d14--7c06" xml:lang="en-US">
+  <title>CloudFormation Template for EKS Cluster</title>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>You can use the CloudFormation template below to bring up an Amazon EKS cluster. This
+      template creates a cluster that meets all the system requirements in <xref href="../concept/system-resource-requirements-eks.dita#xd_97ca4427c072890e-38403db6-189f3ce8904--7d13/section_kh4_wdk_gxb"/>. Use it to quickly get a cluster up and running.</p>
+    <p>This template assumes you have a VPC and you have subnets associated with at least two
+      availability zones (AZs).</p>
+    <codeblock id="codeblock_cpn_nfc_v1c">---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Amazon EKS Cluster with Node Group'
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "EKS Configuration"
+        Parameters:
+          - ClusterName
+          - ClusterVersion
+          - NodeImageIdSSMParam
+          - VpcId
+          - SubnetIds
+          - ExistingClusterSecurityGroups
+
+      -
+        Label:
+          default: "NodeGroup Configuration"
+        Parameters:
+          - NodeGroupName
+          - NodeInstanceType
+          - NodeImageId
+          - KeyName
+          - ASGAutoAssignPublicIp
+          - NodeAutoScalingGroupMinSize
+          - NodeAutoScalingGroupDesiredSize
+          - NodeAutoScalingGroupMaxSize
+          - NodeVolumeSize
+          - HugePageSize
+          - ExistingNodeSecurityGroups
+          - ExtraNodeSecurityGroups
+          - ExtraNodeLabels
+
+
+Parameters:
+  ClusterName:
+    Description: "Provide EKS cluster name for JCNR deployment. Ex: jcnr-payg-cloud-1"
+    Type: String
+
+  ClusterVersion:
+    Description: Cluster Version
+    Type: String
+    Default: "1.28"
+    AllowedValues:
+      - "1.24"
+      - "1.25"
+      - "1.26"
+      - "1.27"
+      - "1.28"
+      - "latest"
+    
+  VpcId:
+    Description: "Provide VPC for JCNR EKS cluster"
+    Type: AWS::EC2::VPC::Id
+
+  SubnetIds:
+    Description: Select minimum 2 subnets from each AvailabilityZones in above VPC
+    Type: List&lt;AWS::EC2::Subnet::Id&gt;
+    ConstraintDescription: Must be a list of at least two existing subnets associated with at least two different availability zones. They should be residing in the selected Virtual Private Cloud
+  
+  KeyName:
+    Description: Key Pair to access Worker Nodes via SSH
+    Type: AWS::EC2::KeyPair::KeyName
+
+  NodeImageId:
+    Type: String
+    Default: ""
+    Description: OPTIONAL - Only Specify AMI id for custom AMI to overwrite NodeImageIdSSMParam
+
+  NodeImageIdSSMParam:
+    Type: "AWS::SSM::Parameter::Value&lt;AWS::EC2::Image::Id&gt;"
+    Default: /aws/service/eks/optimized-ami/1.28/amazon-linux-2/recommended/image_id
+    Description: "Match ClusterVersion in default value  Ex: If ClusterVersion is 1.27 , replace 1.28 with 1.27"
+    AllowedValues:
+    - /aws/service/eks/optimized-ami/1.24/amazon-linux-2/recommended/image_id
+    - /aws/service/eks/optimized-ami/1.25/amazon-linux-2/recommended/image_id
+    - /aws/service/eks/optimized-ami/1.26/amazon-linux-2/recommended/image_id
+    - /aws/service/eks/optimized-ami/1.27/amazon-linux-2/recommended/image_id
+    - /aws/service/eks/optimized-ami/1.28/amazon-linux-2/recommended/image_id
+    - /aws/service/eks/optimized-ami/latest/amazon-linux-2/recommended/image_id
+    ConstraintDescription: Must matches with ClusterVersion parameter
+
+  NodeInstanceType:
+    Description: Worker Node Instance Type
+    Type: String
+    Default: m5.8xlarge
+    ConstraintDescription: Must be a valid EC2 instance type
+    
+  NodeVolumeSize:
+    Type: Number
+    Description: Worker Node volume size
+    Default: 30
+
+  NodeAutoScalingGroupMinSize:
+    Type: Number
+    Description: Minimum size of Node Group ASG.
+    Default: 1
+
+  NodeAutoScalingGroupDesiredSize:
+    Type: Number
+    Description: Desired size of Node Group ASG.
+    Default: 2
+    
+  NodeAutoScalingGroupMaxSize:
+    Type: Number
+    Description: Maximum size of Node Group ASG.
+    Default: 2
+
+  ASGAutoAssignPublicIp:
+    Type: String
+    Description: "auto assign public IP address for ASG instances"
+    AllowedValues:
+      - "yes"
+      - "no"
+    Default: "no"
+
+  ExistingClusterSecurityGroups:
+    Type: String
+    Description: OPTIONAL - attach existing security group ID(s) for your nodegroup
+    Default: ""
+    
+  ExtraNodeSecurityGroups:
+    Type: String
+    Description: OPTIONAL - attach extra existing security group ID(s) for your nodegroup
+    Default: ""
+
+  ExistingNodeSecurityGroups:
+    Type: String
+    Description: OPTIONAL - attach extra existing security group ID(s) for your nodegroup
+    Default: ""
+
+  ExtraNodeLabels:
+    Description: Extra Node Labels(seperated by comma)
+    Type: String
+    Default: "jcnrcluster=cloud"
+
+  NodeGroupName:
+    Description: "Provide Worker Node group name. Ex: jcnr-nodegroup-1"
+    Type: String
+
+  HugePageSize:
+    Type: Number
+    Description: Huge Page size, minimum is 8GB
+    Default: 8
+
+Conditions:
+  CreateLatestVersionCluster: !Equals [ !Ref ClusterVersion, latest ]
+  CreateCustomVersionCluster: !Not [!Equals [!Ref ClusterVersion, latest]]
+  HasNodeImageId: !Not [ !Equals [ !Ref NodeImageId, "" ] ]
+  IsASGAutoAssignPublicIp: !Equals [ !Ref ASGAutoAssignPublicIp , "yes" ]
+  AddExistingSG: !Not [ !Equals [ !Ref ExistingClusterSecurityGroups, "" ] ]
+  CreateNewNodeSG: !Equals [ !Ref ExistingNodeSecurityGroups, "" ]
+  AttachExistingNodeSG: !Not [ !Equals [ !Ref ExistingNodeSecurityGroups, "" ] ]
+  AttachExtraNodeSG: !Not [ !Equals [ !Ref ExtraNodeSecurityGroups, "" ] ]
+
+Rules:
+  SubnetsInVPC:
+    Assertions:
+    - Assert:
+        Fn::EachMemberIn:
+        - Fn::ValueOfAll:
+          - AWS::EC2::Subnet::Id
+          - VpcId
+        - Fn::RefAll: AWS::EC2::VPC::Id
+      AssertDescription: All subnets must in the VPC
+  
+#
+# Control Plane
+#
+
+Resources:
+  EKSCluster:
+    Type: "AWS::EKS::Cluster"
+    Properties:
+      Name: !Ref ClusterName
+      ResourcesVpcConfig:
+        SecurityGroupIds: 
+          !If
+            - AddExistingSG
+            - !Split [",", !Sub "${ControlPlaneSecurityGroup},${ExistingClusterSecurityGroups}"]
+            - 
+              - !Ref ControlPlaneSecurityGroup
+        SubnetIds: !Ref SubnetIds
+      RoleArn: !GetAtt EksServiceRole.Arn
+      AccessConfig:
+        AuthenticationMode: "API_AND_CONFIG_MAP"
+      Version:
+        Fn::If:
+          - CreateCustomVersionCluster
+          - !Ref ClusterVersion
+          - 1.28
+      
+  EksServiceRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+        - Effect: "Allow"
+          Principal:
+            Service: "eks.amazonaws.com"
+          Action: "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+        - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+      RoleName: !Sub "EksSvcRole-${ClusterName}"
+  
+  ControlPlaneSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Cluster communication with worker nodes
+      VpcId: !Ref VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-ControlPlaneSecurityGroup"
+
+  ControlPlaneIngressFromWorkerNodesHttps:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow incoming HTTPS traffic (TCP/443) from worker nodes (for API server)
+      GroupId: !Ref ControlPlaneSecurityGroup
+      SourceSecurityGroupId: !Ref NodeSecurityGroup
+      IpProtocol: tcp
+      ToPort: 443
+      FromPort: 443
+  
+  ControlPlaneEgressToWorkerNodesKubelet:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      Description: Allow outgoing kubelet traffic (TCP/10250) to worker nodes
+      GroupId: !Ref ControlPlaneSecurityGroup
+      DestinationSecurityGroupId: !Ref NodeSecurityGroup
+      IpProtocol: tcp
+      FromPort: 10250
+      ToPort: 10250
+  
+  ControlPlaneEgressToWorkerNodesHttps:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      Description: Allow outgoing HTTPS traffic (TCP/442) to worker nodes (for pods running extension API servers)
+      GroupId: !Ref ControlPlaneSecurityGroup
+      DestinationSecurityGroupId: !Ref NodeSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+
+#
+# Worker Nodes
+#
+
+  NodeSecurityGroup:
+    Condition: CreateNewNodeSG
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for all nodes in the cluster
+      VpcId:
+        !Ref VpcId
+      Tags:
+      - Key: !Sub "kubernetes.io/cluster/${ClusterName}"
+        Value: "owned"
+      - Key: Name
+        Value: !Sub "${ClusterName}-cluster/NodeSecurityGroup"
+
+  NodeSecurityGroupIngress:
+    Condition: CreateNewNodeSG
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow node to communicate with each other
+      GroupId: !Ref NodeSecurityGroup
+      SourceSecurityGroupId: !Ref NodeSecurityGroup
+      IpProtocol: '-1'
+
+  NodeSecurityGroupFromControlPlaneIngress:
+    Condition: CreateNewNodeSG
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow worker Kubelets and pods to receive communication from the cluster control plane
+      GroupId: !Ref NodeSecurityGroup
+      SourceSecurityGroupId: !Ref ControlPlaneSecurityGroup
+      IpProtocol: tcp
+      FromPort: 10250
+      ToPort: 10250
+
+  NodeSecurityGroupFromControlPlaneOn443Ingress:
+    Condition: CreateNewNodeSG
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow pods running extension API servers on port 443 to receive communication from cluster control plane
+      GroupId: !Ref NodeSecurityGroup
+      SourceSecurityGroupId: !Ref ControlPlaneSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+  
+  NodeSecurityGroupFromSSHIngress:
+    Condition: CreateNewNodeSG
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow ssh to worker nodes
+      GroupId: !Ref NodeSecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
+
+  NodeInstanceRole:
+    DependsOn: EKSCluster
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "ec2.amazonaws.com"
+          Action: "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  TG:
+    DependsOn: EKSCluster
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: /
+      # HealthCheckPort: String
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      # Matcher: Matcher
+      Name: !Sub "${ClusterName}"
+      Port: 31742
+      Protocol: HTTP
+      TargetType: instance
+      UnhealthyThresholdCount: 2
+      VpcId: !Ref VpcId
+
+  NodeGroup:
+    DependsOn: EKSCluster
+    Type: "AWS::EKS::Nodegroup"
+    Properties:
+      UpdateConfig:
+        MaxUnavailable: 1
+      ScalingConfig:
+        MinSize: !Ref NodeAutoScalingGroupMinSize
+        DesiredSize: !Ref NodeAutoScalingGroupDesiredSize
+        MaxSize: !Ref NodeAutoScalingGroupMaxSize
+      Labels: {}
+      Taints: []
+      CapacityType: "ON_DEMAND"
+      NodegroupName: !Ref NodeGroupName
+      NodeRole: !GetAtt NodeInstanceRole.Arn
+      Subnets: !Ref SubnetIds
+      AmiType: "CUSTOM"
+      LaunchTemplate:
+        Version: !GetAtt MyLaunchTemplate.LatestVersionNumber
+        Id: !Ref MyLaunchTemplate
+      ClusterName: !Ref ClusterName
+      InstanceTypes: []
+  
+  CSIDriverAddon:
+    DependsOn: EKSCluster
+    Type: "AWS::EKS::Addon"
+    Properties:
+      AddonName: "aws-ebs-csi-driver"
+      AddonVersion: "v1.28.0-eksbuild.1"
+      ClusterName: !Ref ClusterName
+
+  VPCCNIAddon:
+    DependsOn: EKSCluster
+    Type: "AWS::EKS::Addon"
+    Properties:
+      AddonName: "vpc-cni"
+      AddonVersion: "v1.15.1-eksbuild.1"
+      ClusterName: !Ref ClusterName
+
+#
+# Launch Template
+#
+  MyLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub "eksLaunchTemplate-${AWS::StackName}"
+      LaunchTemplateData:
+        # SecurityGroupIds: 
+        #   - !Ref NodeSecurityGroup
+        TagSpecifications:
+          -
+            ResourceType: instance
+            Tags:
+              - Key: ltname
+                Value: !Sub "eksLaunchTemplate-${AWS::StackName}"
+              - Key: "eks:cluster-name"
+                Value: !Sub "${ClusterName}"
+              - Key: !Sub "kubernetes.io/cluster/${ClusterName}"
+                Value: "owned"
+        UserData: 
+          Fn::Base64:
+            !Sub |
+            #!/bin/bash
+            echo '#!/bin/bash
+            modprobe vfio-pci 
+            modprobe vfio_iommu_type1
+            modprobe allow_unsafe_interrupts=1
+            modprobe 8021q
+            echo Y &gt; /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
+            echo Y &gt; /sys/module/vfio_iommu_type1/parameters/allow_unsafe_interrupts
+            cd /sys/module/vfio/parameters/
+            echo Y &gt; enable_unsafe_noiommu_mode
+            exit 0' &gt; /usr/local/bin/jcnr_startup
+            chmod +x /usr/local/bin/jcnr_startup
+
+            echo '[Unit]
+            Description=/usr/local/bin/jcnr_startup Compatibility
+            ConditionPathExists=/usr/local/bin/jcnr_startup
+
+            [Service]
+            Type=forking
+            ExecStart=/usr/local/bin/jcnr_startup start
+            TimeoutSec=0
+            StandardOutput=tty
+            RemainAfterExit=yes
+            SysVStartPriority=99
+
+            [Install]
+            WantedBy=multi-user.target' &gt; /etc/systemd/system/jcnr-startup.service
+            sudo systemctl enable jcnr-startup
+            sudo systemctl start jcnr-startup  
+
+            if [ ! -f /var/jcnr_startup_flag ]; then
+              sudo sed -i 's/\(GRUB_CMDLINE_LINUX_DEFAULT=".*\)"/\1 default_hugepagesz=1G hugepagesz=1G hugepages=${HugePageSize} intel_iommu=on iommu=pt"/' /etc/default/grub
+              grub2-mkconfig -o /boot/grub2/grub.cfg
+              set -o xtrace
+              /etc/eks/bootstrap.sh ${ClusterName}
+              /opt/aws/bin/cfn-signal \
+                          --exit-code $? \
+                          --stack  ${AWS::StackName} \
+                          --resource NodeGroup \
+                          --region ${AWS::Region}
+              touch /var/jcnr_startup_flag
+              sleep 2m
+              reboot
+            fi
+        KeyName: !Ref KeyName
+        NetworkInterfaces: 
+          - DeviceIndex: 0
+            AssociatePublicIpAddress:
+              !If
+                - IsASGAutoAssignPublicIp
+                - 'true'
+                - 'false'
+            Groups:
+              !If
+                - CreateNewNodeSG
+                - !If
+                    - AttachExtraNodeSG
+                    - !Split [",", !Sub "${NodeSecurityGroup},${ExtraNodeSecurityGroups}"]
+                    -
+                      - !Ref NodeSecurityGroup
+                - !Split [",", !Ref ExistingNodeSecurityGroups ]
+        ImageId:
+          !If
+            - HasNodeImageId
+            - !Ref NodeImageId    
+            - !Ref NodeImageIdSSMParam
+        InstanceType: !Ref NodeInstanceType
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref NodeVolumeSize
+              VolumeType: gp2
+              DeleteOnTermination: true
+</codeblock>
+  </conbody>
+
+  <related-links/>
+</concept>

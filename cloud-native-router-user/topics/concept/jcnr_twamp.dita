@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_c76d1256f55a982e--6be0ecf5-18f5b51661c--7ca3" xml:lang="en-US">
+  <title>Two-Way Active Measurement Protocol (TWAMP)</title>
+  <shortdesc>The Cloud-Native Router supports Two-Way Active Management Protocol (TWAMP) for network
+    performance measurement and monitoring in 5G transport networks. It supports managed and light
+    TWAMP.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>The Two-Way Active Management Protocol (TWAMP), described in RFC 5357, is a network
+      performance measurement and monitoring service used for active performance monitoring of 5G
+      transport networks. TWAMP is an extension of the One-Way Active Management Protocol (OWAMP)
+      providing two-way or round-trip measurements instead of unidirectional capabilities. Two-way
+      measurements do not require local and remote clock synchronization. The remote host support
+      can be limited to a simple echo function. TWAMP defines an open protocol for measuring two-way
+      or round-trip metrics with greater accuracy than other methods by using time-stamps, while
+      accounting for processing delays. Please review <xref format="html" href="/documentation/us/en/software/junos/flow-monitoring/topics/concept/twamp-overview.html" scope="external">Understanding Two-Way Active Measurement Protocol</xref>
+      topic for more details.</p>
+    <p>Juniper Cloud-Native Router supports two flavors of TWAMP implementation:</p>
+    <ul id="ul_g15_vgx_4bc">
+      <li>Managed TWAMP—A TCP control connection is established between control client and responder
+        server for exchanging test session information. Measurement and monitoring tests run between
+        session-sender and session-reflector.</li>
+      <li>Light TWAMP—No control connection is established between the control client and responder
+        server. The session-sender directly runs measurement and monitoring tests with the
+        session-reflector. The session-reflector has no knowledge of the session state.<image href="../../images/jn-000960.png" id="image_ppr_yhs_sbc"/></li>
+    </ul>
+    <p>Cloud-Native Router supports timestamping the TWAMP test packets by either the cRPD or
+      vRouter. The cRPD timestamps are enabled by default. Since the Round Trip Time (RTT) for cRPD
+      timestamps has higher jitter due to latency in the host network stack, vRouter timestamps may
+      be preferred. The vRouter uses hardware timestamping if the underlying NIC supports it, else
+      it defaults to the kernel system clock.  </p>
+    <note id="note_hbg_z2f_pdc">
+      <p>vRouter timestamping is supported for TWAMP light mode only.</p>
+    </note>
+    <section id="section_ovs_bnx_4bc">
+      <title>Configuration</title>
+      <p>To enable vRouter timestamping, you must enable the <codeph>twampPort</codeph>
+        configuration in the Cloud-Native Router helm chart at the time of installation. The vRouter
+        listens to TWAMP test messages on the configured <codeph>twampPort</codeph> and overwrites
+        timestamps in TWAMP test packets. Please review the <xref keyref="cloud-native-router-deployment-guide.deployment-config-files-bms">Customizing
+          Cloud-Native Router Helm Chart</xref> for more details. When not configured, cRPD
+        timestamps the TWAMP test packets. </p>
+      <p>You can configure the TWAMP server and client with minimum configuration. There are
+        additional configuration parameters with default values which may be modified as per your
+        requirement. Please review <xref format="html" href="/documentation/us/en/software/junos/cli-reference/topics/ref/statement/twamp-edit-services.html" scope="external">edit services rpm twamp</xref> command for more information on each
+        configuration option. The default values for the options is provided in the below
+        tables:</p>
+      <table frame="all" id="table_odb_r31_rbc">
+        <title>TWAMP Client Default Values</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1.05*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Option</p>
+              </entry>
+              <entry>
+                <p>Default value</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>control-type (light | managed)</p>
+              </entry>
+              <entry>
+                <p>managed</p>
+              </entry>
+            </row>
+            <row>
+              <entry>destination-port (862 - 65535)</entry>
+              <entry>
+                <p>862</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>history-size (0 - 512)</p>
+              </entry>
+              <entry>
+                <p>50</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>moving-average-size (0 - 512)</p>
+              </entry>
+              <entry>
+                <p>0</p>
+              </entry>
+            </row>
+            <row>
+              <entry>persistent-results (enable | disable)</entry>
+              <entry>
+                <p>disable</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>target-address </p>
+              </entry>
+              <entry>
+                <p>An IPv4 address. This field is mandatory for managed control-type. The
+                  configuration commit fails if configured for light control-type.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>tcp-keepcnt (1 - 50)</p>
+              </entry>
+              <entry>
+                <p>6</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>tcp-keepidle (1 - 600 seconds)</p>
+              </entry>
+              <entry>
+                <p>120</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>tcp-keepintvl (1 - 600 seconds)</p>
+              </entry>
+              <entry>
+                <p>5</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>test-count (0 - 4294967290)</p>
+              </entry>
+              <entry>
+                <p>0</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>test-interval (1 - 255)</p>
+              </entry>
+              <entry>
+                <p>1</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>test-session (name)</p>
+              </entry>
+              <entry>
+                <p>Mandatory</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>data-size (60 - 1400)</p>
+              </entry>
+              <entry>
+                <p>60</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>destination-port (862 - 65535)</p>
+              </entry>
+              <entry>
+                <p>862</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>dscp-code-points</p>
+              </entry>
+              <entry>
+                <p>000000</p>
+              </entry>
+            </row>
+            <row>
+              <entry>probe-count (1 - 4294967290)</entry>
+              <entry>1</entry>
+            </row>
+            <row>
+              <entry>
+                <p>probe-interval (1 - 255)</p>
+              </entry>
+              <entry>
+                <p>1</p>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <table frame="all" id="table_hct_dk1_rbc">
+        <title>TWAMP Server Default Values</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Options</p>
+              </entry>
+              <entry>
+                <p>Values</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>port (862 - 65535) [<i>light</i>]</p>
+              </entry>
+              <entry>
+                <p>862</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>max-connection-duration (0 - 120 hours)</p>
+              </entry>
+              <entry>
+                <p>24</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>maximum-connections (0 - 1000)</p>
+              </entry>
+              <entry>
+                <p>64</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>maximum-connections-per-client (1 - 500)</p>
+              </entry>
+              <entry>
+                <p>64</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>maximum-sessions (1 - 2048)</p>
+              </entry>
+              <entry>
+                <p>64</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>maximum-sessions-per-connection (1 - 1024)</p>
+              </entry>
+              <entry>
+                <p>64</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>port (1 - 65535) [<i>server</i>]</p>
+              </entry>
+              <entry>
+                <p>862</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>port (1 - 65535) [<i>routing-instance-list</i>]</p>
+              </entry>
+              <entry>
+                <p>862</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>server-inactivity-timeout (0 - 30 minutes)</p>
+              </entry>
+              <entry>
+                <p>15</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>tcp-keepcnt (1 - 50)</p>
+              </entry>
+              <entry>
+                <p>6</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>tcp-keepidle (1 - 600 seconds)</p>
+              </entry>
+              <entry>
+                <p>120</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>tcp-keepintvl (1 - 600 seconds)</p>
+              </entry>
+              <entry>
+                <p>5</p>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <p>Sample TWAMP client and server configurations for managed or TWAMP light are provided
+        below. Use the <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">configlet
+          resource</xref> to configure cRPD:</p>
+      <p>
+        <subsection id="subsection_n42_mh1_rbc">
+          <title>TWAMP Client/Server Configuration (Managed, Minimum Configuration)</title>
+          <p><b>Client Configuration</b></p>
+          <codeblock id="codeblock_rbq_4h1_rbc">set services rpm twamp client control-connection myTcManaged1 target-address 1.1.1.29
+set services rpm twamp client control-connection myTcManaged1 test-session myTs1 target-address 21.21.21.29</codeblock>
+          <p><b>Server Configuration</b></p>
+          <codeblock id="codeblock_ujs_4kg_sbc">set services rpm twamp server client-list myClients address 21.21.21.0/24</codeblock>
+        </subsection>
+        <subsection id="subsection_vmf_xh1_rbc">
+          <title>TWAMP Client/Server Configuration (Managed, Optional Configuration)</title>
+          <p><b>Client Configuration</b></p>
+          <codeblock id="codeblock_ghc_yh1_rbc">set services rpm twamp client control-connection myTcManaged1 control-type managed
+set services rpm twamp client control-connection myTcManaged1 destination-interface ens2f0
+set services rpm twamp client control-connection myTcManaged1 destination-port 10000
+set services rpm twamp client control-connection myTcManaged1 history-size 50
+set services rpm twamp client control-connection myTcManaged1 moving-average-size 50
+set services rpm twamp client control-connection myTcManaged1 persistent-results
+set services rpm twamp client control-connection myTcManaged1 routing-instance <varname>routing-instance</varname>
+set services rpm twamp client control-connection myTcManaged1 source-address 2.2.2.29
+set services rpm twamp client control-connection myTcManaged1 target-address 21.21.21.29
+set services rpm twamp client control-connection myTcManaged1 tcp-keepcnt 10
+set services rpm twamp client control-connection myTcManaged1 tcp-keepidle 60
+set services rpm twamp client control-connection myTcManaged1 tcp-keepintvl 600
+set services rpm twamp client control-connection myTcManaged1 test-count 3
+set services rpm twamp client control-connection myTcManaged1 test-interval 10
+set services rpm twamp client control-connection myTcManaged1 test-session test1 data-fill-with-zeros
+set services rpm twamp client control-connection myTcManaged1 test-session test1 data-size 100
+set services rpm twamp client control-connection myTcManaged1 test-session test1 destination-port 65000
+set services rpm twamp client control-connection myTcManaged1 test-session test1 dscp-code-points 000001
+set services rpm twamp client control-connection myTcManaged1 test-session test1 probe-count 10
+set services rpm twamp client control-connection myTcManaged1 test-session test1 probe-interval 1
+set services rpm twamp client control-connection myTcManaged1 test-session test1 source-address 21.21.21.30
+set services rpm twamp client control-connection myTcManaged1 test-session test1 target-address 21.21.21.29
+set services rpm twamp client control-connection myTcManaged1 test-session test1 ttl 5</codeblock>
+          <p><b>Server Configuration</b></p>
+          <codeblock id="codeblock_thz_skg_sbc">set services rpm twamp server authentication-mode none
+set services rpm twamp server client-list 192.168.11.0/24
+set services rpm twamp server max-connection-duration 1
+set services rpm twamp server maximum-connections 20
+set services rpm twamp server maximum-connections-per-client 20
+set services rpm twamp server maximum-sessions 30
+set services rpm twamp server maximum-sessions-per-connection 30
+set services rpm twamp server port 10000
+set services rpm twamp server routing-instance-list &lt;routing-instance&gt; &lt;port&gt;
+set services rpm twamp server server-inactivity-timeout 10
+set services rpm twamp server tcp-keepcnt 10
+set services rpm twamp server tcp-keepidle 60
+set services rpm twamp server tcp-keepintvl 600</codeblock>
+        </subsection>
+        <subsection id="subsection_zls_sh1_rbc">
+          <title>TWAMP Client/Server Configuration (Light, Minimum Configuration)</title>
+          <p><b>Client Configuration</b></p>
+          <codeblock id="codeblock_ryt_5h1_rbc">set services rpm twamp client control-connection myTcLight1 control-type light
+set services rpm twamp client control-connection myTcLight1 test-session myTs1 target-address 21.21.21.29</codeblock>
+          <p><b>Server Configuration</b></p>
+          <codeblock id="codeblock_vwj_5kg_sbc">set services rpm twamp server light</codeblock>
+        </subsection>
+        <subsection id="subsection_swr_b31_rbc">
+          <title>TWAMP Client/Server Configuration (Light, Optional Configuration)</title>
+          <p><b>Client Configuration</b></p>
+          <codeblock id="codeblock_rwn_c31_rbc">set services rpm twamp client control-connection myTcLight1 control-type light
+set services rpm twamp client control-connection myTcLight1 test-session test1 data-fill-with-zeros
+set services rpm twamp client control-connection myTcLight1 test-session test1 data-size 100
+set services rpm twamp client control-connection myTcLight1 test-session test1 destination-port 65000
+set services rpm twamp client control-connection myTcLight1 test-session test1 dscp-code-points 000001
+set services rpm twamp client control-connection myTcLight1 test-session test1 probe-count 10
+set services rpm twamp client control-connection myTcLight1 test-session test1 probe-interval 1
+set services rpm twamp client control-connection myTcLight1 test-session test1 source-address 21.21.21.30
+set services rpm twamp client control-connection myTcLight1 test-session test1 target-address 21.21.21.29
+set services rpm twamp client control-connection myTcLight1 test-session test1 ttl 5</codeblock>
+          <p><b>Server Configuration</b></p>
+          <codeblock id="codeblock_pt4_vkg_sbc">set services rpm twamp server control-type light</codeblock>
+        </subsection>
+      </p>
+      <note id="note_tpt_2yk_sbc">
+        <p>By default the client control connection <codeph>test-count</codeph> is set to zero. In
+          this case the TWAMP test automatically starts after the configuration is committed and
+          continues to run until the configuration is deleted. If <codeph>test-count</codeph> is
+          configured to a non-zero value, the TWAMP test must be started or stopped using below
+          commands:</p>
+        <codeblock id="codeblock_dfx_hyk_sbc">user@host&gt; request services rpm twamp start client <varname>control-client-name</varname>
+user@host&gt; request services rpm twamp stop client <varname>control-client-name</varname></codeblock>
+      </note>
+    </section>
+    <section id="section_gjd_ql1_rbc">
+      <title>Verification</title>
+      <ul id="ul_uds_5hf_pdc">
+        <li>You can use the <codeph>show services rpm twamp client probe-results</codeph> command to
+          verify the TWAMP probe results on <xref href="accessing-crpd-cli.dita">cRPD</xref>
+          shell:<codeblock id="codeblock_fkb_vhf_pdc"><b>user@host&gt; show services rpm twamp client probe-results </b>    
+    Owner: myTcManaged1, Test: myTs1
+    server-address: 1.1.1.29, server-port: 862, Client address: 21.21.21.30, Client port: 35109
+    TWAMP-Server-Status: Connected, Number-Of-Retries-With-TWAMP-Server: 222
+    Reflector address: 21.21.21.29, Reflector port: 10029, Sender address: 21.21.21.30, sender-port: 10029
+    Test size: 1 probes
+    Probe results:
+      Response received
+      Probe sent time: Thu Jun 13 06:34:14 2024
+      Probe rcvd/timeout time: Thu Jun 13 06:34:14 2024
+      Rtt: 968 usec, Egress jitter: 63 usec, Ingress jitter: -22 usec, Round trip jitter: 28 usec
+      Egress interarrival jitter: 40 usec, Ingress interarrival jitter: 9 usec, Round trip interarrival jitter: 32 usec
+    Results over current test:
+      Probes sent: 1, Probes received: 1, Loss percentage: 0.000000
+      Measurement: Round trip time
+        Samples: 1, Minimum: 968 usec, Maximum: 968 usec, Average: 968 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 968 usec
+      Measurement: Positive egress jitter
+        Samples: 1, Minimum: 63 usec, Maximum: 63 usec, Average: 63 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 63 usec
+      Measurement: Negative ingress jitter
+        Samples: 1, Minimum: 22 usec, Maximum: 22 usec, Average: 22 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 22 usec
+      Measurement: Positive round trip jitter
+        Samples: 1, Minimum: 28 usec, Maximum: 28 usec, Average: 28 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 28 usec
+    Results over last test:
+      Probes sent: 1, Probes received: 1, Loss percentage: 0.000000
+      Test completed on Thu Jun 13 06:34:14 2024
+      Measurement: Round trip time
+        Samples: 1, Minimum: 968 usec, Maximum: 968 usec, Average: 968 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 968 usec
+      Measurement: Positive egress jitter
+        Samples: 1, Minimum: 63 usec, Maximum: 63 usec, Average: 63 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 63 usec
+      Measurement: Negative ingress jitter
+        Samples: 1, Minimum: 22 usec, Maximum: 22 usec, Average: 22 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 22 usec
+      Measurement: Positive round trip jitter
+        Samples: 1, Minimum: 28 usec, Maximum: 28 usec, Average: 28 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 28 usec
+    Results over all tests:
+      Probes sent: 5, Probes received: 5, Loss percentage: 0.000000
+      Measurement: Round trip time
+        Samples: 5, Minimum: 892 usec, Maximum: 1186 usec, Average: 992 usec, Peak to peak: 294 usec, Stddev: 102 usec, Sum: 4958 usec
+      Measurement: Positive egress jitter
+        Samples: 3, Minimum: 63 usec, Maximum: 229 usec, Average: 125 usec, Peak to peak: 166 usec, Stddev: 74 usec, Sum: 375 usec
+      Measurement: Negative egress jitter
+        Samples: 1, Minimum: 354 usec, Maximum: 354 usec, Average: 354 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 354 usec
+      Measurement: Positive ingress jitter
+        Samples: 1, Minimum: 60 usec, Maximum: 60 usec, Average: 60 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 60 usec
+      Measurement: Negative ingress jitter
+        Samples: 3, Minimum: 22 usec, Maximum: 48 usec, Average: 33 usec, Peak to peak: 26 usec, Stddev: 11 usec, Sum: 98 usec
+      Measurement: Positive round trip jitter
+        Samples: 3, Minimum: 28 usec, Maximum: 203 usec, Average: 98 usec, Peak to peak: 175 usec, Stddev: 75 usec, Sum: 295 usec
+      Measurement: Negative round trip jitter
+        Samples: 1, Minimum: 298 usec, Maximum: 298 usec, Average: 298 usec, Peak to peak: 0 usec, Stddev: 0 usec, Sum: 298 usec</codeblock></li>
+      </ul>
+      <ul id="ul_ahy_vhf_pdc">
+        <li>Additional show commands
+          include:<codeblock id="codeblock_fbd_whf_pdc">show services rpm twamp client
+show services rpm twamp client connection <varname>connection-name</varname>
+show services rpm twamp client history-results
+show services rpm twamp client history-results brief
+show services rpm twamp client history-results control-connection <varname>control-connection</varname>
+show services rpm twamp client history-results detail
+show services rpm twamp client history-results detail control-connection <varname>control-connection</varname>
+show services rpm twamp client history-results detail control-connection <varname>control-connection</varname> test-session <varname>test-session</varname>
+show services rpm twamp client history-results detail since <varname>YYYY-MM-DD.HH:MM:SS</varname>
+show services rpm twamp client probe-results
+show services rpm twamp client probe-results control-connection <varname>control-connection</varname>
+show services rpm twamp client probe-results control-connection <varname>control-connection</varname> test-session <varname>test-session</varname>
+show services rpm twamp client session
+show services rpm twamp client session control-connection <varname>control-connection</varname> test-session <varname>test-session</varname>
+show services rpm twamp server
+show services rpm twamp server connection <varname>connection-id</varname>
+show services rpm twamp server session <varname>session-id</varname></codeblock></li>
+      </ul>
+      <ul id="ul_ndt_whf_pdc">
+        <li>If vRouter timestamping is enabled, you can verify hardware timestamping support for a
+          fabric interface by executing the following command on the <xref keyref="cloud-native-router-user.accessing-vrouter-cli">vRouter
+          CLI</xref>:<codeblock id="codeblock_q5y_whf_pdc">bash-5.1# dpdkinfo -p 1
+                                          
+********************* Infos for port 0  *********************
+MAC address: B4:96:91:DA:D4:F8
+Device name: 0000:af:00.0
+Driver name: net_ice
+..
+..
+..
+Max segment number per packet: 0
+Max segment number per MTU/TSO: 0
+<b>Hardware timestamping support: Rx:Yes, Tx:Yes</b>
+Device capabilities: 0x0( )</codeblock></li>
+      </ul>
+      <ul id="ul_ecn_xhf_pdc">
+        <li>If the underlying NIC supports hardware timestamping and vRouter timestamping is
+          enabled, you can verify hardware timestamp support for the fabric interface by executing
+          the following command on the <xref keyref="cloud-native-router-user.accessing-vrouter-cli">vRouter CLI</xref>:<codeblock id="codeblock_lxt_xhf_pdc">bash-5.1# vif --get 1
+
+Flags: P=Policy, X=Cross Connect, S=Service Chain, Mr=Receive Mirror
+       Mt=Transmit Mirror, Tc=Transmit Checksum Offload, L3=Layer 3, L2=Layer 2
+       D=DHCP, Vp=Vhost Physical, Pr=Promiscuous, Vnt=Native Vlan Tagged
+       Mnp=No MAC Proxy, Dpdk=DPDK PMD Interface, Rfl=Receive Filtering Offload, Mon=Interface is Monitored
+       Uuf=Unknown Unicast Flood, Vof=VLAN insert/strip offload, Df=Drop New Flows, L=MAC Learning Enabled
+       Proxy=MAC Requests Proxied Always, Er=Etree Root, Mn=Mirror without Vlan Tag, HbsL=HBS Left Intf
+       HbsR=HBS Right Intf, Ig=Igmp Trap Enabled, Ml=MAC-IP Learning Enabled, Me=Multicast Enabled
+       LsDp=Link down in DP only, Ccc=CCC Enabled, <b>HwTs=Hardware support for Timestamp</b>
+
+vif0/1      PCI: 0000:af:00.0 (Speed 10000, Duplex 1) NH: 6 MTU: 9000
+            Type:Physical HWaddr:b4:96:91:da:d4:f8 IPaddr:110.110.110.22
+            IP6addr:110:110::110:22
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:TcL3Vof<b>HwTs</b> QOS:0 Ref:14
+            RX port   packets:93509698 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:af:00.0  Status: UP  Driver: net_ice
+            RX packets:93509698  bytes:8602892343 errors:0
+            TX packets:124162093  bytes:11422912735 errors:0
+            Drops:324
+            TX port   packets:124162084 errors:0</codeblock>The TWAMP counters are
+          incremented for the corresponding tap interface as well:
+          <codeblock id="codeblock_lby_yhf_pdc">bash-5.1# vif --get 2
+
+Flags: P=Policy, X=Cross Connect, S=Service Chain, Mr=Receive Mirror
+       Mt=Transmit Mirror, Tc=Transmit Checksum Offload, L3=Layer 3, L2=Layer 2
+       D=DHCP, Vp=Vhost Physical, Pr=Promiscuous, Vnt=Native Vlan Tagged
+       Mnp=No MAC Proxy, Dpdk=DPDK PMD Interface, Rfl=Receive Filtering Offload, Mon=Interface is Monitored
+       Uuf=Unknown Unicast Flood, Vof=VLAN insert/strip offload, Df=Drop New Flows, L=MAC Learning Enabled
+       Proxy=MAC Requests Proxied Always, Er=Etree Root, Mn=Mirror without Vlan Tag, HbsL=HBS Left Intf
+       HbsR=HBS Right Intf, Ig=Igmp Trap Enabled, Ml=MAC-IP Learning Enabled, Me=Multicast Enabled
+       LsDp=Link down in DP only, Ccc=CCC Enabled, HwTs=Hardware support for Timestamp
+
+vif0/2      PMD: enp175s0f0 NH: 9 MTU: 9000
+            Type:Host HWaddr:b4:96:91:da:d4:f8 IPaddr:110.110.110.22
+            IP6addr:110:110::110:22
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:65535 Flags:L3DProxyEr QOS:-1 Ref:11 TxXVif:1
+            RX device packets:182  bytes:17063 errors:0
+            RX queue  packets:182 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            <b>Twamp RX  packets:84 errors:0
+            Twamp TX  packets:84 errors:0</b>
+            RX packets:182  bytes:17063 errors:0
+            TX packets:174  bytes:16189 errors:0
+            Drops:0
+            TX queue  packets:174 errors:0
+            TX device packets:174  bytes:16189 errors:0
+</codeblock></li>
+      </ul>
+    </section>
+  </conbody>
+  <related-links/>
+</concept>

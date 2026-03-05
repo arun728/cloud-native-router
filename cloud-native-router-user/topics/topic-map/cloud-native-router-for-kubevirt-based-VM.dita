@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_ea802945c31238bf--852731c-19a923fc65c--7fdf" xml:lang="en-US">
+    <!--GENERIC TOPIC MAP: Group related concept, task, example, and reference topics (that describe how to use a feature, for example.) 
+MULTI_TASK TOPIC MAP: Group a set of interrelated tasks. The user will find the main task (the multi-task) and not the individual tasks within it. You can include multi-task topic maps in a generic topic map. 
+-->
+    <!--You can nest topic maps within topic maps. However, we do not recommend doing this unless the topic map you're nesting is a multi-task topic map.-->
+    <!-- 
+- - Arrange the topics in the order in which you expect users to perform tasks or look up information.​
+- - Create a topic map that is of the right “size.” If a feature has many sub-features or a task has many sub-tasks, create topic maps for each sub-feature or sub-task and place the topic maps in a chapter. -->
+    <!--
+FOR REUSE: To include (reuse) an existing topic in a topic map, select DITA > Reuse Content and then select the topic you want to include in the topic map.
+
+ADD TOPIC THAT NEED NOT BE SHARED: Go to Content > System > DitaTemplates > Topics. Open the topic type template that you want to insert in the Topic Map. Copy all the contents of the template, and then paste it into the topic map. You can refer to the guidelines within each topic type to create your topic.
+-->
+    <title>Deploy a KubeVirt-based VM </title>
+    <!--TOPIC-MAP TITLE: Use search-engine optimized titles. Use title case. Use noun phrases that include keywords. For example, "Server-Based Antispam Filtering," "Secure Web Access for Remote Management."
+If you must use a verb phrase, use the imperative form of the verb (not the gerund) and keywords. For example, "Prevent Denial-of-Service Attacks," "Monitor and Troubleshoot Security Policies."-->
+    <shortdesc>Cloud-Native Router supports vhost-user interfaces for a DPDK capable KubeVirt-based
+        VM. Read this topic to learn about deploying a KubeVirt-based VM with Cloud-Native
+        Router.</shortdesc>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody>
+        <p>You can run, deploy and manage virtual machines (VMs) within a Kubernetes cluster using
+            KubeVirt. Such VM based workloads are not easily containerized and KubeVirt enables both
+            pods and VM-based workloads to reside in a common, shared environment. The Cloud-Native
+            Router supports networking for KubeVirt-based VMs as a secondary CNI. You can create
+            Layer 3 interfaces with L3 virtual routing and forwarding (VRF) instances.</p>
+        <p>By default, KubeVirt supports Linux bridge interfaces using veth pairs. Veth pair
+            interfaces can cause high processing times for VMs with DPDK capabilities. Cloud-Native
+            Router can create custom vhost-user interfaces in a KubeVirt-based DPDK-enabled VM to
+            achieve high-performance packet processing. </p>
+        <p>Cloud-Native Router implements a network binding plugin with a sidecar container. The
+            binary in the sidecar container creates vhost-user interfaces based on the VM
+            specifications and updates the domain XML with the interface details. </p>
+    </tmbody>
+    <task id="id_zr5_rl1_jhc" conref="../task/kubevirt-vm-config-steps.dita#xd_ea802945c31238bf--852731c-19a923fc65c--7f31">
+        <title/>
+    </task>
+    <!--To add any new topic in your topic map, open the topic template at /Content/System/DitaTemplates/Topics in Oxygen, copy all the contents of the template, and then paste it into the topic map.-->
+</topic-map>

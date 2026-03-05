@@ -1,0 +1,1975 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_9643b326f08ee29f--1f31d707-18b42ca3eb4--7e7f" xml:lang="en-US">
+  
+   <title>IPsec Security Services </title>
+  
+   <abstract>Read this topic to understand how the cloud-native router integrates with Juniper's cSRX
+    to provide IPsec security services.</abstract>
+  
+   <prolog>
+    
+      <author>tkaur</author>
+    
+      <data name="cli-help-filename"/>
+    
+      <data name="cli-help-text"/>
+    
+      <data name="jweb-help-filename"/>
+  
+   </prolog>
+  
+   <conbody>
+    
+      <p>Juniper Cloud-Native Router offers containerized routing functionality for both cloud-based
+      and on-premise 5G environments. There is a growing demand for integrating security services
+      with Cloud-Native Router. This functionality can be achieved using host-based service
+      chaining. The cloud-native router is integrated with <xref format="html" href="https://www.juniper.net/us/en/products/security/srx-series/csrx-containerized-firewall.html" scope="external">Juniper's containerized SRX (cSRX)</xref> platform to provide security
+      services such as IPsec. </p>
+    
+      <section>
+      
+         <title>Overview</title>
+      
+         <p>Let us consider an IPsec security services use case with the Cloud-Native router. In the
+        figure below, the cloud-native router connects the provider edge (PE) routers in a service
+        provider network. The customer edge (CE) routers or devices in the source network securely
+        transfer data to the destination CEs via an IPsec tunnel. In the given scenario, the IPsec
+        tunnel initiates from the cloud-native router's security services (cSRX) and terminates on
+        the destination CEs. The cloud-native router and its peer PE provides the underlay
+        connectivity to the IPsec tunnel.</p>
+      
+         <p>
+            <image href="../../images/jn-000731.png" id="image_e12_px2_gzb"><!--alt text added by DocEng-Team on 2025-09-17 08:01:20--><!--alt text added by DocEng-Team on 2025-09-17 08:01:20--><alt>jn-000731.png</alt></image>
+         </p>
+      
+         <p>The cloud-native router is chained with a security service instance (cSRX) in the same
+        Kubernetes cluster. The cSRX instance runs as a pod service in L3 mode. </p>
+      <note id="note_vpm_stw_qgc">
+        <p>A cloud-native router instance is service chained with only one instance of cSRX. It can
+          support multiple IPSec tunnels for single-tenancy and multi-tenancy deployments.</p>
+      </note>
+    
+      </section>
+     
+     <section id="section_jbd_vnv_j3c">
+       <title>Deployment Patterns</title>
+       <p>Cloud-Native Router supports three deployment patterns for IPSec tunnels with cSRX service chaining. Each pattern addresses different scale and isolation requirements.</p>
+       
+       <subsection id="subsection_kmt_4nv_j3c">
+         <title>Single-Tenant, Multiple Tunnels</title>
+         <p>A single customer establishes multiple IPSec tunnels to different destinations using one cSRX instance. All tunnels share the same trust and untrust VRF pair on JCNR.</p>
+         
+         <p><b>Use this pattern when:</b></p>
+         <ul id="ul_nqr_tnv_j3c">
+           <li>One customer needs multiple tunnels to different remote sites</li>
+           <li>Traffic isolation between tunnels is not required</li>
+           <li>Example: A company with offices in Tokyo, London, and New York establishes separate tunnels from each office to headquarters</li>
+         </ul>
+         
+         <p><b>Architecture:</b></p>
+         <ul id="ul_pst_5nv_j3c">
+           <li>One trust VRF on JCNR</li>
+           <li>One untrust VRF on JCNR</li>
+           <li>Two interfaces between JCNR and cSRX (ge-0/0/0 for untrust, ge-0/0/1 for trust)</li>
+           <li>Multiple IPSec tunnels share the same source IP address</li>
+         </ul>
+         
+         <p><b>Configuration approach:</b></p>
+         <ul id="ul_rxy_vnv_j3c">
+           <li>Use <codeph>values.yaml</codeph> with <codeph>enableUserConfig: false</codeph> for single tunnel</li>
+           <li>Use <codeph>values-user-defined-cfg.yaml</codeph> with <codeph>enableUserConfig:
+              true</codeph> for multiple tunnels configured via configlet</li>
+         </ul>
+       </subsection>
+       
+       <subsection id="subsection_tbc_wnv_j3c">
+         <title>Multi-Tenant, Multiple Tunnels</title>
+         <p>Multiple customers share the same 5G gateway infrastructure, with each customer receiving dedicated trust and untrust VRF pairs for traffic isolation. A single cSRX instance serves all tenants.</p>
+         
+         <p><b>Use this pattern when:</b></p>
+         <ul id="ul_vdf_xnv_j3c">
+           <li>Multiple customers share the same JCNR deployment</li>
+           <li>Each customer requires traffic isolation from other customers</li>
+           <li>Example: A telecommunications provider hosts IPSec services for multiple enterprise customers on shared gateway infrastructure</li>
+         </ul>
+         
+         <p><b>Architecture:</b></p>
+         <ul id="ul_xgh_ynv_j3c">
+           <li>Dedicated trust VRF per tenant (required for isolation)</li>
+           <li>Untrust VRFs may be shared or dedicated per tenant</li>
+           <li>Each tenant uses dedicated interfaces between JCNR and cSRX</li>
+         </ul>
+         
+         <p><b>Configuration approach:</b></p>
+         <ul id="ul_zkj_znv_j3c">
+           <li>Use <codeph>values-user-defined-cfg.yaml</codeph> with <codeph>enableUserConfig: true</codeph></li>
+           <li>Configure interfaces and VRFs in the Helm chart</li>
+           <li>Apply IPSec tunnel configuration via configlet after deployment</li>
+         </ul>
+       </subsection>
+       
+       <subsection id="subsection_blm_14v_j3c">
+         <title>Multiple cSRX Instances</title>
+         <p>Large-scale deployments deploy multiple cSRX instances on a single JCNR. Each cSRX instance is deployed in a separate Kubernetes namespace with dedicated VRFs to ensure complete traffic isolation between instances.</p>
+         
+         <p><b>Use this pattern when:</b></p>
+         <ul id="ul_dmn_b4v_j3c">
+           <li>Deployment requires more IPSec tunnels than a single cSRX instance supports</li>
+           <li>Scale exceeds the capacity of a single cSRX instance</li>
+         </ul>
+         
+         <p><b>Architecture:</b></p>
+         <ul id="ul_fpq_c4v_j3c">
+           <li>Each cSRX instance deploys in a separate Kubernetes namespace</li>
+           <li>Dedicated VRFs per instance with no IP address overlap between instances</li>
+           <li>Each cSRX instance requires minimum 2 vCPUs and appropriate memory resources</li>
+           <li>No hard limit on number of instances; limited only by available cluster resources</li>
+         </ul>
+         
+         <p><b>Configuration approach:</b></p>
+         <ul id="ul_mcs_14v_j3c">
+           <li>Use <codeph>values-user-defined-cfg.yaml</codeph> with <codeph>enableUserConfig: true</codeph> for each instance</li>
+           <li>Deploy each instance with <codeph>helm install</codeph> specifying unique namespace</li>
+           <li>Configure interfaces and VRFs in the Helm chart with non-overlapping IP addressing</li>
+           <li>Apply IPSec tunnel configuration via namespace-specific configlets</li>
+         </ul>
+       </subsection>
+       
+       <subsection id="subsection_hrs_d4v_j3c">
+         <title>Choosing a Configuration Method</title>
+         <p>Cloud-Native Router supports two methods for configuring IPSec tunnels:</p>
+         
+         <p><b>Helm-based configuration</b> (<codeph>enableUserConfig: false</codeph>):</p>
+         <ul id="ul_jtu_24v_j3c">
+           <li>All IPSec tunnel configuration happens at installation time</li>
+           <li>Configuration is defined in the <codeph>ipSecTunnelConfigs</codeph> section of <codeph>values.yaml</codeph></li>
+           <li>Recommended for single-tunnel deployments</li>
+           <li>cSRX automatically generates and applies the configuration during installation</li>
+         </ul>
+         
+         <p><b>Configlet-based configuration</b> (<codeph>enableUserConfig: true</codeph>):</p>
+         <ul id="ul_lvw_f4v_j3c">
+           <li>Interface configuration happens at installation time via Helm</li>
+           <li>IPSec tunnel configuration happens post-deployment via configlet</li>
+           <li>Recommended for multi-tunnel, multi-tenant, and multiple cSRX instance deployments</li>
+           <li>Enables dynamic configuration changes without redeploying cSRX</li>
+           <li>Supports additional IPSec parameters not available in Helm</li>
+         </ul>
+         
+         <p>The two configuration files (<codeph>values.yaml</codeph> and <codeph>values-user-defined-cfg.yaml</codeph>) are mutually exclusive. Sample files are available in the installer bundle at <codeph>/csrx_examples/values-user-config-csrx.yaml</codeph> for standalone cSRX installation and <codeph>/charts/junos-csrx/csrx_examples/values-user-config-unified.yaml</codeph> for unified JCNR and cSRX installation.</p>
+       </subsection>
+     </section>
+    
+      <section id="section_gk4_dzh_q2c">
+      
+         <title>Configuration </title>
+      
+         <p>Cloud-Native Router can steer selective traffic through IPsec services. This is achieved
+        by defining static routes to a destination via the cSRX interface. When the selective
+        traffic is received on Cloud-Native Router, it is forwarded to cSRX. The cSRX subjects the
+        packet to IPsec encryption based on the configuration and forwards it to Cloud-Native
+        Router. Cloud-Native Router performs a route lookup in the untrust VRF and forwards traffic
+        through the configured fabric interface. When IPsec packet is received from the remote end,
+        Cloud-Native Router sends it to the security services. The cSRX decrypts the packet and
+        forwards it to Cloud-Native Router on the trust interface. Cloud-Native Router then forwards
+        the packet to the pod. The IP addresses of the tunnel endpoints are configured in
+        Cloud-Native Router as static routes and advertised through an IGP to the remote end.</p>
+      
+         <p>You can customize the cSRX deployment by specifying a range of configuration parameters
+        in the helm chart (values.yaml) for cSRX. cSRX supports multiple deployment options:</p>
+      <ul id="ul_syl_ffk_tgc">
+        <li>Unified helm chart—<xref keyref="cloud-native-router-deployment-guide.jcnr-deploy-csrx-task_qpq_j53_1bc"/></li>
+        <li>
+          <p>cSRX helm chart—<xref keyref="cloud-native-router-deployment-guide.jcnr-deploy-csrx-task_e15_krd_qjb"/></p>
+        </li>
+      </ul>
+      <p>Key configuration options include:</p>
+      
+         <ul id="ul_qjp_jh3_xcc">
+        
+            <li>
+          <p>
+            <codeph>enableUserConfig</codeph>: Controls if the tunnel configuration is defined and
+            applied at the time of cSRX installation or post-deployment using a configlet. When set
+            to true, the IPSec tunnel configuration must be performed using a configlet. </p>
+        </li>
+        <li>
+          <p><codeph>interfaceType</codeph>: This is the type of interface on the cSRX to connect to
+            Cloud-Native Router. Must be set to <codeph>vhost</codeph> only.</p>
+        </li>
+        
+            <li>
+          
+               <p>
+            <codeph>interfaceConfigs</codeph>: This is an array defining the interface IP address,
+            gateway address and optionally routes. The routes should contain prefixes to steer
+            decrypted traffic to Cloud-Native Router and reachability route for IPSec gateway.</p>
+        
+            </li>
+        
+            <li>
+          <p>
+            <codeph>ipSecTunnelConfigs</codeph>: This is an array defining the IPsec configuration
+            details such as ike-phase1, proposal, policy and gateway configuration. Traffic selector
+            should contain traffic that is expected to be encrypted. You can define one or multiple
+            tunnel configurations. You can define the tunnel configuration using the installation
+            helm chart or post-deployment using a configlet, based on the
+              <codeph>enableUserConfig</codeph> flag. </p>
+        </li>
+        
+            <li>
+          
+               <p>
+                  <codeph>jcnr_config</codeph>: This is an array defining the routes to be configured in
+            Cloud-Native Router to steer traffic from Cloud-Native Router to cSRX and to steer IPsec
+            traffic from the remote IPsec gateway to the cSRX to apply the security service
+            chain.</p>
+        
+            </li>
+      
+         </ul>
+      
+        
+            <subsection id="subsection_y34_gk3_q2c">
+          
+               <title>Configuring cSRX via Helm Chart </title>
+          
+               <p>The cSRX configurations are required to bring up its containers and pods at the time of
+            installation. The IPSec tunnel configuration can be defined at the time of installation
+            or later using a configlet. The <codeph>enableUserConfig</codeph> flag in the cSRX helm
+            chart when set to true enables IPSec tunnel configuration via configlet. </p>
+          
+               <p>By default the <codeph>enableUserConfig</codeph> flag is set to false in
+              <codeph>values.yaml</codeph> and therefore requires
+              <codeph>ipSecTunnelConfigs</codeph> to be configured at the time of installation. You
+            can configure multiple tunnels in a cSRX instance for both single-tenancy and
+            multi-tenancy deployment.</p>
+            </subsection>
+
+            <subsection id="subsection_jjh_j2x_qgc">
+              <title>Single-Tenancy, Multiple Tunnel Deployment</title>
+              <p>A sample interface and tunnel configuration for single-tenancy, multiple tunnels is
+                provided below:</p>
+              <codeblock id="codeblock_dzl_jk3_q2c">enableUserConfig: false  # enable /disable user configuration
+
+interfaceType: "vhost"  
+
+interfaceConfigs:
+    - name: ge-0/0/0
+      ip: 172.16.10.1/30          # should match ipSecTunnelConfigs localAddress if configured
+      gateway: 172.16.10.2        # gateway configuration
+      ip6: 2001:db8:172:16:10::1/64        # optional
+      ip6Gateway: 2001:db8:172:16:10::2    # optional
+      routes:                   # this field is optional
+      - "172.17.10.0/24"
+      - "172.18.10.0/24"
+      instance_parameters:
+        name: "untrust"
+        type: "vrf"        # options include virtual-router or vrf
+        vrfTarget: 10:10
+    - name: ge-0/0/1
+      ip: 192.168.1.1/30           # should match ipSecTunnelConfigs localAddress if configured
+      gateway: 192.168.1.2         # gateway configuration
+      ip6: 2001:db8:192:168:1::1/64                     # optional
+      ip6Gateway: 2001:db8:192:168:1::2               # optional
+      routes:                   # this field is optional
+      - "10.111.1.0/24"
+      - "10.112.1.0/24"
+      instance_parameters:
+        name: "trust"
+        type: "vrf"        # options include virtual-router or vrf
+        vrfTarget: 11:11
+
+  ipSecTunnelConfigs:        # untrust
+    #Tunnel 1 config 
+    - interface: ge-0/0/0       ## section ike-phase1, proposal, policy, gateway
+      gateway: 172.17.10.2
+      localAddress: 172.16.10.1
+      authenticationAlgorithm: sha-256
+      encryptionAlgorithm: aes-256-cbc
+      preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+      trafficSelector:
+      - name: ts1
+        localIP: 10.111.1.0/24 ## IP cannot be 0.0.0.0/0
+        remoteIP: 10.221.1.0/24 ## IP cannot be 0.0.0.0/0
+    #Tunnel 2 config 
+    - interface: ge-0/0/0       ## section ike-phase1, proposal, policy, gateway
+      gateway: 172.18.10.2
+      localAddress: 172.16.10.1
+      authenticationAlgorithm: sha-256
+      encryptionAlgorithm: aes-256-cbc
+      preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+      trafficSelector:
+      - name: ts2
+        localIP: 10.112.1.0/24 ## IP cannot be 0.0.0.0/0
+        remoteIP: 10.222.1.0/24 ## IP cannot be 0.0.0.0/0
+
+  jcnr_config:
+    - name: ge-0/0/1
+      routes:
+        - "10.221.1.0/24"
+        - "10.222.1.0/24"</codeblock>
+            </subsection>
+
+                <subsection id="subsection_chm_l2x_qgc">
+                  <title>Multi-tenancy, Multiple Tunnel Deployment</title>
+                  <p>For customers sharing the same 5G gateways, Cloud-Native Router supports a
+                    single cSRX service-chained instance, with dedicated trust and untrust
+                    interfaces and VRFs per tenant. The untrust interfaces and VRFs may be shared
+                    between customers, however the trust interfaces and VRFs must be dedicated per
+                    tenant. A sample interface and tunnel configuration for multi-tenancy, multiple
+                    tunnels is provided below:</p>
+                  <codeblock id="codeblock_tgs_bdx_qgc">enableUserConfig: false  # enable /disable user configuration
+
+interfaceType: "vhost"  
+
+ interfaceConfigs: 
+    - name: ge-0/0/0 
+      ip: 181.1.1.1/30          # should match ipSecTunnelConfigs localAddress if configured 
+      gateway: 181.1.1.2        # gateway configuration 
+      ip6: 181:1:1::1/64        # optional 
+      ip6Gateway: 181:1:1::2    # optional 
+      routes:                   # this field is optional 
+      - "191.1.1.0/24" 
+      instance_parameters: 
+        name: "untrust1" 
+        type: "vrf"             # options include virtual-router or vrf 
+        vrfTarget: 10:10        # this option is valid only for vrf 
+    - name: ge-0/0/1 
+      ip: 1.21.1.1/30           # should match ipSecTunnelConfigs localAddress if configured 
+      gateway: 1.21.1.2         # gateway configuration 
+      ip6: 181:21:1::1/64                     # optional 
+      ip6Gateway: 181:21:1::2               # optional 
+      routes:                   # this field is optional 
+      - "121.1.1.0/24" 
+      instance_parameters: 
+        name: "trust1" 
+        type: "vrf"             # options include virtual-router or vrf 
+        vrfTarget: 11:11        # this option is valid only for vrf 
+    - name: ge-0/0/2 
+      ip: 171.1.1.1/30          # should match ipSecTunnelConfigs localAddress if configured 
+      gateway: 171.1.1.2        # gateway configuration 
+      ip6: 171:1:1::1/64        # optional 
+      ip6Gateway: 171:1:1::2    # optional 
+      routes:                   # this field is optional 
+      - "161.1.1.0/24" 
+      instance_parameters: 
+        name: "untrust2" 
+        type: "vrf"             # options include virtual-router or vrf 
+        vrfTarget: 12:12        # this option is valid only for vrf 
+    - name: ge-0/0/3 
+      ip: 1.22.1.1/30           # should match ipSecTunnelConfigs localAddress if configured 
+      gateway: 1.22.1.2         # gateway configuration 
+      ip6: 181:22:1::1/64                     # optional 
+      ip6Gateway: 181:22:1::2               # optional 
+      routes:                   # this field is optional 
+      - "122.1.1.0/24" 
+      instance_parameters: 
+        name: "trust2" 
+        type: "vrf"             # options include virtual-router or vrf 
+        vrfTarget: 13:13        # this option is valid only for vrf 
+  
+  ipSecTunnelConfigs:       # untrust 
+    #Tunnel 1 config 
+    - interface: ge-0/0/0       ## section ike-phase1, proposal, policy, gateway 
+      gateway: 191.1.1.1 
+      localAddress: 181.1.1.1 
+      authenticationAlgorithm: sha-256 
+      encryptionAlgorithm: aes-256-cbc 
+      preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X" 
+      trafficSelector: 
+      - name: ts1 
+        localIP: 121.1.1.0/24 ## IP cannot be 0.0.0.0/0 
+        remoteIP: 121.10.1.0/24 ## IP cannot be 0.0.0.0/0 
+    #Tunnel 2 config 
+    - interface: ge-0/0/2       ## section ike-phase1, proposal, policy, gateway 
+      gateway: 161.1.1.1 
+      localAddress: 171.1.1.1 
+      authenticationAlgorithm: sha-256 
+      encryptionAlgorithm: aes-256-cbc 
+      preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X" 
+      trafficSelector: 
+      - name: ts2 
+        localIP: 122.1.1.0/24 ## IP cannot be 0.0.0.0/0 
+        remoteIP: 122.10.1.0/24 ## IP cannot be 0.0.0.0/0 
+  
+  
+  jcnr_config: 
+    - name: ge-0/0/1 
+      routes: 
+        - "121.10.1.0/24" 
+    - name: ge-0/0/3 
+      routes: 
+        - "122.10.1.0/24" 
+ </codeblock>
+                </subsection>
+
+                <subsection id="subsection_pnx_m2x_qgc">
+                  <title>Multiple cSRX Instances Deployment</title>
+                  <p>For large-scale deployments requiring more IPSec tunnels than a single cSRX instance supports, deploy multiple cSRX instances on a single JCNR. Each cSRX instance is deployed in a separate Kubernetes namespace with dedicated VRFs and non-overlapping IP address spaces.</p>
+                  <p>A sample interface and tunnel configuration for the first cSRX instance in the <codeph>jcnr</codeph> namespace is provided below:</p>
+                  <codeblock id="codeblock_qnx_m2x_qgc">enableUserConfig: false  # enable /disable user configuration
+
+interfaceType: "vhost"  
+
+interfaceConfigs:
+  - name: ge-0/0/0
+    ip: 181.1.1.1/30          # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 181.1.1.2        # gateway configuration
+    ip6: 181:1:1::1/64        # optional
+    ip6Gateway: 181:1:1::2    # optional
+    routes:                   # this field is optional
+    - "171.1.1.0/24"
+    instance_parameters:
+      name: "untrust1"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 10:10        # this option is valid only for vrf
+  - name: ge-0/0/1
+    ip: 1.21.1.1/30           # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 1.21.1.2         # gateway configuration
+    ip6: 121:1:1::1/64                     # optional
+    ip6Gateway: 121:1:1::2               # optional
+    routes:                   # this field is optional
+    - "200.1.1.0/24"
+    instance_parameters:
+      name: "trust1"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 11:11        # this option is valid only for vrf
+
+ipSecTunnelConfigs:       # untrust
+  #Tunnel 1 config
+  - interface: ge-0/0/0       ## section ike-phase1, proposal, policy, gateway
+    gateway: 171.1.1.1
+    localAddress: 181.1.1.1
+    authenticationAlgorithm: sha-256
+    encryptionAlgorithm: aes-256-cbc
+    preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    trafficSelector:
+    - name: ts1
+      localIP: 200.1.1.0/24 ## IP cannot be 0.0.0.0/0
+      remoteIP: 100.1.1.0/24 ## IP cannot be 0.0.0.0/0
+
+jcnr_config:
+  - name: ge-0/0/1
+    routes:
+    - "100.1.1.0/24"</codeblock>
+                  <p>For the second cSRX instance, use a separate namespace and non-overlapping IP addresses and VRF targets. A sample configuration for the second instance is provided below:</p>
+                  <codeblock id="codeblock_snx_m2x_qgc">enableUserConfig: false  # enable /disable user configuration
+
+interfaceType: "vhost"  
+
+interfaceConfigs:
+  - name: ge-0/0/0
+    ip: 161.1.1.1/30          # Different IP range from first instance
+    gateway: 161.1.1.2        # gateway configuration
+    ip6: 161:1:1::1/64        # optional
+    ip6Gateway: 161:1:1::2    # optional
+    routes:                   # this field is optional
+    - "191.1.1.0/24"
+    instance_parameters:
+      name: "untrust2"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 20:10        # Different VRF target from first instance
+  - name: ge-0/0/1
+    ip: 1.22.1.1/30           # Different IP range from first instance
+    gateway: 1.22.1.2         # gateway configuration
+    ip6: 121:2:1::1/64                     # optional
+    ip6Gateway: 121:2:1::2               # optional
+    routes:                   # this field is optional
+    - "210.1.1.0/24"
+    instance_parameters:
+      name: "trust2"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 21:21        # Different VRF target from first instance
+
+ipSecTunnelConfigs:       # untrust
+  #Tunnel 1 config
+  - interface: ge-0/0/0       ## section ike-phase1, proposal, policy, gateway
+    gateway: 191.1.1.1
+    localAddress: 161.1.1.1
+    authenticationAlgorithm: sha-256
+    encryptionAlgorithm: aes-256-cbc
+    preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    trafficSelector:
+    - name: ts2
+      localIP: 210.1.1.0/24 ## IP cannot be 0.0.0.0/0
+      remoteIP: 110.1.1.0/24 ## IP cannot be 0.0.0.0/0
+
+jcnr_config:
+  - name: ge-0/0/1
+    routes:
+    - "110.1.1.0/24"</codeblock>
+                  <p><b>Multiple cSRX instances considerations:</b> For complete deployment procedures including helm install commands, application pod configuration, and verification steps, see the Multiple cSRX Instances Configuration Example section.</p>
+                </subsection>
+
+        
+            <subsection id="subsection_jv5_zmh_qfc">
+          
+               <title>Configuring cSRX IPSec Tunnel Configuration via Configlets </title>
+          
+               <p>You can configure the IPSec tunnels after cSRX has been deployed using a
+            configlet. The installation helm chart must have <codeph>enableUserConfig</codeph> flag
+            value set to true. The <codeph>ipSecTunnelConfigs</codeph> configuration snippet must
+            not be defined. Sample helm charts are provided in the installer bundle—
+              <codeph>/csrx_examples/values-user-config-csrx.yaml</codeph> for cSRX only
+            installation and
+              <codeph>/charts/junos-csrx/csrx_examples/values-user-config-unified.yaml</codeph> for
+            unified JCNR and cSRX installation. Both single-tenancy and multi-tenancy deployments
+            are supported. </p>
+      
+         <p>You can create IPSec tunnels or modify tunnel configuration after deployment using a
+        configlet. A sample configlet has been provided in the installer
+          bundle—<codeph>/csrx_examples/ipsec-tunnel-config-cr.yaml</codeph> for cSRX only
+        installation and
+          <codeph>/charts/junos-csrx/csrx_examples/ipsec-tunnel-config-cr.yaml</codeph> for unified
+        JCNR and cSRX installation. An example configlet is provided below:</p>
+      
+         <codeblock id="codeblock_l3q_53m_rfc"># Example configlet CR to configure an IPsec tunnel on a CSRX
+apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: example-csrx-cr
+  namespace: jcnr
+  labels:
+    app: csrx
+  annotations:
+    juniper.net/device: csrx
+spec:
+  config: |-
+    set security ike proposal ike-phase-171-1-1-1-0-proposal dh-group group5
+    set security ike proposal ike-phase-171-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ike proposal ike-phase-171-1-1-1-0-proposal authentication-algorithm sha-256
+    set security ike proposal ike-phase-171-1-1-1-0-proposal authentication-method pre-shared-keys
+    set security ike proposal ike-phase-171-1-1-1-0-proposal lifetime-seconds 3600
+    set security ike policy ike-phase-171-1-1-1-0-policy proposals ike-phase-171-1-1-1-0-proposal
+    set security ike policy ike-phase-171-1-1-1-0-policy pre-shared-key ascii-text "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    set security ike gateway remote-171-1-1-1-0 ike-policy ike-phase-171-1-1-1-0-policy
+    set security ike gateway remote-171-1-1-1-0 address 181.1.1.1
+    set security ike gateway remote-171-1-1-1-0 external-interface ge-0/0/0.0
+    set security ike gateway remote-171-1-1-1-0 local-address 171.1.1.1
+    set security ike gateway remote-171-1-1-1-0 version v2-only
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal protocol esp
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal authentication-algorithm hmac-sha-256-128
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal lifetime-seconds 18000
+    set security ipsec policy ipsec-171-1-1-1-0-policy perfect-forward-secrecy keys group5
+    set security ipsec policy ipsec-171-1-1-1-0-policy proposals ipsec-171-1-1-1-0-proposal
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 bind-interface st0.0
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 ike gateway remote-171-1-1-1-0
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 ike ipsec-policy ipsec-171-1-1-1-0-policy
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 establish-tunnels immediately
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 traffic-selector ts1 local-ip 100.1.1.0/24
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 traffic-selector ts1 remote-ip 200.1.1.0/24
+    set security zones security-zone untrust host-inbound-traffic system-services all
+    set security zones security-zone untrust host-inbound-traffic protocols all</codeblock>
+            </subsection>
+
+            <subsection id="subsection_vg5_r2x_qgc">
+              <title>Single-Tenancy, Multiple-Tunnel Deployment</title>
+              <p>An example helm chart for single-tenancy, multiple-tunnel deployment is provided
+                below:</p>
+              <codeblock id="codeblock_kv5_zmh_qfc">enableUserConfig: true  # enable /disable user configuration
+
+interfaceType: "vhost"  
+
+interfaceConfigs:
+    - name: ge-0/0/0
+      ip: 172.16.10.1/30          # should match ipSecTunnelConfigs localAddress if configured
+      gateway: 172.16.10.2        # gateway configuration
+      ip6: 2001:db8:172:16:10::1/64        # optional
+      ip6Gateway: 2001:db8:172:16:10::2    # optional
+      routes:                   # this field is optional
+      - "172.17.10.0/24"
+      - "172.18.10.0/24"
+      instance_parameters:
+        name: "untrust"
+        type: "vrf"        # options include virtual-router or vrf
+        vrfTarget: 10:10
+    - name: ge-0/0/1
+      ip: 192.168.1.1/30           # should match ipSecTunnelConfigs localAddress if configured
+      gateway: 192.168.1.2         # gateway configuration
+      ip6: 2001:db8:192:168:1::1/64                     # optional
+      ip6Gateway: 2001:db8:192:168:1::2               # optional
+      routes:                   # this field is optional
+      - "10.111.1.0/24"
+      - "10.112.1.0/24"
+      instance_parameters:
+        name: "trust"
+        type: "vrf"        # options include virtual-router or vrf
+        vrfTarget: 11:11
+
+  jcnr_config:
+    - name: ge-0/0/1
+      routes:
+        - "10.221.1.0/24"
+        - "10.222.1.0/24"</codeblock>
+            </subsection>
+
+      <subsection id="subsection_ohb_w2x_qgc">
+        <title>Multi-tenancy, Multiple-Tunnel Deployment</title>
+        <p>For customers sharing the 5G gateways, you can configure cSRX in a multi-tenancy,
+          multiple-tunnel deployment mode. An example helm chart is provided below:</p>
+        <codeblock id="codeblock_mhj_bfx_qgc">enableUserConfig: false  # enable /disable user configuration
+
+interfaceType: "vhost"  
+
+interfaceConfigs:
+  - name: ge-0/0/0
+    ip: 181.1.1.1/30          # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 181.1.1.2        # gateway configuration
+    ip6: 181:1:1::1/64        # optional
+    ip6Gateway: 181:1:1::2    # optional
+    routes:                   # this field is optional
+    - "171.1.1.0/24"
+    instance_parameters:
+      name: "untrust1"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 10:10        # this option is valid only for vrf
+  - name: ge-0/0/1
+    ip: 1.21.1.1/30           # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 1.21.1.2         # gateway configuration
+    ip6: 121:1:1::1/64                     # optional
+    ip6Gateway: 121:1:1::2               # optional
+    routes:                   # this field is optional
+    - "200.1.1.0/24"
+    instance_parameters:
+      name: "trust1"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 11:11        # this option is valid only for vrf
+  - name: ge-0/0/2
+    ip: 161.1.1.1/30          # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 161.1.1.2        # gateway configuration
+    ip6: 161:1:1::1/64        # optional
+    ip6Gateway: 161:1:1::2    # optional
+    routes:                   # this field is optional
+    - "191.1.1.0/24"
+    instance_parameters:
+      name: "untrust2"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 20:10        # this option is valid only for vrf
+  - name: ge-0/0/3
+    ip: 1.22.1.1/30           # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 1.22.1.2         # gateway configuration
+    ip6: 121:2:1::1/64                     # optional
+    ip6Gateway: 121:2:1::2               # optional
+    routes:                   # this field is optional
+    - "210.1.1.0/24"
+    instance_parameters:
+      name: "trust2"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 21:21        # this option is valid only for vrf
+
+jcnr_config:
+    - name: ge-0/0/1
+      routes:
+      - "100.1.1.0/24"
+    - name: ge-0/0/3
+      routes:
+      - "200.1.1.0/24"</codeblock>
+        <p>Sample configlet for multi-tenancy deployment is provided below:</p>
+        <codeblock id="codeblock_akz_dfx_qgc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: csrx-node
+  namespace: jcnr
+  labels:
+    app: csrx
+  annotations:
+    juniper.net/device: csrx
+spec:
+  config: |-
+    set security ike proposal ike-phase-181-1-1-1-0-proposal authentication-method pre-shared-keys
+    set security ike proposal ike-phase-181-1-1-1-0-proposal dh-group group5
+    set security ike proposal ike-phase-181-1-1-1-0-proposal authentication-algorithm sha-256
+    set security ike proposal ike-phase-181-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ike proposal ike-phase-181-1-1-1-0-proposal lifetime-seconds 3600
+    set security ike proposal ike-phase-161-1-1-1-1-proposal authentication-method pre-shared-keys
+    set security ike proposal ike-phase-161-1-1-1-1-proposal dh-group group5
+    set security ike proposal ike-phase-161-1-1-1-1-proposal authentication-algorithm sha-256
+    set security ike proposal ike-phase-161-1-1-1-1-proposal encryption-algorithm aes-256-cbc
+    set security ike proposal ike-phase-161-1-1-1-1-proposal lifetime-seconds 3600
+    set security ike policy ike-phase-181-1-1-1-0-policy proposals ike-phase-181-1-1-1-0-proposal
+    set security ike policy ike-phase-181-1-1-1-0-policy pre-shared-key ascii-text "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    set security ike policy ike-phase-161-1-1-1-1-policy proposals ike-phase-161-1-1-1-1-proposal
+    set security ike policy ike-phase-161-1-1-1-1-policy pre-shared-key ascii-text "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    set security ike gateway remote-181-1-1-1-0 ike-policy ike-phase-181-1-1-1-0-policy
+    set security ike gateway remote-181-1-1-1-0 address 171.1.1.1
+    set security ike gateway remote-181-1-1-1-0 external-interface ge-0/0/0.0
+    set security ike gateway remote-181-1-1-1-0 local-address 181.1.1.1
+    set security ike gateway remote-181-1-1-1-0 version v2-only
+    set security ike gateway remote-161-1-1-1-1 ike-policy ike-phase-161-1-1-1-1-policy
+    set security ike gateway remote-161-1-1-1-1 address 191.1.1.1
+    set security ike gateway remote-161-1-1-1-1 external-interface ge-0/0/2.0
+    set security ike gateway remote-161-1-1-1-1 local-address 161.1.1.1
+    set security ike gateway remote-161-1-1-1-1 version v2-only
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal protocol esp
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal authentication-algorithm hmac-sha-256-128
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal lifetime-seconds 18000
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal protocol esp
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal authentication-algorithm hmac-sha-256-128
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal encryption-algorithm aes-256-cbc
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal lifetime-seconds 18000
+    set security ipsec policy ipsec-181-1-1-1-0-policy perfect-forward-secrecy keys group5
+    set security ipsec policy ipsec-181-1-1-1-0-policy proposals ipsec-181-1-1-1-0-proposal
+    set security ipsec policy ipsec-161-1-1-1-1-policy perfect-forward-secrecy keys group5
+    set security ipsec policy ipsec-161-1-1-1-1-policy proposals ipsec-161-1-1-1-1-proposal
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 bind-interface st0.0
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 ike gateway remote-181-1-1-1-0
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 ike ipsec-policy ipsec-181-1-1-1-0-policy
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 traffic-selector ts1 local-ip 200.1.1.0/24
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 traffic-selector ts1 remote-ip 100.1.1.0/24
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 establish-tunnels immediately
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 bind-interface st0.1
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 ike gateway remote-161-1-1-1-1
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 ike ipsec-policy ipsec-161-1-1-1-1-policy
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 traffic-selector ts2 local-ip 210.1.1.0/24
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 traffic-selector ts2 remote-ip 110.1.1.0/24
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 establish-tunnels immediately</codeblock>
+      </subsection>
+      <subsection id="subsection_vnx_m2x_qgc">
+        <title>Multiple cSRX Instances Deployment</title>
+        <p>For large-scale deployments requiring more IPSec tunnels than a single cSRX instance supports, deploy multiple cSRX instances with configlet-based IPSec configuration. Each cSRX instance is deployed in a separate Kubernetes namespace with dedicated VRFs and non-overlapping IP address spaces.</p>
+        <p>An example helm chart for the first cSRX instance in the <codeph>jcnr</codeph> namespace is provided below:</p>
+                <codeblock id="codeblock_wnx_m2x_qgc">enableUserConfig: true  # enable /disable user configuration
+
+interfaceType: "vhost"  
+
+interfaceConfigs:
+  - name: ge-0/0/0
+    ip: 181.1.1.1/30          # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 181.1.1.2        # gateway configuration
+    ip6: 181:1:1::1/64        # optional
+    ip6Gateway: 181:1:1::2    # optional
+    routes:                   # this field is optional
+    - "171.1.1.0/24"
+    instance_parameters:
+      name: "untrust1"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 10:10        # this option is valid only for vrf
+  - name: ge-0/0/1
+    ip: 1.21.1.1/30           # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 1.21.1.2         # gateway configuration
+    ip6: 121:1:1::1/64                     # optional
+    ip6Gateway: 121:1:1::2               # optional
+    routes:                   # this field is optional
+    - "200.1.1.0/24"
+    instance_parameters:
+      name: "trust1"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 11:11        # this option is valid only for vrf
+
+jcnr_config:
+  - name: ge-0/0/1
+    routes:
+    - "100.1.1.0/24"</codeblock>
+                <p>Sample configlet for applying IPSec tunnel configuration to the first instance in the <codeph>jcnr</codeph> namespace:</p>
+                <codeblock id="codeblock_ynx_m2x_qgc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: csrx-node1
+  namespace: jcnr
+  labels:
+    app: csrx
+  annotations:
+    juniper.net/device: csrx
+spec:
+  config: |-
+    set security ike proposal ike-phase-171-1-1-1-0-proposal authentication-method pre-shared-keys
+    set security ike proposal ike-phase-171-1-1-1-0-proposal dh-group group5
+    set security ike proposal ike-phase-171-1-1-1-0-proposal authentication-algorithm sha-256
+    set security ike proposal ike-phase-171-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ike proposal ike-phase-171-1-1-1-0-proposal lifetime-seconds 3600
+    set security ike policy ike-phase-171-1-1-1-0-policy proposals ike-phase-171-1-1-1-0-proposal
+    set security ike policy ike-phase-171-1-1-1-0-policy pre-shared-key ascii-text "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    set security ike gateway remote-171-1-1-1-0 ike-policy ike-phase-171-1-1-1-0-policy
+    set security ike gateway remote-171-1-1-1-0 address 181.1.1.1
+    set security ike gateway remote-171-1-1-1-0 external-interface ge-0/0/0.0
+    set security ike gateway remote-171-1-1-1-0 local-address 171.1.1.1
+    set security ike gateway remote-171-1-1-1-0 version v2-only
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal protocol esp
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal authentication-algorithm hmac-sha-256-128
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal lifetime-seconds 18000
+    set security ipsec policy ipsec-171-1-1-1-0-policy perfect-forward-secrecy keys group5
+    set security ipsec policy ipsec-171-1-1-1-0-policy proposals ipsec-171-1-1-1-0-proposal
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 bind-interface st0.0
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 ike gateway remote-171-1-1-1-0
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 ike ipsec-policy ipsec-171-1-1-1-0-policy
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 traffic-selector ts1 local-ip 100.1.1.0/24
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 traffic-selector ts1 remote-ip 200.1.1.0/24
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 establish-tunnels immediately</codeblock>
+                <p>For the second cSRX instance, use non-overlapping IP addresses and VRF targets. An example helm chart for the second instance is provided below:</p>
+                <codeblock id="codeblock_znx_m2x_qgc">enableUserConfig: true  # enable /disable user configuration
+
+interfaceType: "vhost"  
+
+interfaceConfigs:
+  - name: ge-0/0/0
+    ip: 161.1.1.1/30          # Different IP range from first instance
+    gateway: 161.1.1.2        # gateway configuration
+    ip6: 161:1:1::1/64        # optional
+    ip6Gateway: 161:1:1::2    # optional
+    routes:                   # this field is optional
+    - "191.1.1.0/24"
+    instance_parameters:
+      name: "untrust2"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 20:10        # Different VRF target from first instance
+  - name: ge-0/0/1
+    ip: 1.22.1.1/30           # Different IP range from first instance
+    gateway: 1.22.1.2         # gateway configuration
+    ip6: 121:2:1::1/64                     # optional
+    ip6Gateway: 121:2:1::2               # optional
+    routes:                   # this field is optional
+    - "210.1.1.0/24"
+    instance_parameters:
+      name: "trust2"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 21:21        # Different VRF target from first instance
+
+jcnr_config:
+  - name: ge-0/0/1
+    routes:
+    - "110.1.1.0/24"</codeblock>
+                <p>Sample configlet for the second instance in the <codeph>jcnr2</codeph> namespace. Note the namespace specification in the metadata:</p>
+                <codeblock id="codeblock_box_m2x_qgc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: csrx-node2
+  namespace: jcnr2
+  labels:
+    app: csrx
+  annotations:
+    juniper.net/device: csrx
+spec:
+  config: |-
+    set security ike proposal ike-phase-181-1-1-1-0-proposal authentication-method pre-shared-keys
+    set security ike proposal ike-phase-181-1-1-1-0-proposal dh-group group5
+    set security ike proposal ike-phase-181-1-1-1-0-proposal authentication-algorithm sha-256
+    set security ike proposal ike-phase-181-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ike proposal ike-phase-181-1-1-1-0-proposal lifetime-seconds 3600
+    set security ike proposal ike-phase-161-1-1-1-1-proposal authentication-method pre-shared-keys
+    set security ike proposal ike-phase-161-1-1-1-1-proposal dh-group group5
+    set security ike proposal ike-phase-161-1-1-1-1-proposal authentication-algorithm sha-256
+    set security ike proposal ike-phase-161-1-1-1-1-proposal encryption-algorithm aes-256-cbc
+    set security ike proposal ike-phase-161-1-1-1-1-proposal lifetime-seconds 3600
+    set security ike policy ike-phase-181-1-1-1-0-policy proposals ike-phase-181-1-1-1-0-proposal
+    set security ike policy ike-phase-181-1-1-1-0-policy pre-shared-key ascii-text "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    set security ike policy ike-phase-161-1-1-1-1-policy proposals ike-phase-161-1-1-1-1-proposal
+    set security ike policy ike-phase-161-1-1-1-1-policy pre-shared-key ascii-text "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    set security ike gateway remote-181-1-1-1-0 ike-policy ike-phase-181-1-1-1-0-policy
+    set security ike gateway remote-181-1-1-1-0 address 171.1.1.1
+    set security ike gateway remote-181-1-1-1-0 external-interface ge-0/0/0.0
+    set security ike gateway remote-181-1-1-1-0 local-address 181.1.1.1
+    set security ike gateway remote-181-1-1-1-0 version v2-only
+    set security ike gateway remote-161-1-1-1-1 ike-policy ike-phase-161-1-1-1-1-policy
+    set security ike gateway remote-161-1-1-1-1 address 191.1.1.1
+    set security ike gateway remote-161-1-1-1-1 external-interface ge-0/0/2.0
+    set security ike gateway remote-161-1-1-1-1 local-address 161.1.1.1
+    set security ike gateway remote-161-1-1-1-1 version v2-only
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal protocol esp
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal authentication-algorithm hmac-sha-256-128
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal lifetime-seconds 18000
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal protocol esp
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal authentication-algorithm hmac-sha-256-128
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal encryption-algorithm aes-256-cbc
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal lifetime-seconds 18000
+    set security ipsec policy ipsec-181-1-1-1-0-policy perfect-forward-secrecy keys group5
+    set security ipsec policy ipsec-181-1-1-1-0-policy proposals ipsec-181-1-1-1-0-proposal
+    set security ipsec policy ipsec-161-1-1-1-1-policy perfect-forward-secrecy keys group5
+    set security ipsec policy ipsec-161-1-1-1-1-policy proposals ipsec-161-1-1-1-1-proposal
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 bind-interface st0.0
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 ike gateway remote-181-1-1-1-0
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 ike ipsec-policy ipsec-181-1-1-1-0-policy
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 traffic-selector ts1 local-ip 200.1.1.0/24
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 traffic-selector ts1 remote-ip 100.1.1.0/24
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 establish-tunnels immediately
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 bind-interface st0.1
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 ike gateway remote-161-1-1-1-1
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 ike ipsec-policy ipsec-161-1-1-1-1-policy
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 traffic-selector ts2 local-ip 210.1.1.0/24
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 traffic-selector ts2 remote-ip 110.1.1.0/24
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 establish-tunnels immediately</codeblock>
+                <p><b>Multiple cSRX instances with configlets:</b> For complete deployment procedures including helm install commands, namespace creation, and verification steps, see the Multiple cSRX Instances Configuration Example section.</p>
+              </subsection>
+    
+      </section>
+    
+      <section id="section_bt3_sdh_xcc">
+      
+         <title>Configuration Example</title>
+      
+         <p>Let us look at a configuration example for Cloud-Native Router with security services.
+        Consider the following network topology:<image href="../../images/jn-001150.png" id="image_ckb_dxh_q2c"><!-- alt text added by DocEng-Team on 2025-06-29 10:39:51-->
+               <alt>Network diagram showing OSPF connection between Cell-Site and Core DC. Cell-Site has IP 10.111.1.10/32 and Core DC has IP 10.222.1.10/32. Both sites use vRouters with VRF Trust and Untrust.</alt>
+            </image>
+         </p>
+      
+         <p>The topology consists of a Cloud-Native Router on the cell-site and a Cloud-Native
+        Router in the core data center. Both Cloud-Native Routers are service chained with cSRX. The
+        core data center can also have any other physical or virtual firewall function as the tunnel
+        endpoint. The traffic between pods <codeph>10.111.1.10</codeph> and
+          <codeph>10.222.1.10</codeph> must be encrypted through an IPsec tunnel. The IP addresses
+        and gateway addresses for the cSRX-Cloud-Native Router interface are also illustrated. </p>
+      
+         <p>cSRX connects with Cloud-Native Router's forwarding plane (vRouter) using two
+        interfaces:</p>
+      
+         <ul id="ul_uyn_1sh_xcc">
+        
+            <li><codeph>ge-0/0/1</codeph> interface is used to send traffic from Cloud-Native Router
+          to security services for IPsec encryption and from security services to Cloud-Native
+          Router after IPsec decryption. This interface is a part of the trust zone in cSRX and
+          trust VRF in Cloud-Native Router.</li>
+        
+            <li><codeph>ge-0/0/0</codeph> interface is used to send traffic from security services
+          to Cloud-Native Router after IPsec encryption and from Cloud-Native Router to security
+          services for IPsec decryption. This interface is part of the untrust zone in cSRX and
+          untrust VRF in Cloud-Native Router.</li>
+      
+         </ul>
+      
+         <p>Let us look at the configuration steps:</p>
+      
+         <ol id="ol_fwj_443_xcc">
+        
+            <li>Configure the cSRX helm chart with correct <codeph>interfaceConfigs</codeph>,
+            <codeph>ipSecTunnelConfigs</codeph> and <codeph>jcnr_config</codeph> for the topology.
+            <ol id="ol_hkm_nn3_xcc">
+            
+                  <li>Helm chart configuration for cell-site Cloud-Native Router:
+              <codeblock id="codeblock_pcr_f4h_xcc">junos-csrx:
+  # Default values for cSRX.
+  # This is a YAML-formatted file.
+  # Declare variables to be passed into your templates.
+
+  common:
+    registry: enterprise-hub.juniper.net/
+    repository: jcnr-container-prod/
+
+    csrxInit:
+      repository:
+      image: csrx-init
+      tag: R25.1-25 
+      imagePullPolicy: IfNotPresent
+      resources:
+        #limits:
+        #  memory: 1Gi
+        #  cpu: 1
+        #requests:
+        #  memory: 1Gi
+        #  cpu: 1
+
+    csrx:
+      repository:
+      image: csrx
+      tag: 25.1R1.8 
+      imagePullPolicy: IfNotPresent
+      resources:
+        limits:
+          hugepages-1Gi: 6Gi
+          memory: 4Gi
+        requests:
+          hugepages-1Gi: 6Gi
+          memory: 4Gi
+
+    csrxTelemetry:
+      repository:
+      image: contrail-telemetry-exporter
+      tag: 25.1.0.25
+      imagePullPolicy: IfNotPresent
+      resources:
+
+
+  # kubeconfigpath: path to the kubeconfig file (to override the default path /etc/kubernetes/kubelet.conf)
+  # kubeConfigPath: /path/to/kubeconfig
+
+  # nodeAffinity: Can be used to inject nodeAffinity for cSRX
+  # you may label the nodes where we wish to deploy cSRX and inject affinity accordingly
+  nodeAffinity:
+  #- key: node-role.kubernetes.io/worker
+  #  operator: Exists
+  #- key: node-role.kubernetes.io/master
+  #  operator: DoesNotExist
+  - key: kubernetes.io/hostname
+    operator: In
+    values:
+    - node2
+
+  replicas: 1
+
+  interfaceType: "vhost"
+
+interfaceConfigs:
+  - name: ge-0/0/0
+    ip: 172.16.2.1/30          # --&gt; Interface IP in Untrust VRF, should match ipSecTunnelConfigs localAddress if configured
+    gateway: 172.16.2.2        # --&gt; gateway configuration
+    ip6: 2001:172:16:2::1/126        # optional 
+    ip6Gateway: 2001:172:16:2::2    # optional 
+    routes:                   # --&gt; Route to remote tunnel endpoint
+    - "172.16.4.0/24"
+    instance_parameters:
+       name: "untrust"
+       type: "vrf"        # options include virtual-router or vrf
+       vrfTarget: 10:10
+  - name: ge-0/0/1
+    ip: 10.20.1.1/30           # --&gt; Interface IP in the Trust VRF
+    gateway: 10.20.1.2         # --&gt; gateway configuration
+    ip6: 2001:10:20:1::1/126           # optional 
+    ip6Gateway: 2001:10:20:1::2        # optional 
+    routes:                   # --&gt; Route to local application subnet
+    - "10.111.1.0/24"
+    instance_parameters:
+       name: "trust"
+       type: "vrf"        # options include virtual-router or vrf
+       vrfTarget: 11:11
+
+ipSecTunnelConfigs:       # untrust
+  - interface: ge-0/0/0       ## section ike-phase1, proposal, policy, gateway
+    gateway: 172.16.4.1   # --&gt; Remote tunnel endpoint
+    localAddress: 172.16.2.1  # --&gt; Local Untrust Interface IP
+    authenticationAlgorithm: sha-256
+    encryptionAlgorithm: aes-256-cbc
+    preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    trafficSelector:
+    - name: ts1
+      localIP: 10.111.1.0/24  # --&gt; Traffic selector based on local application subnet
+      remoteIP: 10.222.1.0/24 # --&gt; Traffic selector based on remote application subnet
+
+jcnr_config:
+  - name: ge-0/0/1
+    routes: 
+      - "10.222.1.0/24"     # --&gt; cRPD route to remote application subnet via trust interface
+
+#csrx_flavor: specify the csrx deployment model. Corresponding values for csrx control and data cpus
+#must be provided based on the flavor mentioned below. Following are possible options:
+# CSRX-2CPU-4G
+# CSRX-4CPU-8G
+# CSRX-6CPU-12G
+# CSRX-8CPU-16G
+# CSRX-16CPU-32G
+# CSRX-20CPU-48G
+csrx_flavor: CSRX-2CPU-4G
+
+csrx_ctrl_cpu: "0x01"
+
+csrx_data_cpu: "0x02"</codeblock>
+            </li>
+            
+                  <li>
+              <p>Helm chart configuration for remote Cloud-Native Router:</p>
+              <codeblock id="codeblock_sy4_pn3_xcc"># Default values for cSRX.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+common:
+  registry: enterprise-hub.juniper.net/
+  repository: jcnr-container-prod/
+
+  csrxInit:
+    image: csrx-init
+    tag: f4tgt33
+    imagePullPolicy: IfNotPresent
+    resources:
+      #limits:
+      #  memory: 1Gi
+      #  cpu: 1
+      #requests:
+      #  memory: 1Gi
+      #  cpu: 1
+
+  csrx:
+    image: csrx
+    tag: 24.2R1.14
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        hugepages-1Gi: 4Gi
+        memory: 4Gi
+      requests:
+        hugepages-1Gi: 4Gi
+        memory: 4Gi
+
+# uncomment below if you are using a private registry that needs authentication
+# registryCredentials - Base64 representation of your Docker registry credentials
+# secretName - Name of the Secret object that will be created
+#imagePullSecret:
+  #registryCredentials:  &lt;base64-encoded-credential&gt;
+  #secretName: regcred
+
+# nodeAffinity: Can be used to inject nodeAffinity for cSRX
+# you may label the nodes where we wish to deploy cSRX and inject affinity accordingly
+# nodeAffinity:
+#- key: node-role.kubernetes.io/worker
+#  operator: Exists
+#- key: node-role.kubernetes.io/master
+#  operator: DoesNotExist
+
+replicas: 1
+
+interfaceType: "vhost"        
+
+interfaceConfigs:
+  - name: ge-0/0/0
+    ip: 172.16.4.1/30          # --&gt; Interface IP in Untrust VRF, should match ipSecTunnelConfigs localAddress if configured
+    gateway: 172.16.4.2        # --&gt; gateway configuration
+    ip6: 2001:172:16:4::1/126        # optional 
+    ip6Gateway: 2001:172.16.4::2    # optional 
+    routes:                   # --&gt; Route to remote tunnel endpoint
+    - "172.16.2.0/24"
+    instance_parameters:
+        name: "untrust"
+        type: "vrf"        # options include virtual-router or vrf
+        vrfTarget: 10:10
+  - name: ge-0/0/1
+    ip: 10.40.1.1/30           # --&gt; Interface IP in the Trust VRF
+    gateway: 10.40.1.2         # --&gt; gateway configuration
+    ip6: 2001:10:40:1::1/126           # optional 
+    ip6Gateway: 2001:10:40:1::2        # optional 
+    routes:                   # --&gt; Route to local application subnet
+    - "10.222.1.0/24"
+    instance_parameters:
+       name: "trust"
+       type: "vrf"        # options include virtual-router or vrf
+       vrfTarget: 11:11
+
+ipSecTunnelConfigs:       # untrust
+  - interface: ge-0/0/0       ## section ike-phase1, proposal, policy, gateway
+    gateway: 172.16.2.1   # --&gt; Remote tunnel endpoint
+    localAddress: 172.16.4.1  # --&gt; Local Untrust Interface IP
+    authenticationAlgorithm: sha-256
+    encryptionAlgorithm: aes-256-cbc
+    preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    trafficSelector:
+    - name: ts1
+      localIP: 10.222.1.0/24  # --&gt; Traffic selector based on local application subnet
+      remoteIP: 10.111.1.0/24 # --&gt; Traffic selector based on remote application subnet
+
+jcnr_config:
+  - name: ge-0/0/0
+    routes: 
+      - "10.222.1.0/24"      # --&gt; cRPD route to local application subnet via untrust interface
+  - name: ge-0/0/1
+    routes: 
+      - "10.111.1.0/24"     # --&gt; cRPD route to remote application subnet via trust interface
+
+#csrx_flavor: specify the csrx deployment model. Corresponding values for csrx control and data cpus
+#must be provided based on the flavor mentioned below. Following are possible options:
+# CSRX-2CPU-4G
+# CSRX-4CPU-8G
+# CSRX-6CPU-12G
+# CSRX-8CPU-16G
+# CSRX-16CPU-32G
+# CSRX-20CPU-48G
+csrx_flavor: CSRX-2CPU-4G
+
+csrx_ctrl_cpu: "0x01"
+
+csrx_data_cpu: "0x02"</codeblock>
+              <p>Once you have configured the helm chart, you must deploy cSRX. </p>Please review
+              the <xref keyref="cloud-native-router-deployment-guide.jcnr-deploy-csrx"/> topic for
+              details on how to deploy cSRX for service chaining with Cloud-Native Router.</li>
+          
+               </ol>
+            </li>
+        
+            <li>
+               <p>Configure the Cloud-Native Router fabric interface (<codeph>ens192</codeph>) to
+            participate in the IGP running in the core. The configuration is performed in the
+            untrust VRF. </p>
+               <ol id="ol_t5c_xn3_xcc">
+            
+                  <li>
+              <p>Example configlet for OSPF on the cell-site Cloud-Native Router:</p>
+              <codeblock id="codeblock_f35_jm3_xcc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-ipsec-ospf             # &lt;-- Configlet resource name
+  namespace: jcnr
+spec:
+  config: |-
+    set policy-options policy-statement export_static_ospf from protocol local
+    set policy-options policy-statement export_static_ospf from protocol static
+    set policy-options policy-statement export_static_ospf then accept
+    set routing-instances untrust protocols ospf export export_static_ospf
+    set routing-instances untrust protocols ospf area 0 interface ens192
+    set interfaces ens192 unit 0 family inet address 172.16.0.11/24
+    set routing-instances untrust interface ens192
+  crpdSelector:
+    matchLabels:
+        node: worker</codeblock>
+            </li>
+            
+                  <li>
+              <p>Example configlet for OSPF on the remote Cloud-Native Router:</p>
+              <codeblock id="codeblock_tpv_yn3_xcc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-ipsec-ospf             # &lt;-- Configlet resource name
+  namespace: jcnr
+spec:
+  config: |-
+    set policy-options policy-statement export_static_ospf from protocol local
+    set policy-options policy-statement export_static_ospf from protocol static
+    set policy-options policy-statement export_static_ospf then accept
+    set routing-instances untrust protocols ospf export export_static_ospf
+    set routing-instances untrust protocols ospf area 0 interface ens192
+    set interfaces ens192 unit 0 family inet address 172.16.0.12/24
+    set routing-instances untrust interface ens192
+  crpdSelector:
+    matchLabels:
+        node: worker</codeblock>
+            </li>
+          
+               </ol>
+            </li>
+        
+            <li>
+          <p>Deploy the application pods with an interface attached to the trust VRF in Cloud-Native
+            Router. </p>
+          <ol id="ol_uv4_g43_xcc">
+            <li>
+              <p>Application pod on the cell-site:</p>
+              <codeblock id="codeblock_lbb_qm3_xcc">apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-trust
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "net-trust",
+    "plugins": [
+      {
+        "type": "jcnr",               # --&gt; CNI plugin is jcnr
+        "args": {
+          "vrfName": "trust",         # --&gt; VRF name is trust
+          "vrfTarget": "10:10"
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]  
+  }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pktgen-ce1
+  labels:
+     app: pktgen-odu
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "net-trust",
+          "interface":"net1",
+          "cni-args": {
+            "interfaceType":"veth",  
+            "mac":"aa:bb:cc:dd:50:11",
+            "ipConfig":{
+              "ipv4":{
+                "address":"10.111.1.10/24",      # --&gt; IP address of the pod
+                "gateway":"10.111.1.1",
+                "routes":[ "10.222.1.0/24"]
+              },
+              "ipv6":{
+                      "address":"2001:0db8:10:111:1::10/126",
+                      "gateway":"2001:0db8:10:111:1::10",
+                      "routes":["2001:0db8:10:222:1::0/126"]
+              }
+            }
+          }
+        }
+      ]
+spec:
+  affinity:
+&lt;trimmed...&gt;</codeblock>
+            </li>
+            <li>
+              <p>Application pod on the remote site:</p>
+              <codeblock id="codeblock_yt1_k43_xcc">apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-trust
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "net-trust",
+    "plugins": [
+      {
+        "type": "jcnr",               # --&gt; CNI plugin is jcnr
+        "args": {
+          "vrfName": "trust",         # --&gt; VRF name is trust
+          "vrfTarget": "10:10"
+        },
+        "kubeConfig":"/etc/kubernetes/kubelet.conf"
+      }
+    ]  
+  }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pktgen-ce1
+  labels:
+     app: pktgen-odu
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "net-trust",
+          "interface":"net1",
+          "cni-args": {
+            "interfaceType":"veth",  
+            "mac":"aa:bb:cc:dd:50:22",
+            "ipConfig":{
+              "ipv4":{
+                "address":"10.222.1.10/24",      # --&gt; IP address of the pod
+                "gateway":"10.222.1.1",
+                "routes":[ "10.111.1.0/24"]
+              },
+              "ipv6":{
+                      "address":"2001:0db8:10:222:1::10/126",
+                      "gateway":"2001:0db8:10:222:1::10",
+                      "routes":["2001:0db8:10:111:1::0/126"]
+              }
+            }
+          }
+        }
+      ]
+spec:
+  affinity:
+&lt;trimmed...&gt;</codeblock>
+            </li>
+          </ol>
+        </li>
+      
+         </ol>
+    
+      </section>
+      
+      <section id="section_pmx_k5v_j3c">
+        <title>Multiple cSRX Instances Configuration Example</title>
+        
+        <p>This example demonstrates deploying two cSRX instances on a single JCNR to support additional IPSec tunnels beyond the capacity of a single cSRX instance. Each cSRX instance is deployed in a separate Kubernetes namespace with dedicated VRFs, non-overlapping IP address spaces, and independent IPSec tunnel configurations.</p>
+        
+        <p><b>Topology Overview:</b></p>
+        <p>The deployment consists of:</p>
+        <ul id="ul_qmx_k5v_j3c">
+          <li>First cSRX instance (<codeph>csrx</codeph>) in <codeph>jcnr</codeph> namespace with trust1/untrust1 VRFs</li>
+          <li>Second cSRX instance (<codeph>csrx2</codeph>) in <codeph>jcnr2</codeph> namespace with trust2/untrust2 VRFs</li>
+          <li>Each instance handles separate IPSec tunnels with no IP overlap</li>
+          <li>JCNR routes traffic to the appropriate cSRX instance based on VRF configuration</li>
+        </ul>
+        
+        <p><b>Traffic Steering:</b> Applications are directed to specific cSRX instances through VRF assignment. Pods attached to trust1 VRF use the first cSRX instance, while pods attached to trust2 VRF use the second instance. The jcnr_config routes configure JCNR to forward traffic from each trust VRF to its corresponding cSRX instance.</p>
+        
+        <p>Let us look at the configuration steps:</p>
+        
+        <ol id="ol_rmx_k5v_j3c">
+          <li>
+            <p>Deploy the first cSRX instance in the default <codeph>jcnr</codeph> namespace. Configure the helm chart with <codeph>enableUserConfig: true</codeph> to enable configlet-based IPSec configuration.</p>
+            <codeblock id="codeblock_smx_k5v_j3c">enableUserConfig: true  # enable /disable user configuration
+
+interfaceType: "vhost"  
+
+interfaceConfigs:
+  - name: ge-0/0/0
+    ip: 181.1.1.1/30          # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 181.1.1.2        # gateway configuration
+    ip6: 181:1:1::1/64        # optional
+    ip6Gateway: 181:1:1::2    # optional
+    routes:                   # this field is optional
+    - "171.1.1.0/24"
+    instance_parameters:
+      name: "untrust1"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 10:10        # this option is valid only for vrf
+  - name: ge-0/0/1
+    ip: 1.21.1.1/30           # should match ipSecTunnelConfigs localAddress if configured
+    gateway: 1.21.1.2         # gateway configuration
+    ip6: 121:1:1::1/64                     # optional
+    ip6Gateway: 121:1:1::2               # optional
+    routes:                   # this field is optional
+    - "200.1.1.0/24"
+    instance_parameters:
+      name: "trust1"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 11:11        # this option is valid only for vrf
+
+jcnr_config:
+  - name: ge-0/0/1
+    routes:
+    - "100.1.1.0/24"</codeblock>
+            <p>Deploy the first cSRX instance:</p>
+            <codeblock id="codeblock_tmx_k5v_j3c">helm install csrx &lt;path-to-helm-chart&gt; -f values-user-defined-cfg.yaml</codeblock>
+          </li>
+          
+          <li>
+            <p>Apply the IPSec tunnel configuration for the first cSRX instance via configlet in the <codeph>jcnr</codeph> namespace:</p>
+            <codeblock id="codeblock_umx_k5v_j3c">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: csrx-node1
+  namespace: jcnr
+  labels:
+    app: csrx
+  annotations:
+    juniper.net/device: csrx
+spec:
+  config: |-
+    set security ike proposal ike-phase-171-1-1-1-0-proposal authentication-method pre-shared-keys
+    set security ike proposal ike-phase-171-1-1-1-0-proposal dh-group group5
+    set security ike proposal ike-phase-171-1-1-1-0-proposal authentication-algorithm sha-256
+    set security ike proposal ike-phase-171-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ike proposal ike-phase-171-1-1-1-0-proposal lifetime-seconds 3600
+    set security ike policy ike-phase-171-1-1-1-0-policy proposals ike-phase-171-1-1-1-0-proposal
+    set security ike policy ike-phase-171-1-1-1-0-policy pre-shared-key ascii-text "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    set security ike gateway remote-171-1-1-1-0 ike-policy ike-phase-171-1-1-1-0-policy
+    set security ike gateway remote-171-1-1-1-0 address 181.1.1.1
+    set security ike gateway remote-171-1-1-1-0 external-interface ge-0/0/0.0
+    set security ike gateway remote-171-1-1-1-0 local-address 171.1.1.1
+    set security ike gateway remote-171-1-1-1-0 version v2-only
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal protocol esp
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal authentication-algorithm hmac-sha-256-128
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ipsec proposal ipsec-171-1-1-1-0-proposal lifetime-seconds 18000
+    set security ipsec policy ipsec-171-1-1-1-0-policy perfect-forward-secrecy keys group5
+    set security ipsec policy ipsec-171-1-1-1-0-policy proposals ipsec-171-1-1-1-0-proposal
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 bind-interface st0.0
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 ike gateway remote-171-1-1-1-0
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 ike ipsec-policy ipsec-171-1-1-1-0-policy
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 traffic-selector ts1 local-ip 100.1.1.0/24
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 traffic-selector ts1 remote-ip 200.1.1.0/24
+    set security ipsec vpn ipsec-remote-171-1-1-1-0 establish-tunnels immediately</codeblock>
+          </li>
+          
+          <li>
+            <p>Create the second namespace and deploy the second cSRX instance with non-overlapping IP addresses. Configure the helm chart with different VRFs and IP ranges:</p>
+            <codeblock id="codeblock_vmx_k5v_j3c">kubectl create namespace jcnr2</codeblock>
+            <codeblock id="codeblock_wmx_k5v_j3c">enableUserConfig: true  # enable /disable user configuration
+
+interfaceType: "vhost"  
+
+interfaceConfigs:
+  - name: ge-0/0/0
+    ip: 161.1.1.1/30          # Different IP range from first instance
+    gateway: 161.1.1.2        # gateway configuration
+    ip6: 161:1:1::1/64        # optional
+    ip6Gateway: 161:1:1::2    # optional
+    routes:                   # this field is optional
+    - "191.1.1.0/24"
+    instance_parameters:
+      name: "untrust2"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 20:10        # Different VRF target from first instance
+  - name: ge-0/0/1
+    ip: 1.22.1.1/30           # Different IP range from first instance
+    gateway: 1.22.1.2         # gateway configuration
+    ip6: 121:2:1::1/64                     # optional
+    ip6Gateway: 121:2:1::2               # optional
+    routes:                   # this field is optional
+    - "210.1.1.0/24"
+    instance_parameters:
+      name: "trust2"
+      type: "vrf"             # options include virtual-router or vrf
+      vrfTarget: 21:21        # Different VRF target from first instance
+
+jcnr_config:
+  - name: ge-0/0/1
+    routes:
+    - "110.1.1.0/24"</codeblock>
+            <p>Deploy the second cSRX instance in the <codeph>jcnr2</codeph> namespace:</p>
+            <codeblock id="codeblock_xmx_k5v_j3c">helm install csrx2 &lt;path-to-helm-chart&gt; -f values-user-defined-cfg-instance2.yaml -n jcnr2</codeblock>
+          </li>
+          
+          <li>
+            <p>Apply the IPSec tunnel configuration for the second cSRX instance via configlet in the <codeph>jcnr2</codeph> namespace. Note the namespace specification in the metadata:</p>
+            <codeblock id="codeblock_ymx_k5v_j3c">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: csrx-node2
+  namespace: jcnr2
+  labels:
+    app: csrx
+  annotations:
+    juniper.net/device: csrx
+spec:
+  config: |-
+    set security ike proposal ike-phase-181-1-1-1-0-proposal authentication-method pre-shared-keys
+    set security ike proposal ike-phase-181-1-1-1-0-proposal dh-group group5
+    set security ike proposal ike-phase-181-1-1-1-0-proposal authentication-algorithm sha-256
+    set security ike proposal ike-phase-181-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ike proposal ike-phase-181-1-1-1-0-proposal lifetime-seconds 3600
+    set security ike proposal ike-phase-161-1-1-1-1-proposal authentication-method pre-shared-keys
+    set security ike proposal ike-phase-161-1-1-1-1-proposal dh-group group5
+    set security ike proposal ike-phase-161-1-1-1-1-proposal authentication-algorithm sha-256
+    set security ike proposal ike-phase-161-1-1-1-1-proposal encryption-algorithm aes-256-cbc
+    set security ike proposal ike-phase-161-1-1-1-1-proposal lifetime-seconds 3600
+    set security ike policy ike-phase-181-1-1-1-0-policy proposals ike-phase-181-1-1-1-0-proposal
+    set security ike policy ike-phase-181-1-1-1-0-policy pre-shared-key ascii-text "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    set security ike policy ike-phase-161-1-1-1-1-policy proposals ike-phase-161-1-1-1-1-proposal
+    set security ike policy ike-phase-161-1-1-1-1-policy pre-shared-key ascii-text "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+    set security ike gateway remote-181-1-1-1-0 ike-policy ike-phase-181-1-1-1-0-policy
+    set security ike gateway remote-181-1-1-1-0 address 171.1.1.1
+    set security ike gateway remote-181-1-1-1-0 external-interface ge-0/0/0.0
+    set security ike gateway remote-181-1-1-1-0 local-address 181.1.1.1
+    set security ike gateway remote-181-1-1-1-0 version v2-only
+    set security ike gateway remote-161-1-1-1-1 ike-policy ike-phase-161-1-1-1-1-policy
+    set security ike gateway remote-161-1-1-1-1 address 191.1.1.1
+    set security ike gateway remote-161-1-1-1-1 external-interface ge-0/0/2.0
+    set security ike gateway remote-161-1-1-1-1 local-address 161.1.1.1
+    set security ike gateway remote-161-1-1-1-1 version v2-only
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal protocol esp
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal authentication-algorithm hmac-sha-256-128
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal encryption-algorithm aes-256-cbc
+    set security ipsec proposal ipsec-181-1-1-1-0-proposal lifetime-seconds 18000
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal protocol esp
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal authentication-algorithm hmac-sha-256-128
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal encryption-algorithm aes-256-cbc
+    set security ipsec proposal ipsec-161-1-1-1-1-proposal lifetime-seconds 18000
+    set security ipsec policy ipsec-181-1-1-1-0-policy perfect-forward-secrecy keys group5
+    set security ipsec policy ipsec-181-1-1-1-0-policy proposals ipsec-181-1-1-1-0-proposal
+    set security ipsec policy ipsec-161-1-1-1-1-policy perfect-forward-secrecy keys group5
+    set security ipsec policy ipsec-161-1-1-1-1-policy proposals ipsec-161-1-1-1-1-proposal
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 bind-interface st0.0
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 ike gateway remote-181-1-1-1-0
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 ike ipsec-policy ipsec-181-1-1-1-0-policy
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 traffic-selector ts1 local-ip 200.1.1.0/24
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 traffic-selector ts1 remote-ip 100.1.1.0/24
+    set security ipsec vpn ipsec-remote-181-1-1-1-0 establish-tunnels immediately
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 bind-interface st0.1
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 ike gateway remote-161-1-1-1-1
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 ike ipsec-policy ipsec-161-1-1-1-1-policy
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 traffic-selector ts2 local-ip 210.1.1.0/24
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 traffic-selector ts2 remote-ip 110.1.1.0/24
+    set security ipsec vpn ipsec-remote-161-1-1-1-1 establish-tunnels immediately</codeblock>
+          </li>
+        </ol>
+        
+        <p><b>Important Considerations:</b></p>
+        <ul id="ul_cnx_k5v_j3c">
+          <li><b>IP Address Planning:</b> Each cSRX instance must use unique IP address ranges with no overlap. This includes interface IPs, VRF subnets, and traffic selectors. Create an IP address allocation table before deployment.</li>
+          <li><b>VRF Target Uniqueness:</b> Each VRF must have a unique VRF target across all cSRX instances. Use a consistent numbering scheme (e.g., instance 1: 10:10/11:11, instance 2: 20:10/21:21).</li>
+          <li><b>Resource Requirements:</b> Each cSRX instance requires minimum 2 vCPUs and 4GB memory. Plan cluster resources accordingly when deploying multiple instances.</li>
+          <li><b>Namespace Isolation:</b> Deploy each instance in a separate Kubernetes namespace for proper isolation. This prevents resource conflicts and simplifies management.</li>
+          <li><b>Traffic Steering:</b> Applications are directed to specific cSRX instances through VRF assignment in the NetworkAttachmentDefinition. Pods attached to trust1 VRF automatically use the first cSRX instance, pods attached to trust2 VRF use the second instance.</li>
+          <li><b>Scalability:</b> There is no hard limit on the number of cSRX instances. The deployment is limited only by available cluster resources (CPU, memory, network interfaces).</li>
+          <li><b>Configuration Management:</b> Maintain separate values.yaml files for each instance with clear naming conventions (values-instance1.yaml, values-instance2.yaml, etc.).</li>
+          <li><b>Verification:</b> Once deployment is complete, refer to the Verify Configuration section for steps to verify both cSRX instances, IPSec tunnels, routing tables, and end-to-end connectivity.</li>
+        </ul>
+        
+        <p><b>Uninstalling cSRX Instances:</b></p>
+        <p>To remove cSRX instances and associated resources:</p>
+        <codeblock id="codeblock_dnx_k5v_j3c">
+# Uninstall first instance
+helm uninstall csrx
+
+# Uninstall second instance
+helm uninstall csrx2 -n jcnr2
+</codeblock>
+      </section>
+    
+      <section id="section_adk_443_xcc">
+      
+         <title>Verify Configuration</title>
+      
+         <p>You can verify the configuration and traffic flows in cRPD, cSRX and vRouter. </p>
+      
+         <ol>
+        
+            <li>
+               <p>Verify cRPD configuration for trust and untrust VRFs via the <xref href="accessing-crpd-cli.dita">cRPD shell</xref>. The
+            configuration is available under the cni configuration group.
+          </p>
+               <codeblock id="codeblock_xld_r43_xcc">user@host &gt; show configuration groups cni | display set 
+set groups cni apply-flags omit
+set groups cni apply-macro ht jcnr
+set groups cni routing-instances untrust instance-type vrf
+set groups cni routing-instances untrust routing-options rib untrust.inet6.0 static route 2001:db8:172:16:10::1/128 qualified-next-hop 2001:db8:172:16:10::1 interface vhostge-0_0_0-90aca656-8b86-4d1d-a8
+set groups cni routing-instances untrust routing-options static route 172.16.10.1/32 qualified-next-hop 172.16.10.1 interface vhostge-0_0_0-90aca656-8b86-4d1d-a8
+set groups cni routing-instances untrust interface vhostge-0_0_0-90aca656-8b86-4d1d-a8
+set groups cni routing-instances untrust route-distinguisher 10:10
+set groups cni routing-instances untrust vrf-target target:10:10
+set groups cni routing-instances trust instance-type vrf
+set groups cni routing-instances trust routing-options rib trust.inet6.0 static route 2001:db8:10:20:1::1/128 qualified-next-hop 2001:db8:10:20:1::1 interface vhostge-0_0_1-90aca656-8b86-4d1d-a8
+set groups cni routing-instances trust routing-options static route 10:20:1.1/32 qualified-next-hop 10:20:1.1 interface vhostge-0_0_1-90aca656-8b86-4d1d-a8
+set groups cni routing-instances trust routing-options static route 10.222.1.0/24 qualified-next-hop 10.20.1.1 interface vhostge-0_0_1-90aca656-8b86-4d1d-a8
+set groups cni routing-instances trust interface vhostge-0_0_1-90aca656-8b86-4d1d-a8
+set groups cni routing-instances trust route-distinguisher 11:11
+set groups cni routing-instances trust vrf-target target:11:11</codeblock>
+            </li>
+        
+            <li>
+               <p>Verify the cRPD Routing
+          Tables:</p>
+               <codeblock id="codeblock_vrj_1p3_xcc">user@host &gt; show route table trust.inet.0   
+trust.inet.0: 5 destinations, 5 routes (5 active, 0 holddown, 0 hidden)
++ = Active Route, - = Last Active, * = Both
+
+10.20.1.1/32       *[Static/5] 03:59:00
+                    &gt;  via vhostge-0_0_1-a6c764da-a46d-4832-b5
+10.20.1.2/32       *[Local/0] 03:59:00
+                       Local via vhostge-0_0_1-a6c764da-a46d-4832-b5
+10.111.1.1/32      *[Local/0] 03:59:00
+                       Local via jvknet1-88e1126
+10.111.1.10/32     *[Static/5] 03:59:00
+                    &gt;  via jvknet1-88e1126
+10.222.1.0/24      *[Static/5] 03:59:00
+                    &gt;  via vhostge-0_0_1-a6c764da-a46d-4832-b5
+</codeblock>
+               <codeblock id="codeblock_v5p_lp3_xcc">user@host &gt; show route table untrust.inet.0  
+untrust.inet.0: 9 destinations, 9 routes (9 active, 0 holddown, 0 hidden)
++ = Active Route, - = Last Active, * = Both
+
+10.111.1.0/24      *[Static/5] 04:00:31
+                    &gt;  via vhostge-0_0_0-a6c764da-a46d-4832-b5
+10.222.1.0/24      *[OSPF/150] 03:56:03, metric 0, tag 0
+                    &gt;  to 172.16.0.12 via ens192
+172.16.0.0/24      *[Direct/0] 04:00:31
+                    &gt;  via ens192
+172.16.0.11/32     *[Local/0] 04:00:31
+                       Local via ens192
+172.16.1.0/24      *[OSPF/10] 03:56:03, metric 2
+                    &gt;  to 172.16.0.12 via ens192
+172.16.2.1/32      *[Static/5] 04:00:31
+                    &gt;  via vhostge-0_0_0-a6c764da-a46d-4832-b5
+172.16.2.2/32      *[Local/0] 04:00:31
+                       Local via vhostge-0_0_0-a6c764da-a46d-4832-b5
+172.16.4.1/32      *[OSPF/150] 03:56:03, metric 0, tag 0
+                    &gt;  to 172.16.0.12 via ens192</codeblock>
+            </li>
+        
+            <li>
+               <p>Login to the cSRX shell using the <codeph>kubectl exec -it
+                <varname>csrx_pod_name</varname> -n jcnr -- bash</codeph> command. Type
+              <codeph>cli</codeph> to navigate to the CLI mode. Verify the cSRX configuration,
+            security associations and
+          flows:</p>
+               <codeblock id="codeblock_a25_mw1_ycc">user@host&gt; show configuration 
+## Last commit: 2024-10-01 10:25:50 UTC by root
+version 20240621.103832_builder.r1429411;
+system {
+    root-authentication {
+        encrypted-password *disabled*; ## SECRET-DATA
+    }
+    services {
+        ssh {
+            root-login allow;
+        }
+    }
+}
+interfaces {
+    ge-0/0/0 {
+        unit 0 {
+            family inet {
+                address 172.16.2.1/30;
+            }
+        }
+    }
+    ge-0/0/1 {
+        unit 0 {
+            family inet {
+                address 10.20.1.1/30;
+            }
+        }
+    }
+    st0 {
+        unit 0 {
+            family inet;
+        }
+    }
+}
+routing-options {
+    static {
+        route 172.16.4.0/24 next-hop 172.16.2.2/32;
+        route 10.111.1.0/24 next-hop 10.20.1.2/32;
+    }
+}
+security {
+    ike {
+        proposal ike-phase-172-16-2-1-proposal {
+            authentication-method pre-shared-keys;
+            dh-group group5;
+            authentication-algorithm sha-256;
+            encryption-algorithm aes-256-cbc;
+            lifetime-seconds 3600;
+        }
+        policy ike-phase-172-16-2-1-policy {
+            proposals ike-phase-172-16-2-1-proposal;
+            pre-shared-key ascii-text "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"; ## SECRET-DATA
+        }
+        gateway remote-172-16-2-1 {
+            ike-policy ike-phase-172-16-2-1-policy;
+            address 172.16.4.1;
+            external-interface ge-0/0/0.0;
+            local-address 172.16.2.1;
+            version v2-only;
+        }
+    }
+    ipsec {
+        proposal ipsec-172-16-2-1-proposal {
+            protocol esp;
+        }
+        policy ipsec-172-16-2-1-policy {
+            perfect-forward-secrecy {
+                keys group5;
+            }
+            proposals ipsec-172-16-2-1-proposal;
+        }
+        vpn ipsec-remote-172-16-2-1 {
+            bind-interface st0.0;       
+            ike {
+                gateway remote-172-16-2-1;
+                ipsec-policy ipsec-172-16-2-1-policy;
+            }
+            traffic-selector ts1 {
+                local-ip 10.111.1.0/24;
+                remote-ip 10.222.1.0/24;
+            }
+            establish-tunnels immediately;
+        }
+    }
+    policies {
+        default-policy {
+            permit-all;
+        }
+    }
+    zones {
+        security-zone untrust {
+            host-inbound-traffic {
+                system-services {
+                    all;
+                }
+                protocols {
+                    all;
+                }
+            }
+            interfaces {
+                ge-0/0/0.0;
+                st0.0;
+            }
+        }
+        security-zone trust {
+            host-inbound-traffic {
+                system-services {
+                    all;
+                }
+                protocols {
+                    all;
+                }
+            }
+            interfaces {
+                ge-0/0/1.0;
+            }
+        }
+    }
+}</codeblock>
+               <codeblock id="codeblock_egs_sp3_xcc">user@host&gt; show security ike security-associations 
+Index   State  Initiator cookie  Responder cookie  Mode           Remote Address
+73      UP     6895337b7ae4b449  2bdca7788a896e50  IKEv2          172.16.4.1   </codeblock>
+               <codeblock id="codeblock_lyc_5p3_xcc">user@host&gt; show security ipsec security-associations 
+  Total active tunnels: 1     Total IPsec sas: 1
+  ID      Algorithm       SPI      Life:sec/kb  Mon lsys Port  Gateway
+  &lt;500002 ESP:3des/sha1   0x0283e69b 2132/ unlim -  root 500   172.16.4.1      
+  &gt;500002 ESP:3des/sha1   0xbdd5cc1e 2132/ unlim -  root 500   172.16.4.1    </codeblock>
+               <codeblock id="codeblock_yc2_vp3_xcc">user@host&gt; show security ipsec statistics 
+ESP Statistics:
+  Encrypted bytes:          2878576
+  Decrypted bytes:          1739472
+  Encrypted packets:          21166
+  Decrypted packets:          20708
+AH Statistics:
+  Input bytes:                    0
+  Output bytes:                   0
+  Input packets:                  0
+  Output packets:                 0
+Errors:
+  AH authentication failures: 0, Replay errors: 0
+  ESP authentication failures: 0, ESP decryption failures: 0
+  Bad headers: 0, Bad trailers: 0
+  Invalid SPI: 0, TS check fail: 0
+  Exceeds tunnel MTU: 0
+  Discarded: 0
+</codeblock>
+               <codeblock id="codeblock_sp1_wp3_xcc">user@host&gt; show security flow session 
+Session ID: 2, Policy name: N/A, Timeout: N/A, Session State: Valid
+  In: 172.16.4.1/0 --&gt; 172.16.2.1/0;esp, Conn Tag: 0x0, If: ge-0/0/0.0, Pkts: 0, Bytes: 0, 
+
+Session ID: 2696, Policy name: N/A, Timeout: N/A, Session State: Valid
+  In: 172.16.4.1/20915 --&gt; 172.16.2.1/10740;esp, Conn Tag: 0x0, If: ge-0/0/0.0, Pkts: 7, Bytes: 952, 
+Total sessions: 2
+</codeblock>
+            </li>
+        
+            <li>
+               <p>You can also verify the flow in the <xref href="accessing-vrouter-cli.dita">vRouter CLI</xref>:
+          </p>
+               <codeblock id="codeblock_k3n_cq3_xcc"># flow -l
+Flow table(size 161218560, entries 629760)
+…
+    Index                Source:Port/Destination:Port                      Proto(V)
+-----------------------------------------------------------------------------------
+    58256&lt;=&gt;206532       172.16.4.1:0                                       50 (1)
+                         172.16.2.1:0    
+(Gen: 53, K(nh):1, Action:F, Flags:, QOS:-1, S(nh):26,  Stats:14479/1969144, 
+ SPort 63031, TTL 0, Sinfo 0.0.0.0)
+
+   202824&lt;=&gt;382336       10.111.1.10:67                                      1 (2)
+                         10.222.1.10:0    
+(Gen: 5, K(nh):2, Action:F, Flags:, QOS:-1, S(nh):18,  Stats:14754/1445892, 
+ SPort 51876, TTL 0, Sinfo 8.0.0.0)
+
+   206532&lt;=&gt;58256        172.16.2.1:0                                       50 (1)
+                         172.16.4.1:0    
+(Gen: 53, K(nh):1, Action:F, Flags:, QOS:-1, S(nh):27,  Stats:14494/2174100, 
+ SPort 55303, TTL 0, Sinfo 6.0.0.0)
+
+   382336&lt;=&gt;202824       10.222.1.10:67                                      1 (2)
+                         10.111.1.10:0    
+(Gen: 5, K(nh):2, Action:F, Flags:, QOS:-1, S(nh):14,  Stats:14479/1418942, 
+ …
+</codeblock>
+            </li>
+
+
+      
+         </ol>
+        <subsection id="subsection_dox_m2x_qgc">
+          <title>Verifying Multiple cSRX Instances</title>
+          <p>When deploying multiple cSRX instances, verify that each instance is running correctly, IPSec tunnels are established in their respective namespaces, and end-to-end traffic flows through the correct paths.</p>
+          
+          <ol id="ol_eox_m2x_qgc">
+            <li>
+              <p>Verify both cSRX instances are running in their respective namespaces:</p>
+              <codeblock id="codeblock_fox_m2x_qgc"># Verify first instance in jcnr namespace
+kubectl get pods -n jcnr | grep csrx
+
+# Verify second instance in jcnr2 namespace
+kubectl get pods -n jcnr2 | grep csrx
+
+# Expected output: Both pods show status "Running"</codeblock>
+            </li>
+            
+            <li>
+              <p>Verify IPSec tunnel status for the first cSRX instance:</p>
+              <codeblock id="codeblock_gox_m2x_qgc"># Login to first cSRX instance
+kubectl exec -it &lt;csrx_pod_name&gt; -n jcnr -- bash
+cli
+
+# Verify IKE security associations
+show security ike security-associations
+
+# Expected output:
+# Index   State  Initiator cookie  Responder cookie  Mode           Remote Address
+# 73      UP     6895337b7ae4b449  2bdca7788a896e50  IKEv2          171.1.1.1
+
+# Verify IPSec security associations
+show security ipsec security-associations
+
+# Expected output:
+#   Total active tunnels: 1     Total IPsec sas: 1
+#   ID      Algorithm       SPI      Life:sec/kb  Mon lsys Port  Gateway
+#   &lt;500002 ESP:aes-256-cbc/sha-256 0x0283e69b 2132/ unlim -  root 500   171.1.1.1      
+#   &gt;500002 ESP:aes-256-cbc/sha-256 0xbdd5cc1e 2132/ unlim -  root 500   171.1.1.1
+
+# Verify IPSec statistics
+show security ipsec statistics</codeblock>
+            </li>
+            
+            <li>
+              <p>Verify IPSec tunnel status for the second cSRX instance:</p>
+              <codeblock id="codeblock_hox_m2x_qgc"># Login to second cSRX instance
+kubectl exec -it &lt;csrx2_pod_name&gt; -n jcnr2 -- bash
+cli
+
+# Verify IKE security associations
+show security ike security-associations
+
+# Expected output:
+# Index   State  Initiator cookie  Responder cookie  Mode           Remote Address
+# 84      UP     7896448c8cf5c550  3cedbb889b907f61  IKEv2          191.1.1.1
+
+# Verify IPSec security associations
+show security ipsec security-associations
+
+# Expected output shows active tunnel to 191.1.1.1:
+#   Total active tunnels: 2     Total IPsec sas: 2
+#   ID      Algorithm       SPI      Life:sec/kb  Mon lsys Port  Gateway
+#   &lt;500003 ESP:3des/sha1   0x0394f7ac 2098/ unlim -  root 500   191.1.1.1      
+#   &gt;500003 ESP:3des/sha1   0xcee6dd2f 2098/ unlim -  root 500   191.1.1.1
+
+# Verify IPSec statistics
+show security ipsec statistics</codeblock>
+            </li>
+            
+            <li>
+              <p>Verify VRF isolation by checking cRPD routing tables for each cSRX instance via the <xref href="accessing-crpd-cli.dita">cRPD shell</xref>. Each cSRX instance should have separate VRFs with no route overlap:</p>
+              <codeblock id="codeblock_iox_m2x_qgc"># Access cRPD shell
+kubectl exec -it &lt;crpd_pod_name&gt; -n jcnr -- cli
+
+# Check trust1 VRF for first instance
+user@host&gt; show route table trust1.inet.0
+
+# Expected output shows routes for first instance:
+# 200.1.1.0/24      *[Direct/0] via jvknet1-xxx
+# 100.1.1.0/24      *[Static/5] via vhostge-0_0_1-xxx (via cSRX trust interface)
+
+# Check untrust1 VRF for first instance
+user@host&gt; show route table untrust1.inet.0
+
+# Expected output shows:
+# 171.1.1.0/24      *[Static/5] via ge-0/0/0 (route to remote tunnel endpoint)
+
+# Check trust2 VRF for second instance
+user@host&gt; show route table trust2.inet.0
+
+# Expected output shows routes for second instance:
+# 210.1.1.0/24      *[Direct/0] via jvknet2-xxx
+# 110.1.1.0/24      *[Static/5] via vhostge-0_0_1-yyy (via cSRX2 trust interface)
+
+# Check untrust2 VRF for second instance
+user@host&gt; show route table untrust2.inet.0
+
+# Expected output shows:
+# 191.1.1.0/24      *[Static/5] via ge-0/0/0 (route to remote tunnel endpoint)</codeblock>
+            </li>
+            
+            <li>
+              <p>Verify namespace isolation by checking configlets are applied to the correct instances:</p>
+              <codeblock id="codeblock_jox_m2x_qgc"># List configlets in jcnr namespace
+kubectl get configlets -n jcnr
+
+# List configlets in jcnr2 namespace
+kubectl get configlets -n jcnr2
+
+# Expected: Each namespace shows its own configlets</codeblock>
+            </li>
+          </ol>
+          
+          <p><b>Troubleshooting Multiple cSRX Instances:</b></p>
+          <ul id="ul_mox_m2x_qgc">
+            <li><b>cSRX instance fails to start:</b> Verify CPU and memory resources are sufficient (minimum 2 vCPUs and 4GB per instance). Check pod logs using <codeph>kubectl logs &lt;csrx_pod_name&gt; -n &lt;namespace&gt;</codeph>. Verify license secret exists using <codeph>kubectl get secret service-chain-instance -n &lt;namespace&gt;</codeph>. Check pod events using <codeph>kubectl describe pod &lt;csrx_pod_name&gt; -n &lt;namespace&gt;</codeph>.</li>
+            <li><b>IPSec tunnels fail to establish:</b> Verify no IP address overlap between instances by reviewing all interface IPs, VRF subnets, and application pod IPs. Check connectivity to remote tunnel endpoint using <codeph>kubectl exec -it &lt;csrx_pod_name&gt; -n &lt;namespace&gt; -- ping &lt;remote_gateway&gt;</codeph>. Verify IKE proposal parameters match on both ends (authentication algorithm, encryption algorithm, pre-shared key). Check cSRX logs for IKE negotiation errors using <codeph>kubectl exec -it &lt;csrx_pod_name&gt; -n &lt;namespace&gt; -- cli -c "show log messages | match ike"</codeph>. Verify external interface is correctly configured in IKE gateway configuration.</li>
+            <li><b>Traffic routing to wrong cSRX instance:</b> Verify VRF targets are unique across all instances. Check NetworkAttachmentDefinition vrfName matches the intended cSRX instance VRF. Verify pod annotations specify correct network attachment definition. Check JCNR routing using <codeph>show route table &lt;vrf_name&gt;.inet.0</codeph> to ensure routes point to correct cSRX interface.</li>
+            <li><b>Configlets not applied:</b> Verify namespace in configlet metadata matches target cSRX instance namespace. Check configlet status using <codeph>kubectl get configlets -n &lt;namespace&gt;</codeph>. Verify cSRX pod is running before applying configlet. Check configlet controller logs for errors.</li>
+            <li><b>Performance issues with multiple instances:</b> Monitor CPU and memory usage using <codeph>kubectl top pods -n &lt;namespace&gt;</codeph>. Check for CPU throttling using <codeph>kubectl describe pod &lt;csrx_pod_name&gt; -n &lt;namespace&gt;</codeph>. Verify each cSRX instance has dedicated CPU cores allocated. Check IPSec statistics for packet drops using <codeph>show security ipsec statistics</codeph>.</li>
+          </ul>
+        </subsection>
+    
+      </section>
+  
+   </conbody>
+  
+   <related-links>
+    
+      <link format="html" href="https://www.juniper.net/documentation/us/en/software/junos/vpn-ipsec/topics/topic-map/security-ipsec-basics.html#id-ipsec-overview" scope="external">
+      
+         <linktext>IPsec Overview</linktext>
+    
+      </link>
+  
+   </related-links>
+
+</concept>

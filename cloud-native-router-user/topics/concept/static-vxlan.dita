@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_f6e5d86de3c5fb24-c7c47c8-198e4d90ef6--7eff" xml:lang="en-US">
+  <!--Use the Concept template to introduce a new product or functionality. Also use this template to provide high-level explanations, definitions of key concepts, terminology, or general background information. Limit one topic to one theme or subject.-->
+  <!--For <title>, follow these guidelines:
+- Avoid the gerund form and minimize the use of “Understanding.” 
+- Use "[Feature] Overview" if the topic is indeed an overview. 
+- Use the feature name as the topic title for very long feature names. 
+- Use the Who, What, Where, When, Why, or How (not How to) phrase to describe a specific aspect of a product, feature, or user scenario.-->
+  <title>Static VXLAN with IPv4 and IPv6 Underlay</title>
+  <shortdesc>Juniper Cloud-Native Router supports static VXLAN to extend Layer 2 networks over a
+    Layer 3 IP underlay through manually configured VXLAN tunnels. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  
+  <conbody>
+    <p>Static (Virtual extensible LAN) VXLAN enables organizations to extend Layer 2 networks over a
+      Layer 3 IP underlay through manually configured VXLAN tunnels. The VXLAN Identifier (VNI) and
+      VXLAN Tunnel Endpoint (VTEP) configurations are configured manually, instead of relying on
+      EVPN control plane protocols to dynamically discover MAC-to-VTEP mapping. Static VXLAN is
+      ideal for small-scale environments, air-gapped systems, edge computing nodes, and deployments
+      that require predictable behavior and simpler operational model. Static VXLAN offers key
+      advantages including lower complexity, reduced resource consumption, and easier deployment in
+      minimalistic infrastructures. However, it also requires greater diligence in configuration and
+      operational monitoring to prevent inconsistencies and outages. Since dynamic advertisement and
+      auto-discovery are not available, all failover and redundance mechanisms must be carefully
+      planned. You can read more about <xref href="https://www.juniper.net/documentation/us/en/software/junos/evpn/topics/topic-map/vxlan-static.html" format="html" scope="external">static VXLAN</xref> in the Junos documentation.</p>
+    <p>Static VXLANs is often implemented in multiple edge, enterprise, and telecom usecases, such
+      as in 5G networks for slice isolation between DU and CU, to extend enterprise LAN across
+      different geographies, and remote branch deployments. </p>
+    <section id="section_lrs_fsy_mgc">
+      <title>Configuration</title>
+      <p>Static VXLAN configuration includes multiple VTEPs, each configured with a set of VNIs and
+        corresponding remote VTEPs. There is no central controller or signaling mechanism. Traffic
+        flows based on static mapping and local MAC learning. You must configure the following
+        elements on the Cloud-Native router to bring up static VXLAN:</p>
+      <ul id="ul_kb1_zsy_mgc">
+        <li>
+          <p>Configure IP loopback interface or source interface for VXLAN</p>
+        </li>
+        <li>
+          <p>Assign a unique VNI for each logical Layer 2 domain</p>
+        </li>
+        <li>
+          <p>Ensure reachability for all configured remote VTEPs</p>
+        </li>
+        <li>
+          <p>Enable VLAN tagging or bridge domains to map to VNIs</p>
+        </li>
+        <li>
+          <p>Set the MTU in the <xref href="../../../cloud-native-router-deployment-guide/topics/concept/deployment-config-files-bms.dita">deployment helm chart</xref> to accommodate VXLAN header overhead</p>
+          <note id="note_idq_sd3_tgc">Cloud-Native Router must be deployed in L2 or L2-L3 mode to
+            support bridge domains.</note>
+        </li>
+      </ul>
+      <p>You must perform static VXLAN configuration using a Configlet. Review <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router25.2/cloud-native-router-deployment-guide/topics/concept/crpd-customization-node-configlet.html" format="html" scope="external">Customize JCNR Configuration</xref> for more details. A
+        sample configlet is provided below:</p>
+      <codeblock id="codeblock_lzm_1dz_mgc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces lo0 unit 0 family inet address 10.3.3.3/32
+    set interfaces lo0 unit 0 family inet6 address 2001:db8:10:3:3::3/128
+    set interfaces enp94s0f2v0 unit 0 family bridge interface-mode trunk
+    set interfaces enp94s0f2v0 unit 0 family bridge vlan-id-list 201-205
+    set routing-instances vswitch instance-type virtual-switch
+    set routing-instances vswitch interface enp94s0f2v0
+    set routing-instances vswitch vtep-source-interface lo0.0
+    set routing-instances vswitch bridge-domains bd201 vlan-id 201
+    set routing-instances vswitch bridge-domains bd201 vxlan vni 2001
+    set routing-instances vswitch bridge-domains bd201 vxlan static-remote-vtep-list 2001:db8:10:5:5::5
+    set routing-instances vswitch bridge-domains bd202 vlan-id 202
+    set routing-instances vswitch bridge-domains bd202 vxlan vni 2002
+    set routing-instances vswitch bridge-domains bd202 vxlan static-remote-vtep-list 10.5.5.5
+    set routing-instances vswitch bridge-domains bd203 vlan-id 203
+    set routing-instances vswitch bridge-domains bd203 vxlan vni 2003
+    set routing-instances vswitch bridge-domains bd203 vxlan static-remote-vtep-list 10.5.5.5
+    set routing-instances vswitch bridge-domains bd204 vlan-id 204
+    set routing-instances vswitch bridge-domains bd204 vxlan vni 2004
+    set routing-instances vswitch bridge-domains bd204 vxlan static-remote-vtep-list 10.5.5.5
+    set routing-instances vswitch bridge-domains bd205 vlan-id 205
+    set routing-instances vswitch bridge-domains bd205 vxlan vni 2005
+    set routing-instances vswitch bridge-domains bd205 vxlan static-remote-vtep-list 2001:db8:10:5:5::5
+  crpdSelector:
+    matchLabels:
+      node: worker </codeblock>
+      <p>You can also configure Layer 2 circuit (L2CKT) with static VXLAN, such that the Layer 2
+        control traffic can tunnel over a VXLAN overlay network by manually configuring the tunnel
+        endpoints. The L2CKT stiching requires <codeph>lt</codeph> interface pairing. One
+          <codeph>lt</codeph> pair is a part of the bridge domain with encapsulation
+          <codeph>ethernet-bridge</codeph> and the other participates in the L2 circuit, with
+        encapsulation <codeph>ethernet-ccc</codeph>. A sample configlet is provided below:</p>
+      <codeblock id="codeblock_twx_gf5_pgc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces lo0 unit 0 family inet address 10.3.3.3/32
+    set interfaces lo0 unit 0 family inet6 address 2001:db8:10:3:3::3/128
+    set interfaces lt unit 1 peer-unit 2
+    set interfaces lt unit 1 vlan-id 102
+    set interfaces lt unit 1 encapsulation ethernet-bridge
+    set interfaces lt unit 2 peer-unit 1
+    set interfaces lt unit 2 encapsulation ethernet-ccc
+    set interfaces lt unit 3 peer-unit 4
+    set interfaces lt unit 3 vlan-id 104
+    set interfaces lt unit 3 encapsulation ethernet-bridge
+    set interfaces lt unit 4 peer-unit 3
+    set interfaces lt unit 4 encapsulation ethernet-ccc
+    set protocols l2circuit neighbor 111.1.1.1 interface lt.2 virtual-circuit-id 102
+    set protocols l2circuit neighbor 111.1.1.1 interface lt.2 ignore-encapsulation-mismatch
+    set protocols l2circuit neighbor 111.1.1.1 interface lt.2 ignore-mtu-mismatch
+    set protocols l2circuit neighbor 111.1.1.1 interface lt.2 pseudowire-status-tlv
+    set protocols l2circuit neighbor 111.1.1.1 interface lt.4 virtual-circuit-id 104
+    set protocols l2circuit neighbor 111.1.1.1 interface lt.4 no-control-word
+    set protocols l2circuit neighbor 111.1.1.1 interface lt.4 ignore-encapsulation-mismatch  
+    set protocols l2circuit neighbor 111.1.1.1 interface lt.4 ignore-mtu-mismatch
+    set protocols l2circuit neighbor 111.1.1.1 interface lt.4 pseudowire-status-tlv
+    set routing-instances static-vxlan instance-type virtual-switch
+    set routing-instances static-vxlan vtep-source-interface lo0.0
+    set routing-instances static-vxlan bridge-domains bd102 vlan-id 102
+    set routing-instances static-vxlan bridge-domains bd102 interface lt.1
+    set routing-instances static-vxlan bridge-domains bd102 vxlan vni 1002
+    set routing-instances static-vxlan bridge-domains bd102 vxlan static-remote-vtep-list 10.7.7.7
+    set routing-instances static-vxlan bridge-domains bd104 vlan-id 104
+    set routing-instances static-vxlan bridge-domains bd104 interface lt.3
+    set routing-instances static-vxlan bridge-domains bd104 vxlan vni 1004
+    set routing-instances static-vxlan bridge-domains bd104 vxlan static-remote-vtep-list 2001:db8:10:7:7::7
+  crpdSelector:
+    matchLabels:
+      node: worker </codeblock>
+    </section>
+    <section id="section_s52_32b_qgc">
+      <title>Verification</title>
+      <p>You can verify the static VXLAN configuring using the <xref href="accessing-vrouter-cli.dita">vRouter CLI</xref>:</p>
+      <ul id="ul_wkg_v2b_qgc">
+        <li>
+          <p>Verify the interface list corresponding to the lt interfaces:</p>
+          <codeblock id="codeblock_tlw_5vw_qgc">bash-5.1# vif --list
+Vrouter Interface Table
+
+...
+vif0/9      <b>Virtual: lt.1 Vlan: 102</b>
+            <b>Type:LT</b> HWaddr:00:00:5e:00:01:00
+            DDP: OFF SwLB: ON
+            Vrf:2 Flags:L2L QOS:-1 Ref:6 <b>TxXVif:10</b> 
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Vlan Mode: Access  Vlan Id: 102  OVlan Id: 0 
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+            
+vif0/10     <b>Virtual: lt.2 NH: 66</b>
+            <b>Type:LT</b> HWaddr:00:00:5e:00:01:00 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:65535 Mcast Vrf:65535 Flags:L3ProxyEr QOS:-1 Ref:4 <b>TxXVif:9 </b>
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+            
+vif0/11     <b>Virtual: lt.3 Vlan: 104</b>
+            <b>Type:LT</b> HWaddr:00:00:5e:00:01:00
+            DDP: OFF SwLB: ON
+            Vrf:2 Flags:L2L QOS:-1 Ref:6 <b>TxXVif:12</b> 
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Vlan Mode: Access  Vlan Id: 104  OVlan Id: 0 
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+            
+vif0/12     <b>Virtual: lt.4 NH: 69</b>
+            Type:LT HWaddr:00:00:5e:00:01:00 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:65535 Mcast Vrf:65535 Flags:L3ProxyEr QOS:-1 Ref:4 <b>TxXVif:11</b> 
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+            
+
+</codeblock>
+        </li>
+        <li>
+          <p>Verify the VXLAN table using the <codeph>vxlan --dump</codeph> command:</p>
+          <codeblock id="codeblock_ssw_gfb_qgc">bash-5.1# vxlan --dump
+VXLAN Table
+
+Flags: L=Local bridge learn
+
+   VNID  NextHop   BD Flags
+---------------------------
+   1002    54       10   L
+   1004    54       13   L
+   2001    53        3   L
+   2002    53       14   L
+   2003    53        4   L
+   2004    53        5   L
+   2005    53        1   L</codeblock>
+        </li>
+        <li>
+          <p>Verify the bridge domain table using the <codeph>bd --dump</codeph> command:</p>
+          <codeblock id="codeblock_uh4_jfb_qgc">bash-5.1# bd --dump
+Bridge Domain (BD) Table
+-------------------------------------------
+    VRF	           VLAN	           BD
+-------------------------------------------
+      1		    102		     10
+      1		    104		     13
+      2		    201		      3
+      2		    202		     14
+      2		    203		      4
+      2		    204		      5
+      2		    205		      1
+-------------------------------------------</codeblock>
+        </li>
+        <li>Verify the routes in the vRouter bridge table for VRFs 1 and 2 corresponding to the
+            <codeph>static-vxlan</codeph> and <codeph>vswitch</codeph> routing instances defined in
+          the
+          configuration:<codeblock id="codeblock_qsb_z2b_qgc">bash-5.1# rt --dump 1 --family bridge
+Flags: L=Label Valid, Df=DHCP flood, Mm=Mac Moved, L2c=L2 Evpn Control Word, N=New Entry, Ec=EvpnControlProcessing
+vRouter bridge table 0/1
+Index       BdID      DestMac                  Flags           Label/VNID      Nexthop           Stats
+33808         13      0:10:94:0:0:c              LDf                 1004           48        17313339
+67044         10      0:10:94:0:0:5               Df                    -           41        17315525
+129816        13      ff:ff:ff:ff:ff:ff          LDf                    0           90           24788
+162204         0      0:0:5e:0:1:0                Df                    -            3               0
+181564        10      ff:ff:ff:ff:ff:ff          LDf                    0           52           18341
+236720        13      0:10:94:0:0:b               Df                    -           87        17313665
+248572        10      0:10:94:0:0:9              LDf                 1002           33        17315380</codeblock><codeblock id="codeblock_npx_bfb_qgc">bash-5.1# rt --dump 2 --family bridge
+Flags: L=Label Valid, Df=DHCP flood, Mm=Mac Moved, L2c=L2 Evpn Control Word, N=New Entry, Ec=EvpnControlProcessing
+vRouter bridge table 0/2
+Index       BdID      DestMac                  Flags           Label/VNID      Nexthop           Stats
+30120          2      0:10:94:0:0:1b              Df                    -           11         2966399
+73480          0      0:0:5e:0:1:0                Df                    -            3               3
+78924         14      ff:ff:ff:ff:ff:ff          LDf                    0           69           24065
+85392          5      ff:ff:ff:ff:ff:ff          LDf                    0           71           24063
+101204         4      0:10:94:0:0:1e             LDf                 2003           28         5935375
+109492         7      0:11:11:11:21:11            Df                    -          118               1
+113348         5      0:10:94:0:0:15              Df                    -           11         5935600
+141852         4      0:10:94:0:0:14              Df                    -           11         5935517
+146472        14      0:10:94:0:0:13              Df                    -           11         5935522
+154692         4      ff:ff:ff:ff:ff:ff          LDf                    0           70           24063
+160996         1      0:10:94:0:0:16              Df                    -           11         2966405
+162964        14      0:10:94:0:0:1d             LDf                 2002           28         5935388
+177844         3      ff:ff:ff:ff:ff:ff          LDf                    0           68         2990359
+208392         2      ff:ff:ff:ff:ff:ff          LDf                    0           77         2990320
+214548         3      0:10:94:0:0:12              Df                    -           11         2966408
+236544         5      0:10:94:0:0:1f             LDf                 2004           28         5935479
+246800         7      ff:ff:ff:ff:ff:ff          LDf                    0          103             454
+257312         1      ff:ff:ff:ff:ff:ff          LDf                    0           72         2990345</codeblock></li>
+      </ul>
+    </section>
+  </conbody>
+  
+  <related-links><!--Optional.--></related-links>
+</concept>

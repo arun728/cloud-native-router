@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE bookmap PUBLIC "-//OASIS//DTD DITA BookMap//EN" "/SysSchema/dita13/dtd/bookmap/dtd/bookmap.dtd">
+<bookmap xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" xml:lang="en-US">
+    <!--Use the guide template (based on the bookmap structure) to create long documents in the book format such as user guides. -->
+    <booktitle>
+        <booklibrary/>
+        <mainbooktitle>Juniper Cloud-Native Router <ph keyref="product_version"/> User
+            Guide</mainbooktitle>
+    </booktitle>
+    <bookmeta>
+        <author>tkaur</author>
+        <data name="watermark" value="DRAFT"/>
+        <data name="release-number"/>
+    </bookmeta>
+    <frontmatter>
+        <keydef keys="product_version">
+            <topicmeta>
+                <keywords>
+                    <keyword>26.1</keyword>
+                </keywords>
+            </topicmeta>
+        </keydef>
+        <booklists>
+            <toc/>
+        </booklists>
+        <!--The bookabstract element specifies the path to the topic containing high level overview of the pathway page. The topic filename should be <book-name>-abstract.dita. For example, high-availability-abstract.dita.  -->
+        <bookabstract href="cloud-native-router-user/topics/concept/jcnr-user-abstract.dita" processing-role="resource-only"/>
+        <mapref href="cloud-native-router-user/keys-cloud-native-router-user.ditamap" keyscope="cloud-native-router-user" processing-role="resource-only"/>
+        <!-- Thu Jun 29 05:23:22 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.troubleshooting-vrouter" inserted by "tkaur" -->
+        <mapref href="cloud-native-router-deployment-guide/keys-cloud-native-router-deployment-guide.ditamap" keyscope="cloud-native-router-deployment-guide" processing-role="resource-only" scope="peer"/>
+        <!-- Sun Sep 03 23:30:36 PDT 2023 :: By DocEng :: Added below element to support cross-book link "evpn-vxlan.evpn-route-type5-understanding" inserted by "dgv" -->
+        <mapref href="/Content/keys-evpn.ditamap" keyscope="evpn-vxlan" processing-role="resource-only" scope="peer"/>
+        <!-- Thu Nov 30 22:34:18 PST 2023 :: By DocEng :: Added below element to support cross-book link "multicast-l2.irb-and-bridging-id-configuring-integrated-routing-and-bridging-for-vlans" inserted by "dgv" -->
+        <mapref href="/Content/keys-multicast-l2.ditamap" keyscope="multicast-l2" processing-role="resource-only" scope="peer"/>
+    </frontmatter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Introduction</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-user/topics/concept/jcnr-overview.dita" navtitle="Juniper® Cloud-Native Router Overview"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/jcnr-components.dita" navtitle="JCNR-Components"/>
+        <topicref href="cloud-native-router-deployment-guide/topics/concept/jcnr-datapath.dita" navtitle="JCNR vRouter Datapath"/>
+        <topicref href="cloud-native-router-user/topics/concept/jcnr-deployment-modes.dita" navtitle="JCNR Deployment Modes"/>
+        <topicref href="cloud-native-router-user/topics/concept/jcnr-interfaces-overview.dita" navtitle="JCNR Interfaces Overview"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>L2 Features</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-user/topics/concept/l2-deployment-mode-intro.dita" navtitle="Overview"/>
+        <topicref href="cloud-native-router-user/topics/concept/static-vxlan.dita" navtitle="Static VXLAN"/>
+        <topicref href="cloud-native-router-user/topics/concept/l2ckt-overview.dita" navtitle="Layer 2 Circuit"/>
+        <topicref href="cloud-native-router-user/topics/concept/loop-detection-pure-l2.dita" navtitle="Loop Detection in L2"/>
+        <topicref href="cloud-native-router-user/topics/concept/l2-access-control-lists.dita" navtitle="Access Control Lists (Firewall Features)"/>
+        <topicref href="cloud-native-router-user/topics/concept/l2-mac-learning-and-aging.dita" navtitle="MAC Learning and Aging"/>
+        <topicref href="cloud-native-router-user/topics/concept/l2-api-to-force-bond-link-switchover.dita" navtitle="API to Force Bond Link Switchover"/>
+        <topicref href="cloud-native-router-user/topics/concept/l2-native-vlan.dita" navtitle="Native VLAN"/>
+        <topicref href="cloud-native-router-user/topics/concept/l2-l3-dynamic-device-personalization.dita" navtitle="Enable DDP"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>L3 Features</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-user/topics/concept/l3-deployment-mode-intro.dita" navtitle="Overview"/>
+        <topicref href="cloud-native-router-user/topics/topic-map/support-for-lldp.dita" navtitle="LLDP"/>
+        <topicref href="cloud-native-router-user/topics/concept/dhcp-relay-overview.dita" navtitle="DHCP Relay"/>
+        <topicref href="cloud-native-router-user/topics/topic-map/l3cos-tm.dita" navtitle="L3 CoS"/>
+        <topicref href="cloud-native-router-user/topics/concept/jcnr_twamp.dita" navtitle="TWAMP"/>
+        <topicref href="cloud-native-router-user/topics/concept/segment-routing.dita" navtitle="Segment Routing"/>
+        <topicref href="cloud-native-router-user/topics/topic-map/ti-lfa-tm.dita" navtitle="TI-LFA"/>
+        <topicref href="cloud-native-router-user/topics/concept/l3-access-control-lists.dita" navtitle="L3_Access_List"/>
+        <topicref href="cloud-native-router-user/topics/concept/jcnr-and-security-services.dita" navtitle="IPsec Security Services"/>
+        <topicref href="cloud-native-router-user/topics/concept/l3-jcnr-transit-gateway.dita" navtitle="Transit Gateway"/>
+        <topicref href="cloud-native-router-user/topics/concept/l3-evpn-type5-routing-over-vxlan-tunnels.dita" navtitle="EVPN Type 5 Routing over VXLAN Tunnels"/>
+        <topicref href="cloud-native-router-user/topics/concept/l3_integrated_routing_bridging.dita" navtitle="IRB Interfaces"/>
+        <topicref href="cloud-native-router-user/topics/concept/l3-protocols.dita" navtitle="L3 Routing Protocols"/>
+        <topicref href="cloud-native-router-user/topics/concept/l3-mpls-support.dita" navtitle="MPLS Support "/>
+        <topicref href="cloud-native-router-user/topics/concept/l3-bfd.dita" navtitle="Bidirectional Forwarding Detection (BFD)"/>
+        <topicref href="cloud-native-router-user/topics/concept/l3-vrrp.dita" navtitle="Virtual Router Redundancy Protocol (VRRP)"/>
+        <topicref href="cloud-native-router-user/topics/concept/l3-virtual-router.dita" navtitle="Virtual Routing Instance"/>
+        <topicref href="cloud-native-router-user/topics/concept/l3-ecmp.dita" navtitle="ECMP (Flow Stickiness)"/>
+        <topicref href="cloud-native-router-user/topics/concept/bgp-unnumbered.dita" navtitle="BGP Unnumbered"/>
+        <topicref href="cloud-native-router-user/topics/concept/l3-vlan-subinterfaces.dita" navtitle="L3 VLAN Sub-Interface"/>
+        <topicref href="cloud-native-router-user/topics/concept/l2-l3-dynamic-device-personalization.dita" navtitle="Enable DDP"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Workload Configuration </navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-user/topics/concept/config-examples-overview.dita" navtitle="Overview"/>
+        <topicref href="cloud-native-router-user/topics/example/jcnr-l2-add-user-pod-kernel-access-tm.dita" navtitle="L2 Pod with Kernel Access-Mode Interface "/>
+        <topicref href="cloud-native-router-user/topics/example/jcnr-l2-add-user-pod-virtio-trunk-tm.dita" navtitle="L2 Pod with virtio Trunk-Mode Interface "/>
+        <topicref href="cloud-native-router-user/topics/example/l3-add-user-pod-virtio-l3vpn-tm.dita" navtitle="L3 VPN Interface Configuration"/>
+        <topicref href="cloud-native-router-user/topics/example/l3-subinterface-vlan.dita" navtitle="L3 VLAN Sub-Interface Configuration Example"/>
+        <topicref href="cloud-native-router-user/topics/topic-map/cloud-native-router-for-kubevirt-based-VM.dita" navtitle="Deploy a KubeVirt-based VM"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Monitoring and Logging</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-user/topics/concept/monitor-jcnr-via-cli.dita" navtitle="Monitor JCNR via CLI"/>
+        <topicref href="cloud-native-router-user/topics/concept/jcnr-telemetry.dita" navtitle="Telemetry Capabilities of Cloud-Native Router"/>
+        <topicref href="cloud-native-router-user/topics/concept/logging-and-notifications.dita" navtitle="Logging and Notifications"/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Troubleshooting</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-user/topics/concept/troubleshooting-vrouter.dita" navtitle="Troubleshoot via the vRouter CLI"/>
+        <topicref href="cloud-native-router-user/topics/concept/jcnr-introspect.dita" navtitle="Troubleshoot via Introspect "/>
+    </chapter>
+    <chapter>
+        <topicmeta>
+            <navtitle>Appendix</navtitle>
+        </topicmeta>
+        <topicref href="cloud-native-router-user/topics/concept/accessing-crpd-cli.dita" navtitle="Access cRPD CLI"/>
+        <topicref href="cloud-native-router-user/topics/concept/accessing-vrouter-cli.dita" navtitle="Access vRouter CLI"/>
+        <topicref href="cloud-native-router-user/topics/concept/juniper-jcnr-tech-preview.dita" navtitle="Juniper Technology Previews (Tech Previews)"/>
+    </chapter>
+</bookmap>

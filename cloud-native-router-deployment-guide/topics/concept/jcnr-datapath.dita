@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_1239e271fcf6474a-1f720ebc-18dd5a994af--7ff4" xml:lang="en-US">
+  <title>Juniper Cloud-Native Router vRouter Datapath</title>
+  <shortdesc>Cloud-Native Router supports both Data Plane Development Kit (DPDK) and extended
+    Berkley Packet Filter (eBPF) eXpress Data Path (XDP) datapath based vRouter forwarding plane. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>The Cloud-Native Router vRouter forwarding plane supports both the Data Plane Development Kit
+      (DPDK) and extended Berkley Packet Filter (eBPF) eXpress Data Path (XDP) datapath for
+      high-speed packet processing. </p>
+    <section id="section_imn_5pk_n1c"><title>Data Plane Development Kit (DPDK)</title><p>DPDK is an
+        open-source set of libraries and drivers for rapid packet processing. DPDK enables fast
+        packet processing by allowing network interface cards (NICs) to send direct memory access
+        (DMA) packets directly into an application’s address space. This method of packet routing
+        lets the application poll for packets, which prevents the overhead of interrupts from the
+        NIC. </p>DPDK's poll mode drivers (PMDs) use the physical interface (NIC) of a VM's host
+      instead of the Linux kernel's interrupt-based drivers. The NIC's registers operate in user
+      space, which makes them accessible by DPDK’s PMDs. As a result, the host OS does not need to
+      manage the NIC's registers. This means that the DPDK application manages all packet polling,
+      packet processing, and packet forwarding of a NIC. Instead of waiting for an I/O interrupt to
+      occur, a DPDK application constantly polls for packets and processes these packets immediately
+      upon receiving them.<p>The vRouter dataplane is based off of DPDK 24.11.</p></section>
+
+    <section><title>eBPF XDP</title>
+      <note id="note_djz_fdm_s1c">
+        <p>This is a <xref keyref="cloud-native-router-user.juniper-jcnr-tech-preview">Juniper
+            Technology Preview (Tech Preview)</xref> feature.</p>
+      </note>
+      <p>Cloud-Native Router also supports an eBPF XDP datapath based vRouter. eBPF (extended
+        Berkley Packet Filter) is a Linux kernel technology that executes user-defined programs
+        inside a sandbox virtual machine. It enables low-level networking programs to execute with
+        optimal performance. The eXpress Data Path (XDP) frameworks enables high-speed packet
+        processing for the eBPF programs. Cloud-Native Router supports XDP in native (driver) mode
+        on Baremental server deployments for limited drivers only. Please see the <xref keyref="cloud-native-router-deployment-guide.system-resource-requirements-bms">System
+          Requirements</xref> for more details.<subsection id="subsection_o3s_gsh_41c">
+          <title>Benefits of eBPF XDP Datapath</title>
+          <p>Benefits of eBPF XDP Datapath include:</p>
+          <ul id="ul_wsy_tfk_n1c">
+            <li>An eBPF XDP kernel program and its custom library is easier to maintain across
+              kernel versions and has wider kernel compatibility. The kernel dependencies are
+              limited to a small set of eBPF helper functions. </li>
+            <li>The program is safer since it is analysed by the in-built Linux eBPF verifier before
+              it is loaded into the kernel.</li>
+            <li>Offers higher performance using kernel bypass and omitting socket buffer (skb)
+              allocation.</li>
+          </ul>
+        </subsection><subsection id="subsection_gt4_xcj_p1c">
+          <title>Supported Cloud-Native Router Features for eBPF XDP</title>
+          <p>The following Cloud-Native Router Features are supported with eBPF XDP for IPv4 traffic
+            only:</p>
+          <ul id="ul_a1p_1dj_p1c">
+            <li>
+              <p>L3 traffic with Cloud-Native Router deployed as a sending, receiving or transit
+                router</p>
+            </li>
+            <li>
+              <p>VRF-Lite</p>
+            </li>
+            <li>
+              <p>MPLSoUDP </p>
+            </li>
+            <li>
+              <p>IGPs—OSPF, IS-IS</p>
+            </li>
+            <li>
+              <p>BGP route advertisements </p>
+            </li>
+          </ul>
+        </subsection></p>
+      <note id="note_fy5_rrh_41c">
+        <p>When deploying JCNR, you can configure the <codeph>agentModeType</codeph> attribute in
+          the helmchart to select either a DPDK based or eBPF XDP datapath based vRouter. </p>
+      </note></section>
+  </conbody>
+
+  <related-links/>
+</concept>

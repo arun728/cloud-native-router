@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_c0b3c49bbf8a8319--891c1fe-191b8839e55--7fe1" xml:lang="en-US">
+  <!--Use the Concept template to introduce a new product or functionality. Also use this template to provide high-level explanations, definitions of key concepts, terminology, or general background information. Limit one topic to one theme or subject.-->
+  <!--For <title>, follow these guidelines:
+- Avoid the gerund form and minimize the use of “Understanding.” 
+- Use "[Feature] Overview" if the topic is indeed an overview. 
+- Use the feature name as the topic title for very long feature names. 
+- Use the Who, What, Where, When, Why, or How (not How to) phrase to describe a specific aspect of a product, feature, or user scenario.-->
+  <title>TI-LFA Overview</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native
+      Router <?oxy_insert_end?>supports implementing Topology-Independent Loop-Free Alternates
+      (TI-LFA) with fast reroute (FRR) in SR-MPLS. In the sections below we will look at
+      <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native
+      Router <?oxy_insert_end?>TI-LFA implementation in detail.<subsection id="subsection_ond_15l_pcc">
+        <title>Fast Reroute (FRR)</title>
+        <p>Fast Reroute (FRR) technology is used in modern routing protocols to minimize disruption
+          and packet loss in the event of a network failure. Unlike traditional routing protocols,
+          FRR speeds up the convergence process by proactively pre-computing backup paths for
+          critical traffic flows. The backup paths are readily available and instantly activated
+          upon failure, ensuring minimum loss of data communication. </p>
+        <p>Loop-Free Alternates (LFAs) play a critical role in FRR implementations. LFAs are
+          pre-calculated, loop-free backup paths that are leveraged by FRR protocols to quicky
+          switch traffic to the chosen backup path. </p>
+        <p>There are two key aspects to FRR:</p>
+      </subsection></p>
+    <ul id="ul_bzb_42s_ryb">
+      <li>
+        <p>Detection:</p>
+        <ul id="ul_hvy_x5l_pcc">
+          <li>
+            <p>Fault Detection—Rapidly identify link or node failures within a network through
+              continuous monitoring of network elements.</p>
+          </li>
+          <li>
+            <p>Detection Methods—Applying one of the various methods for fault detection, including
+              proactive methods such as periodic link probing or reactive methods that sense failure
+              when it occurs. In some cases Bidirectional Forwarding Detection (BFD) may be used for
+              quick fault detection.
+              <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native
+              Router <?oxy_insert_end?>detects failure by monitoring the link status events from the
+              Poll Mode Driver (PMD). </p>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <p>Handling:</p>
+        <ul id="ul_emv_kvl_pcc">
+          <li>
+            <p>Precomputed Backup Paths—Using predetermined and optimised backup paths that are
+              quickly activated when a failure is detected.</p>
+          </li>
+          <li>
+            <p>Fast Switchover—Network devices participating in the FRR process quickly switching to
+              precomputed backup paths to minimize the impact on the network's forwarding
+              capabilities.</p>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <p>The control plane is responsible for preparing the backup paths and detecting when failure
+      occurs. It also re-calculates the best path based on the updated network topology and
+      propagates information about the new path to other routers in the network. This ensures the
+      network converges to the optimal path in the long run. The data plane is responsible for
+      quickly failing over to the backup path in the event of a failure detection. Typically, with
+      LFA implementations, pre-configured forwarding entries or next-hop information for the LFA are
+      already installed on the router. The data plane also adjusts its forwarding tables when it
+      receives a new path from the control plane upon re-calculation. Efficient communication
+      between the control and data planes is critical to minimize lag in traffic reroute, ensuring
+      reduced downtime, improved performance and enhanced
+        reliability.<?oxy_insert_start author="tkaur" timestamp="20251112T164402+0000"?><subsection id="subsection_xxb_4xc_hhc">
+        <title/>
+      </subsection><?oxy_insert_end?></p>
+    <?oxy_insert_start author="tkaur" timestamp="20251212T223022+0000"?>
+    <section id="section_hsn_3v4_phc">
+      <title>Topology-Independent Loop-Free Alternates (TI-LFA)</title>
+      <p>IS-IS and OSPF can calculate LFA backup paths in a plain IP network. However, the LFA
+        feature requires any backup path to be guaranteed loop-free. For this reason, in a plain IP
+        network, LFA cannot offer backup paths to every single known destination. LFA only offers
+        partial topology coverage. TI-LFA is a topology independent implementation of LFA. TI-LFA
+        can push a Segment ID stack that can navigate around any potential loops along the backup
+        path. In other words, backup paths can be calculated independent of the topology. It defines
+        LFAs based on the traffic flow itself and can function effectively regardless of the
+        underlying network layout. TI-LFA uses the pre-computed post-convergence path of the routing
+        protocol. TI-LFA finds the path that would be calculated in the event of a particular link
+        or node failure, and uses that exact path as the backup path. This is not always possible in
+        regular LFA, due to the requirement for a loop-free backup path. By using the
+        post-convergence path, TI-LFA reduces jitter during failover and the network operator only
+        needs to ensure the network has enough capacity to carry the traffic on the post-convergence
+        path after a failure. TI-LFA has multiple advantages:</p>
+      <ul id="ul_adw_xwq_pcc">
+        <li>
+          <p>Simplified configuration—TI-LFA automatically computes backup paths, eliminating the
+            need to manually configurate LFAs for each network element.</p>
+        </li>
+        <li>
+          <p>Faster failover—TI-LFA uses the pre-computed post-convergence path of the routing
+            protocol that enables it to activate backup paths significantly faster than traditional
+            LFAs.</p>
+        </li>
+        <li>
+          <p>Improved scalability—TI-LFA scales efficiently in large and complex networks because it
+            is topology independent in contrast to LDP and RSVP which require additional state to
+            create backup paths.</p>
+        </li>
+      </ul>
+      <p>Cloud-Native Router supports TI-LFA for SR-MPLS implementations with link and node failure
+        protection. You can read more about <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/is-is/topics/concept/understanding-ti-lfa-for-is-is.html" scope="external">TI-LFA</xref> in the Junos documentation.</p>
+      <p>An IGP identifies the primary and post-convergence (backup for TI-LFA) paths for a prefix
+        based on its criterion. The paths are associated with a weight metric to signify priority
+        (numerically lower the weight, higher the priority). The paths are calculated during the
+        network's initial setup and stored in the routers' forwarding tables. </p>
+      <p>When link protection is implemented, TI-LFA uses the pre-computed post-convergence path of
+        the routing protocol as the backup path to bypass a protected link. When an upstream node
+        detects a link failure, it immediately initiates the pre-computed backup path to reroute the
+        packet, bypassing the failed failed link. </p>
+      <p>When node protection is implemented, TI-LFA uses the pre-computed post-convergence path of
+        the routing protocol as the backup path to bypass a protected node's Segment Identifier
+        (SID). When an upstream node detects an intermediate node failure, it immediately initiates
+        the pre-computed backup path to reroute the packet, bypassing the failed node entirely. This
+        process ensures minimal packet loss and maintains network connectivity even in the event of
+        node failures. </p>
+      <p>When both link-protection and node-protection are implemented, the Cloud-Native Router
+        prefers backup paths that avoid the failed node entirely, rather than just the failed link. </p>
+      <p>The Cloud-Native Router control plane (cRPD) sends the primary and backup path to the data
+        plane via the vRouter agent. The vRouter data plane implements FRR by identifying the
+        primary path and quickly switching over to backup path if a link failure was detected. </p>
+      <p>Key points to note about the Cloud-Native Router TI-LFA implementation:</p>
+      <?oxy_insert_end?>
+      <ul id="ul_qf3_4ft_pcc">
+        <li>
+          <p>TI-LFA is supported for SR-MPLS on IS-IS implementations.</p>
+        </li>
+        <li>
+          <p>TI-LFA is supported for SR-MPLS on OSPF implementations (Tech Preview Feature Only)</p>
+        </li>
+        <li>
+          <p>TI-LFA is supported when Cloud-Native Router is deployed as head-end, transit or egress
+            node in an SR-MPLS domain.</p>
+        </li>
+        <li>Both TI-LFA node and link protection are supported.</li>
+        <li>
+          <p>Multiple primary and single backup path is supported.</p>
+        </li>
+        <li>
+          <p>Both physical and bond interfaces are supported (FRR is triggered for bond interfaces
+            only if all the links in the bond are down).</p>
+        </li>
+        <li>
+          <p>BGP Multipath with underlay ECMP deployments are supported.</p>
+        </li>
+        <li>
+          <p>FRR is triggered based on link status events detected by the Poll Mode Drivers (PMD)
+            followed by Interior Gateway Protocol (IGP) updates.</p>
+        </li>
+      </ul>
+      <?oxy_insert_start author="tkaur" timestamp="20251212T223022+0000"?>
+    </section>
+    <?oxy_insert_end?>
+  </conbody>
+</concept><?oxy_options track_changes="on"?>

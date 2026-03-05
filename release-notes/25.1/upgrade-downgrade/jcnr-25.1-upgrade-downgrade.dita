@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_9f391b9479650779-44507c7-195cb3b2fb2--7d0a" xml:lang="en-US">
+  <title>Upgrade and Downgrade Options</title>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section provides high-level information about the available upgrade and downgrade
+      options. </p>
+    <section id="section_r1w_gnh_xvb">
+      <title>Upgrade from a Previous Version</title>
+      <p>You can upgrade Juniper Cloud-Native Router from release 24.2 onwards to release 25.1. See
+        the <xref href="https://www.juniper.net/documentation/us/en/software/cloud-native-router24.4/cloud-native-router-deployment-guide/topics/topic-map/jcnr-manage-software.html#task_vqv_g2h_scc" format="html" scope="external">Upgrade from Cloud-Native Router Release 24.2 and
+          Later</xref> topic in the deployment guide for details.</p>
+    </section>
+    <section id="section_zmf_mnh_xvb">
+      <title>Downgrade to an Older Version</title>
+      <p>There is no procedure for downgrading to an older version. To change from a current version
+        to an older version, you must uninstall the current version and install the older
+        version.</p>
+    </section>
+  </conbody>
+</concept>

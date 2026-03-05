@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_f8c7b3865841839e-2a965920-193ca123f59--7f4f" xml:lang="en-US">
+  <!--Use the Concept template to introduce a new product or functionality. Also use this template to provide high-level explanations, definitions of key concepts, terminology, or general background information. Limit one topic to one theme or subject.-->
+  <!--For <title>, follow these guidelines:
+- Avoid the gerund form and minimize the use of “Understanding.” 
+- Use "[Feature] Overview" if the topic is indeed an overview. 
+- Use the feature name as the topic title for very long feature names. 
+- Use the Who, What, Where, When, Why, or How (not How to) phrase to describe a specific aspect of a product, feature, or user scenario.-->
+  <title>Host Protection using Control Plane Policing</title>
+  <shortdesc>This topic provides details about configuring Juniper Cloud-Native Router with host
+    protection against DDoS attacks.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <note id="note_ltk_11b_tdc">
+      <p>This is a <xref href="juniper-jcnr-tech-preview.dita">Juniper
+          Technology Preview Feature</xref>.</p>
+    </note>
+    <p>Juniper Cloud-Native Router supports host protection against Distributed Denial of Service
+      (DDoS) Attacks. You can configure rate-limiting for host traffic based on protocol
+      classification on the loopback interface <codeph>lo0.0</codeph>. The rate-limiting is
+      configured using <xref keyref="cloud-native-router-user.l3cos-tm"/> Layer-3 Class of Service
+      (CoS) feature. </p>
+    <p>Here is a sample configlet to rate-limit BGP control plane traffic on the loopback
+        <codeph>lo0.0</codeph> interface:</p>
+    <codeblock id="codeblock_yt3_d3n_sdc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces lo0.0 unit 0 family inet filter input f1 
+    set firewall three-color-policer test action loss-priority high then discard 
+    set firewall three-color-policer test two-rate color-blind 
+    set firewall three-color-policer test two-rate committed-information-rate 50m 
+    set firewall three-color-policer test two-rate committed-burst-size 70m 
+    set firewall three-color-policer test two-rate peak-information-rate 2048 
+    set firewall three-color-policer test two-rate peak-burst-size 2048 
+    set firewall family inet filter f1 term t1 from source-port bgp 
+    set firewall family inet filter f1 term t1 then accept 
+    set firewall family inet filter f1 term t1 then count c1 
+    set firewall family inet filter f1 term t1 then three-color-policer two-rate test  
+crpdSelector:
+    matchLabels:
+      node: worker </codeblock>
+    <p>Please review the <xref keyref="cloud-native-router-user.l3cos-tm"/> Layer-3 Class of Service
+      (CoS) for more configuration details.</p>
+  </conbody>
+</concept>

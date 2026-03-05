@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_306c8ea3f555812e-683dd46b-1957e2cfdb5--7e51" xml:lang="en-US">
+    <title>Overlay Management Access</title>
+    <shortdesc>Overlay management access in a bare metal deployment allows you to manage a
+        Cloud-Native Router deployment using an overlay network.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody><?oxy-placeholder Optional. Use the tmbody element to include any content before the first topic in the topic map. Delete the tmbody element if you are not using it."?></tmbody>
+    <concept id="id_wbk_jbp_s2c" conref="../concept/jcnr-mgmt-overlay-overview.dita">
+        <title/>
+    </concept>
+    <task id="id_cnc_q1p_s2c" conref="../task/jcnr-mgmt-overlay-install-jcnr-bms.dita">
+        <title/>
+    </task>
+    <task id="id_yzz_s1p_s2c" conref="../task/jcnr-mgmt-overlay-configure-oam-mngd-node.dita">
+        <title/>
+    </task>
+    <task id="id_sng_51p_s2c" conref="../task/jcnr-mgmt-overlay-configure-tunnel.dita">
+        <title/>
+    </task>
+    <task id="id_snr_v1p_s2c" conref="../task/jcnr-mgmt-overlay-configure-oam-mgmt-node.dita">
+        <title/>
+    </task>
+</topic-map>

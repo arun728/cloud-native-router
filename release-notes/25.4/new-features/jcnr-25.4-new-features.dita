@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2db52dc84c60c57--2b7cf35-19ae9866821--7ebd" xml:lang="en-US">
+  <title>New and Updated Features</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>This section describes the new features in the Juniper Cloud-Native Router 25.4 release.</p>
+    <section>
+      <title>New Features in Juniper Cloud-Native Router Release 25.4</title>
+      <ul>
+        <li>
+          <p><b>Support to deploy Cloud-Native Router as a single pod in pod network
+            namespace</b>—Cloud-Native Router can deployed as a single pod in pod network namespace
+            for increased security, simplified deployment and enhanced portability. This is
+            supported for deployments on Rocky Linux or Ubuntu OS and can be used for pure container
+            network function (CNF) deployments only. We support Nokia CPU Pooler CPU allocation for
+            this deployment mode.</p>
+        </li>
+        <li>
+          <p><b>Support for KubeVirt-based VMs</b>—The Cloud-Native Router supports networking for
+            KubeVirt-based VMs as a secondary CNI. It creates vhost-user interfaces for a DPDK
+            capable KubeVirt-based VM. You can create Layer 3 interfaces with L3 virtual routing and
+            forwarding (VRF) instances.</p>
+        </li>
+        <li>
+          <p><b>Support for TI-LFA node protection</b>—Cloud-Native Router supports
+            Topology-Independent Loop-Free Alternates (TI-LFA) for SR-MPLS implementations with link
+            and node failure protection. </p>
+        </li>
+        <li>
+          <p><b>New commands for reporting L2 statistics</b>—The <codeph>purel2cli</codeph> vRouter
+            troubleshooting command is deprecated with L2 statistics now reported as part of various
+            other vRouter commands including <codeph>vif</codeph>, <codeph>bd</codeph> and
+              <codeph>rt</codeph>.</p>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

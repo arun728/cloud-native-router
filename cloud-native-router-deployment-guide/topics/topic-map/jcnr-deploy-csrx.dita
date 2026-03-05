@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6e389dfcf6e0ccd1-2b9339cf-18ebe20edd7--7f66" xml:lang="en-US">
+    <title>Deploying Service Chain (cSRX) with JCNR</title>
+    <shortdesc>Read this section to learn how to customize and deploy a security services instance
+        (cSRX) with the Cloud-Native Router.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody>
+        <p>You can integrate the Juniper Cloud-Native Router (JCNR) with <xref format="html" href="https://www.juniper.net/us/en/products/security/srx-series/csrx-containerized-firewall.html" scope="external">Juniper's containerized SRX (cSRX)</xref> platform to
+            provide security services such as IPsec. Using host-based service chaining, the
+            cloud-native router is chained with a security service instance (cSRX) in the same
+            Kubernetes cluster. The cSRX instance runs as a pod service in L3 mode. The cSRX
+            instance is customized and deployed via a Helm chart. </p>
+        <p>You have the option of deploying Juniper cSRX when you're installing Cloud-Native Router
+            or after you've installed JCNR. See <xref href="../ref/jcnr-sw-download-packages.dita"/> for a description of
+            the available packages.</p>
+        <p>cSRX is supported on all Cloud-Native Router platforms:</p>
+        <table frame="all" rowsep="1" colsep="1" id="table_zrv_xdn_5fc">
+            <title>cSRX Supported Platforms</title>
+            <tgroup cols="2">
+                <colspec colname="c1" colnum="1" colwidth="1*"/>
+                <colspec colname="c2" colnum="2" colwidth="1*"/>
+                <thead>
+                    <row>
+                        <entry>Platform</entry>
+                        <entry>cSRX</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>Bare Metal</entry>
+                        <entry>Yes</entry>
+                    </row>
+                    <row>
+                        <entry>Red Hat OpenShift</entry>
+                        <entry>Yes</entry>
+                    </row>
+                    <row>
+                        <entry>Amazon EKS</entry>
+                        <entry>Yes</entry>
+                    </row>
+                    <row>
+                        <entry>Google Cloud Platform</entry>
+                        <entry>Yes</entry>
+                    </row>
+                    <row>
+                        <entry>Wind River Cloud Platform</entry>
+                        <entry>Yes</entry>
+                    </row>
+                    <row>
+                        <entry>Microsoft Azure</entry>
+                        <entry>Yes</entry>
+                    </row>
+                    <row>
+                        <entry>VMWare Tanzu</entry>
+                        <entry>Yes</entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </tmbody>
+    <task id="task_e15_krd_qjb">
+        <title>Install cSRX on an Existing Cloud-Native Router Installation</title>
+        <taskbody>
+            <context id="context_fgf_ds3_1bc">
+                <p>Follow this procedure to install a cSRX instance on an existing Cloud-Native
+                    Router installation. Ensure all Cloud-Native Router components are up and
+                    running before you start this procedure.</p>
+            </context>
+            <steps id="steps_rfw_b53_1bc">
+                <step>
+                    <cmd>Download and expand the software package for installing Juniper cSRX on an
+                        existing Cloud-Native Router installation. See <xref href="../ref/jcnr-sw-download-packages.dita"/> for a
+                        description of the software packages available. </cmd>
+                    <info>
+                        <codeblock id="codeblock_i1y_qb4_xbc">tar -xzvf <filepath>junos_csrx_<varname>&lt;release&gt;</varname>.tar.gz</filepath></codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change to the
+                            <filepath>junos_csrx_<varname>&lt;release&gt;</varname>/helmchart</filepath>
+                        directory and expand the Helm chart.</cmd>
+                    <info><codeblock id="codeblock_pjq_21q_sbc">cd junos_csrx_<varname>&lt;release&gt;</varname>/helmchart</codeblock><codeblock id="codeblock_c2t_mfq_sbc">ls
+junos-csrx-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_cpv_n1q_sbc">tar -xzvf junos-csrx-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_ukc_1bq_sbc">ls
+junos-csrx   junos-csrx-<varname>&lt;release&gt;</varname>.tgz</codeblock>The
+                        Helm chart is located in the <filepath>junos-csrx</filepath>
+                        directory.</info>
+                </step>
+                <step>
+                    <cmd>The cSRX container images are required for deployment. Choose one of the
+                        following options: </cmd>
+                    <info>
+                        <ul id="ul_kds_vb3_4bc">
+                            <li>
+                                <p>Configure your cluster to deploy images from the Juniper Networks
+                                        <codeph>enterprise-hub.juniper.net</codeph> repository. See
+                                        <xref href="../concept/cn-cloud-native-k8s-configure-secrets.dita"/> for example instructions on how to configure repository
+                                    credentials in Helm charts.</p>
+                            </li>
+                            <li>
+                                <p>Configure your cluster to deploy images from the image tarball
+                                    included in the downloaded cSRX software package. See <xref href="../task/jcnr-deploy-prepackaged-images.dita"/> for example instructions on how to import images to the local
+                                    containerd runtime.</p>
+                            </li>
+                        </ul>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Follow the steps in <xref format="dita" href="#task_zly_rd3_1bc"/> to apply
+                        your cSRX license and configure the cSRX Helm chart.</cmd>
+                </step>
+                <step>
+                    <cmd>Install cSRX. </cmd>
+                    <info>Navigate to the
+                            <filepath>junos_csrx_<varname>&lt;release&gt;</varname>/helmchart/junos-csrx</filepath>
+                        directory and issue the following command to install the cSRX
+                        instance.<codeblock id="codeblock_w4v_dd3_1bc">helm install junos-csrx .</codeblock></info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_qpq_j53_1bc">
+        <title>Install cSRX During Cloud-Native Router Installation</title>
+        <taskbody>
+            <context id="context_blr_l53_1bc">Follow the steps in the respective Cloud-Native Router
+                installation sections to install JCNR. One of the steps will refer you to <xref format="dita" href="#task_zly_rd3_1bc"/>.</context>
+        </taskbody>
+    </task>
+    <task id="task_zly_rd3_1bc">
+        <title>Apply the cSRX License and Configure cSRX</title>
+        <taskbody>
+            <context id="context_pdj_1x3_1bc">
+                <p>Follow this procedure to apply your cSRX license and configure Juniper cSRX.</p>
+                <p>The following steps assume you're in the
+                            <filepath>Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname></filepath>
+                    directory if installing cSRX and Cloud-Native Router together, or in the
+                            <filepath>junos_csrx_<varname>&lt;release&gt;</varname></filepath>
+                    directory if installing cSRX on an existing Cloud-Native Router
+                    installation.</p>
+            </context>
+            <steps id="steps_bmy_rd3_1bc">
+                <step id="step_avg_pm5_tcc">
+                    <cmd>Copy the cluster kubeconfig to all nodes where you want to install the
+                        Cloud-Native Router and cSRX combination.</cmd>
+                    <info>This step applies to both installing cSRX during Cloud-Native Router
+                        installation and installing cSRX on an existing Cloud-Native Router
+                        installation. If you don't perform this step, the installation may
+                        fail.</info>
+                    <substeps id="substeps_g12_qk5_tcc">
+                        <substep>
+                            <cmd>Copy the cluster kubeconfig to a location of your choice on the
+                                target node.</cmd>
+                            <info>For example, the following copies the cluster kubeconfig from its
+                                default location at <filepath>~/.kube/config</filepath> to
+                                    <filepath>/root/kubeconfig</filepath> on the target
+                                node:<codeblock id="codeblock_etg_4ty_qcc">scp ~/.kube/config <varname>&lt;worker-node-ip&gt;</varname>:/root/kubeconfig</codeblock>where
+                                    <varname>&lt;worker-node-ip&gt;</varname> is the IP address of a
+                                node where you want to install both Cloud-Native Router and cSRX.
+                                Repeat for all nodes where you want to install both Cloud-Native
+                                Router and cSRX.<note id="note_pfz_df5_tcc">
+                                    <p>The destination file path must be the same on all target
+                                        nodes.</p>
+                                </note></info>
+                        </substep>
+                        <substep>
+                            <cmd>After copying the kubeconfig to all target nodes, set
+                                    <codeph>kubeConfigPath</codeph> in
+                                    <filepath>values.yaml</filepath> to the destination file
+                                location. </cmd>
+                            <info>For
+                                example:<codeblock id="codeblock_dnm_5f5_tcc">kubeconfigpath: /root/kubeconfig</codeblock>See
+                                    <xref format="dita" href="#concept_ip4_fc3_1bc"/> for
+                                information on the parameters in
+                                <filepath>values.yaml</filepath>.</info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Apply your Juniper cSRX license.</cmd>
+                    <substeps id="substeps_mdt_j23_1bc">
+                        <substep>
+                            <cmd>If the <filepath>secrets/csrx-secrets.yaml</filepath> doesn't exist
+                                in your software package, create it with the contents below:</cmd>
+                            <info>
+                                <codeblock id="codeblock_emy_rd3_1bc">apiVersion: v1
+kind: Secret
+metadata:
+  name: service-chain-instance
+  namespace: jcnr
+data:
+  csrx_license: |
+    &lt;add your license in base64 format&gt;
+  csrx_root_password: &lt;add your root password in base64 format&gt;</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Encode your license in base64.</cmd>
+                            <info><p>Copy your Juniper cSRX license file onto your host server and
+                                    issue the
+                                command:</p><codeblock id="codeblock_gmy_rd3_1bc">base64 -w 0 licenseFile</codeblock>The
+                                output of this command is your base64-encoded license.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Replace <codeph>&lt;add your license in base64 format&gt;</codeph>
+                                with your base64-encoded license.</cmd>
+                            <info>
+                                <note id="note_hmy_rd3_1bc">
+                                    <p>You must obtain your license file from your account team and
+                                        install it in the
+                                            <filepath>secrets/csrx-secrets.yaml</filepath> file as
+                                        instructed above. The <codeph>csrx-init</codeph> container
+                                        performs a license check and proceeds only if the required
+                                        secret <codeph>service-chain-instance</codeph> is found.
+                                    </p>
+                                </note>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Encode your root password in base64. The root password is required
+                                for NETCONF access for telemetry.</cmd>
+                            <info>Encode your password as follows:
+                                <codeblock id="codeblock_eqx_kyz_51c">echo -n "<varname>password</varname>" | base64 -w0</codeblock>The
+                                output of this command is your base64-encoded root password.</info>
+                        </substep>
+                        <substep>
+                            <cmd>Replace <codeph>&lt;add your root password in base64
+                                    format&gt;</codeph> with your base64-encoded root
+                                password.</cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Apply the <filepath>secrets/csrx-secrets.yaml</filepath> to the
+                                Kubernetes cluster.</cmd>
+                            <info>
+                                <codeblock id="codeblock_eh1_mf3_1bc">kubectl apply -f secrets/csrx-secrets.yaml
+secret/service-chain-instance created</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Configure the cSRX Helm chart. </cmd>
+                    <info>
+                        <ul id="ul_bxn_wj4_xbc">
+                            <li>
+                                <p>If you're installing cSRX at the same time you're installing
+                                    JCNR, then you're configuring the <codeph>junos-csrx</codeph>
+                                    section of the combination Helm chart in
+                                            <filepath>Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname>/helmchart/jcnr_csrx/values.yaml</filepath>.</p>
+                            </li>
+                            <li>
+                                <p>If you're installing cSRX on an existing Cloud-Native Router
+                                    installation, then you're configuring the <codeph>csrx</codeph>
+                                    section of the standalone Helm chart in
+                                            <filepath>junos_csrx_<varname>&lt;release&gt;</varname>/helmchart/junos-csrx/values.yaml</filepath>.</p>
+                            </li>
+                        </ul>
+                        <p>Refer to the cSRX parameter descriptions in <xref format="dita" href="#concept_ip4_fc3_1bc"/>. </p>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <concept id="concept_ip4_fc3_1bc">
+        <title>Customize cSRX Helm Chart</title>
+        <conbody>
+            <p>The cSRX service chaining instance is deployed via a Helm chart, either a standalone
+                Helm chart or a combined Helm chart with JCNR. The deployment consists of two
+                essential components:</p>
+            <ul id="ul_pqb_jl4_hzb">
+                <li>
+                    <p>csrx-init: This is an init container that prepares the configuration for the
+                        main cSRX application. It extracts the necessary information from the
+                            <filepath>values.yaml</filepath> file, processes it, and generates the
+                        configuration data for cSRX. This ensures that the main cSRX application
+                        starts with a valid, up-to-date configuration. </p>
+                </li>
+                <li>
+                    <p>csrx: The csrx is the main application container and the core component of
+                        the cSRX deployment. It relies on the configuration provided by the
+                            <codeph>csrx-init</codeph> container to function correctly. </p>
+                </li>
+            </ul>
+            <p>You can customize the cSRX deployment by specifying a range of configuration
+                parameters in the <filepath>values.yaml</filepath> file. Key configuration options
+                include:</p>
+            <ul id="ul_qmw_kdx_hzb">
+                <li>
+                    <p>kubeConfigPath: This is the path to the cluster kubeconfig file on the
+                        node(s) where you're installing Cloud-Native Router and cSRX. You copied the
+                        cluster kubeconfig to this file location on this node(s) in step <xref format="dita" href="#task_zly_rd3_1bc/step_avg_pm5_tcc"/> in <xref format="dita" href="#task_zly_rd3_1bc"/>. If this parameter is commented
+                        out, then the cluster kubeconfig is assumed to be at
+                            <filepath>/etc/kubernetes/kubelet.conf</filepath>.</p>
+                </li>
+                <li>
+                    <p>interfaceType: This is the type of interface on the cSRX to connect to JCNR.
+                        Must be set to <codeph>vhost</codeph> only.</p>
+                </li>
+                <li>
+                    <p>interfaceConfigs: This is an array defining the interface IP address, gateway
+                        address and optionally routes. The interface IP must match the
+                            <codeph>localAddress</codeph> element in the
+                            <codeph>ipSecTunnelConfigs</codeph> array. The routes should contain
+                        prefixes to steer decrypted traffic to Cloud-Native Router and reachability
+                        route for IPSec gateway.</p>
+                </li>
+                <li>
+                    <p>enableUserConfig: </p>
+                    <ul id="ul_ccq_ls5_pfc">
+                        <li>
+                            <p>Set to <codeph>false</codeph> if you want cSRX to create your IPSec
+                                tunnels now during installation. Define your IPSec tunnels in the
+                                    <codeph>ipSecTunnelConfigs</codeph> section of this Helm chart.
+                                cSRX will automatically create a configlet based on that
+                                configuration and apply it for you during cSRX installation.</p>
+                        </li>
+                        <li>
+                            <p>Set to <codeph>true</codeph> if you want to create your IPSec tunnels
+                                on your own later. In this case, you don't define your
+                                    <codeph>ipSecTunnelConfigs</codeph> in this Helm chart. Instead,
+                                you'll define your IPSec configuration directly in a configlet and
+                                explicitly apply it anytime after cSRX is installed.</p>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <p>ipSecTunnelConfigs: This is an array defining the IPsec configuration details
+                        such as ike-phase1, proposal, policy and gateway configuration. Traffic
+                        selector should contain traffic that is expected to be encrypted. This
+                        section is only applicable if <codeph>enableUserConfig</codeph> is set to
+                            <codeph>false</codeph>.</p>
+                </li>
+                <li>
+                    <p>jcnr_config: This is an array defining the routes to be configured in
+                        Cloud-Native Router to steer traffic from Cloud-Native Router to cSRX and to
+                        steer IPsec traffic from the remote IPsec gateway to the cSRX to apply the
+                        security service chain. </p>
+                </li>
+                <li>
+                    <p>telemetry: Enable or disable telemetry.</p>
+                </li>
+            </ul>
+            <p>Here is the default <filepath>values.yaml</filepath> for standalone cSRX
+                deployment:</p>
+            <codeblock id="codeblock_usx_y4x_vfc"># Default values for cSRX.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Set to true if IPsec tunnels will be configured by user at a later stage
+enableUserConfig: false  # enable /disable user configuration
+
+common:
+  registry: enterprise-hub.juniper.net/
+  repository: jcnr-container-prod/
+
+  csrxInit:
+    repository:
+    image: csrx-init
+    tag: 25.2.0.92
+    imagePullPolicy: IfNotPresent
+    resources:
+      #limits:
+      #  memory: 1Gi
+      #  cpu: 1
+      #requests:
+      #  memory: 1Gi
+      #  cpu: 1
+
+  csrx:
+    repository:
+    image: csrx
+    tag: 25.2R1.9
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        hugepages-1Gi: 4Gi
+        memory: 4Gi
+      requests:
+        hugepages-1Gi: 4Gi
+        memory: 4Gi
+
+  csrxTelemetry:
+    repository:
+    image: contrail-telemetry-exporter
+    tag: 25.2.0.92
+    imagePullPolicy: IfNotPresent
+    resources:
+
+# uncomment below if you are using a private registry that needs authentication
+# registryCredentials - Base64 representation of your Docker registry credentials
+# secretName - Name of the Secret object that will be created
+#imagePullSecret:
+  #registryCredentials:  &lt;base64-encoded-credential&gt;
+  #secretName: regcred
+
+# nodeAffinity: Can be used to inject nodeAffinity for cSRX
+# you may label the nodes where we wish to deploy cSRX and inject affinity accordingly
+#nodeAffinity:
+#- key: node-role.kubernetes.io/worker
+#  operator: Exists
+#- key: node-role.kubernetes.io/master
+#  operator: DoesNotExist
+#- key: kubernetes.io/hostname
+#  operator: In
+#  values:
+#  - example-host-1
+
+# Toleration allows the cSRX related pods to tolerate nodes with specific taints
+#tolerations:
+#- key: "csrx"
+#  operator: "Equal"
+#  value: "yes"
+#  effect: "NoSchedule"
+
+
+enableSecurityALg: false  # enable /disable security alg
+replicas: 1
+
+interfaceType: "vhost"
+
+interfaceConfigs:
+  #- name: ge-0/0/0
+  #  ip: 181.1.1.1/30          # should match ipSecTunnelConfigs localAddress if configured
+  #  gateway: 181.1.1.2        # gateway configuration
+  #  ip6: 181:1:1::1/64        # optional
+  #  ip6Gateway: 181:1:1::2    # optional
+  #  routes:                   # this field is optional
+  #  - "191.1.1.0/24"
+  #  - "200.1.1.0/24"
+  #  instance_parameters:
+  #    name: "untrust"
+  #    type: "vrf"             # options include virtual-router or vrf
+  #    vrfTarget: 10:10        # this option is valid only for vrf
+  #- name: ge-0/0/1
+  #  ip: 1.21.1.1/30           # should match ipSecTunnelConfigs localAddress if configured
+  #  gateway: 1.21.1.2         # gateway configuration
+  #  ip6: 181:2:1::1/64                     # optional
+  #  ip6Gateway: 181:2:1::2               # optional
+  #  routes:                   # this field is optional
+  #  - "111.1.1.0/24"
+  #  - "192.1.1.0/24"
+  #  instance_parameters:
+  #    name: "trust"
+  #    type: "vrf"             # options include virtual-router or vrf
+  #    vrfTarget: 11:11        # this option is valid only for vrf
+
+ipSecTunnelConfigs:       # untrust
+  #Tunnel 1 config
+  #- interface: ge-0/0/0       ## section ike-phase1, proposal, policy, gateway
+  #  gateway: 181.1.1.1
+  #  localAddress: 171.1.1.1
+  #  localIdentificationHostname:  jcnr-csrx3.com     #Optional
+  #  remoteIdentificationHostname:  jcnr-csrx1.com    #Optional
+  #  authenticationAlgorithm: sha-256
+  #  encryptionAlgorithm: aes-256-cbc
+  #  preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+  #  trafficSelector:
+  #  - name: ts1
+  #    localIP: 222.1.1.0/24 ## IP cannot be 0.0.0.0/0
+  #    remoteIP: 111.1.1.0/24 ## IP cannot be 0.0.0.0/0
+  #Tunnel 2 config
+  #- interface: ge-0/0/0       ## section ike-phase1, proposal, policy, gateway
+  #  gateway: 191.1.1.1
+  #  localAddress: 171.1.1.1
+  #  localIdentificationHostname:  jcnr-csrx3.com     #Optional
+  #  remoteIdentificationHostname:  jcnr-csrx1.com    #Optional
+  #  authenticationAlgorithm: sha-256
+  #  encryptionAlgorithm: aes-256-cbc
+  #  preSharedKey: "$9$zt3l3AuIRhev8FnNVsYoaApu0RcSyev8XO1NVYoDj.P5F9AyrKv8X"
+  #  trafficSelector:
+  #  - name: ts2
+  #    localIP: 100.1.1.0/24 ## IP cannot be 0.0.0.0/0
+  #    remoteIP: 200.1.1.0/24 ## IP cannot be 0.0.0.0/0
+
+jcnr_config:
+  #- name: ge-0/0/0
+  #  routes:
+  #    - "121.1.1.0/24"
+
+#csrx_flavor: specify the csrx deployment model. Corresponding values for csrx control and data
+#must be provided based on the flavor mentioned below. Following are possible options:
+# CSRX-2CPU-4G
+# CSRX-4CPU-8G
+# CSRX-6CPU-12G
+# CSRX-8CPU-16G
+# CSRX-16CPU-32G
+# CSRX-20CPU-48G
+csrx_flavor: CSRX-2CPU-4G
+
+csrx_ctrl_cpu: "0x01"
+
+csrx_data_cpu: "0x02"
+
+telemetry:
+  enable: false
+  gnmi: true
+  service:
+    type: ClusterIP
+
+    labels: {}
+    annotations: {}
+    clusterIP: ""
+
+    # List of IP addresses at which the cSRX telemetry service is available
+    # Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+    externalIPs: []
+
+    # Only use if service.type is "LoadBalancer"
+    loadBalancerIP: ""
+
+    # Ports to expose on each node
+    # Only used if service.type is "NodePort"
+    nodePort:
+      prometheus: 30073
+      gnmi: 30077
+
+contrail_k8s_applier:
+  image: contrail-k8s-applier
+  tag: 25.2.0.92
+  pullPolicy: IfNotPresent
+
+csrx_log_path: "/var/log/csrx/"
+</codeblock>
+            <p>For a cSRX configuration example, see <xref keyref="cloud-native-router-user.jcnr-and-security-services"/> in the
+                    <cite>Juniper Cloud Native Router User Guide</cite>.</p>
+        </conbody>
+    </concept>
+</topic-map>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "/SysSchema/dita13/dtd/technicalContent/dtd/map.dtd">
+<map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" xml:lang="en-US">
+    <title>key-cloud-native-router-deployment-guide</title>
+    <!--For each guide, create a keymap file to define keydefs to support cross-book links (links to topics in your guide from topics in other guides). Define a keydef for every topic to which you want to insert a cross-book link, The keys attribute value for a keydef must be the filename for the topic. For example, the keydef to a topic file named my-topic.dita must have my-topic as the keys attribute value. The keymap file must be placed in the folder for the guide and mapref'd into the ditamap file for the guide and in the ditamap file for every other guide that has cross-book links to topics in your guide. -->
+
+<!-- Thu Jun 29 06:13:02 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.crpd-customization-node-annotation" inserted by "tkaur" -->
+<keydef keys="crpd-customization-node-annotation" href="topics/concept/crpd-customization-node-annotation.dita"/>
+
+<!-- Thu Jul 06 02:57:10 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.deployment-config-files" inserted by "tkaur" -->
+<!--<keydef keys="deployment-config-files" href="/Content/deployment-config-files_xi920469_1_1.dita"/>-->
+
+<!-- Thu Jul 06 03:11:41 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.juniper-jcnr-tech-preview" inserted by "tkaur" -->
+<keydef keys="juniper-jcnr-tech-preview" href="topics/concept/juniper-jcnr-tech-preview.dita"/>
+
+<!-- Tue Sep 19 07:26:34 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.crpd-customization-node-configmap" inserted by "tkaur" -->
+<keydef keys="crpd-customization-node-configlet" href="topics/concept/crpd-customization-node-configlet.dita"/>
+
+<!-- Thu Sep 21 09:13:56 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.system-resource-requirements-eks" inserted by "tkaur" -->
+<keydef keys="system-resource-requirements-eks" href="topics/concept/system-resource-requirements-eks.dita"/>
+
+<!-- Tue Sep 26 04:41:37 PDT 2023 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.deployment-config-files-windriver" inserted by "tkaur" -->
+<keydef keys="deployment-config-files-windriver" href="topics/concept/deployment-config-files-windriver.dita"/>
+    <keydef keys="jcnr-deploy-csrx" href="topics/topic-map/jcnr-deploy-csrx.dita"/>
+
+<!-- Tue Mar 12 06:47:12 PDT 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.jcnr-datapath" inserted by "tkaur" -->
+<keydef keys="jcnr-datapath" href="topics/concept/jcnr-datapath.dita"/>
+
+<!-- Mon Sep 02 10:08:38 PDT 2024 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.deployment-config-files-bms" inserted by "tkaur" -->
+<keydef keys="deployment-config-files-bms" href="topics/concept/deployment-config-files-bms.dita"/>
+
+<!-- Mon Jan 06 03:44:59 PST 2025 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.jcnr-deploy-csrx-task_zly_rd3_1bc" inserted by "tkaur" -->
+<keydef keys="jcnr-deploy-csrx-task_zly_rd3_1bc" href="topics/topic-map/jcnr-deploy-csrx.dita#task_zly_rd3_1bc"/>
+
+<!-- Fri Jan 10 01:22:08 PST 2025 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.system-resource-requirements-bms" inserted by "tkaur" -->
+<keydef keys="system-resource-requirements-bms" href="topics/concept/system-resource-requirements-bms.dita"/>
+
+<!-- Mon Sep 29 03:05:11 PDT 2025 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.jcnr-deploy-csrx-task_qpq_j53_1bc" inserted by "tkaur" -->
+<keydef keys="jcnr-deploy-csrx-task_qpq_j53_1bc" href="topics/topic-map/jcnr-deploy-csrx.dita#task_qpq_j53_1bc"/>
+
+<!-- Mon Sep 29 03:06:14 PDT 2025 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.jcnr-deploy-csrx-task_e15_krd_qjb" inserted by "tkaur" -->
+<keydef keys="jcnr-deploy-csrx-task_e15_krd_qjb" href="topics/topic-map/jcnr-deploy-csrx.dita#task_e15_krd_qjb"/>
+
+<!-- Mon Oct 20 08:00:28 PDT 2025 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.jcnr-deploy-prepackaged-images" inserted by "bfong" -->
+<keydef keys="jcnr-deploy-prepackaged-images" href="topics/task/jcnr-deploy-prepackaged-images.dita"/>
+
+<!-- Thu Oct 23 06:40:28 PDT 2025 :: By DocEng :: Added below element to support cross-book link "cloud-native-router-deployment-guide.jcnr-mgmt-overlay-configure-tunnel" inserted by "bfong" -->
+<keydef keys="jcnr-mgmt-overlay-configure-tunnel" href="topics/task/jcnr-mgmt-overlay-configure-tunnel.dita"/>
+</map>

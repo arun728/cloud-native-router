@@ -1,0 +1,1866 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_007af26dc695851a--47806945-193bf8c758b--7f68" xml:lang="en-US">
+    <title>Cloud-Native Router Operator Service Module: Host-Based Routing Example Configuration
+        Files</title>
+    <shortdesc>This section contains example scripts and configuration files that you can use to
+        create a service module host-based routing deployment.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+  <reference id="reference_egd_bsn_5dc">
+    <title>Host-Based Routing: Example Scripts and Configuration Files to Install cRPD</title>
+    <refbody>
+      <section id="section_cyh_fln_2yb">
+        <title>Example cRPD Installation Script</title>
+        <p>The following example script installs cRPD on the node where you run the script. If cRPD
+          is already running on the node, the script removes the running cRPD instance and installs
+          a new instance. If the script finds an existing cRPD configuration file, it will reuse
+          that configuration file. Otherwise, it will use the configuration file specified by the
+            <varname>CONFIG_TEMPLATE</varname> variable that you set in the script.</p>
+        <p>Run this script with the proper <varname>CONFIG_TEMPLATE</varname> configuration file on
+          every node in your cluster.</p>
+        <p>We provide sample <varname>CONFIG_TEMPLATE</varname> configuration files in <xref href="#reference_egd_bsn_5dc/section_yzs_w12_rdc" format="dita"/> and <xref href="#reference_egd_bsn_5dc/section_ax3_bkm_rdc" format="dita"/>.</p>
+        <p>install-crpd.sh:</p>
+        <codeblock id="codeblock_xmk_xyd_rdc">
+set -o nounset
+set -o errexit
+SCRIPT_DIR=$(cd -P `dirname $0`; pwd)
+NETWORK_NS="ns:/run/netns/crpd"
+# Specify the config file. For example: 
+# ctl_plane_crpd_connectivity_template_5_node.conf or worker_crpd_connectivity_template_5_node.conf
+CONFIG_TEMPLATE=ctl_plane_crpd_connectivity_template_5_node.conf
+POD_NAME=crpd
+CONTAINER_NAME=crpd01
+# Remove existing pod
+## Stop all containers in pod crpd
+POD_ID=$(sudo podman pod ls -fname=${POD_NAME} -q)
+if [ -n "$POD_ID" ]; then
+   sudo podman pod stop ${POD_ID}
+   sudo podman pod rm ${POD_ID}
+fi
+# Create Pod in NS (Tested with podman 4.6.2)
+#
+sudo podman pod create --name ${POD_NAME} --network ${NETWORK_NS}
+# create config dir
+CRPD_CONFIG_DIR=/etc/crpd/config
+sudo rm -rf ${CRPD_CONFIG_DIR}
+sudo mkdir -p ${CRPD_CONFIG_DIR}
+if [[ -f ${CRPD_CONFIG_DIR}/juniper.conf || -f ${CRPD_CONFIG_DIR}/juniper.conf.gz ]]; then
+   echo "conf file exists"
+else
+   echo "initialize with base config"
+   envsubst &lt; ${CONFIG_TEMPLATE} &gt; crpd_base_connectivity.conf
+   sudo cp ${SCRIPT_DIR}/crpd_base_connectivity.conf ${CRPD_CONFIG_DIR}/juniper.conf
+fi
+sudo podman volume create crpd01-varlog --ignore
+sudo podman run --rm -d --name ${CONTAINER_NAME} --pod ${POD_NAME} --privileged -v /etc/crpd/config:/config:Z -v crpd01-varlog:/var/log -it enterprise-hub.juniper.net:/jcnr-container-prod/crpd:24.4R1.9
+# List
+sudo podman pod ps --ctr-status --ctr-names --ctr-ids</codeblock>
+      </section>
+      <section id="section_yzs_w12_rdc">
+        <title>Example Control Plane Node Configuration File</title>
+        <p>This configuration file is referenced by <varname>CONFIG_TEMPLATE</varname> in the cRPD
+          installation script. There is one control plane node configuration file per control plane
+          node. See <xref href="#reference_egd_bsn_5dc/table_y3x_zb2_rdc" format="dita"/> through
+            <xref href="#reference_egd_bsn_5dc/table_vkf_b3m_rdc" format="dita"/> for the variable
+          values to set for each control plane node.</p>
+        <p>ctl_plane_crpd_connectivity_template_5_node.conf:</p>
+        <codeblock id="codeblock_f5c_z5n_5dc">
+groups {
+   base {
+      apply-flags omit;
+      system {
+         root-authentication {
+            encrypted-password "<varname>&lt;encrypted_password&gt;</varname>"
+         }
+         commit {
+            xpath;
+            constraints {
+               direct-access;
+            }
+            notification {
+               configuration-diff-format xml;
+            }
+         }
+         scripts {
+            action {
+               max-datasize 256m;
+            }
+            language python3;
+         }
+         services {
+            netconf {
+               ssh;
+            }
+            ssh {
+               root-login allow;
+               port 24;
+            }
+         }
+         license {
+            keys {
+               key "<varname>&lt;crpd-license-key&gt;</varname>";
+            }
+         }
+      }
+   }
+   connectivity {
+      interfaces {
+         lo0 {
+            mtu 9216;
+            unit 0 {
+               family inet {
+                  address ${LO0_IP}/32;
+               }
+            }
+         }
+         veth-crpd {
+            mtu 9216;
+            unit 0 {
+               family inet {
+                  address ${VETH_CRPD}/30;
+               }
+               # *** uncomment below if running dual stack ***
+               #family inet6 {
+               #   address ${VETH6_CRPD}/126;
+               }
+            }
+         }
+      }
+      policy-options {
+         policy-statement accept-podcidr {
+            term accept {
+               from {
+                  route-filter ${POD_CIDR} orlonger;
+               }
+               then accept;
+            }
+            then reject;
+         }
+         policy-statement export-direct {
+            term 1 {
+               from {
+                  route-filter ${LO0_IP_POOL} orlonger;
+               }
+               then accept;
+            }
+            then reject;
+         }
+         policy-statement export-evpn {
+            term 1 {
+               from protocol evpn;
+               then accept;
+            }
+            then reject;
+         }
+         policy-statement export-veth {
+            term 1 {
+               from {
+                  protocol direct;
+                  route-filter ${VETH_PREFIX}/30 exact;
+               }
+               then accept;
+            }
+            term 2 {
+               from protocol bgp;
+               then accept;
+            }
+            then {
+
+               # *** uncomment below if running dual stack ***
+               #next policy;
+               reject;
+            }
+         }
+         # *** uncomment below if running dual stack ***
+         #policy-statement export-veth-v6 {
+         #   term 1 {
+         #      from {
+         #         protocol direct;
+         #         route-filter ${VETH6_PREFIX}/126 exact;
+         #      }
+         #      then accept;
+         #   }
+         #   term 2 {
+         #      from protocol bgp;
+         #      then accept;
+         #   }
+         #   then reject;
+         #}
+      }
+      routing-instances {
+         master-calico-ri {
+            instance-type vrf;
+            protocols {
+               bgp {
+                  group calico-bgprtrgrp-master {
+                     multihop;
+                     local-address ${VETH_CRPD};
+                     import accept-podcidr;
+                     export export-evpn;
+                     remove-private no-peer-loop-check;
+                     peer-as 64512;
+                     local-as 64600;
+                     neighbor ${VETH_K8S};
+                  }
+                  # *** uncomment below if running dual stack ***
+                  #group calico-bgprtrgrp-master6 {
+                  #   multihop;
+                  #   local-address ${VETH6_CRPD};
+                  #   export export-evpn;
+                  #   remove-private no-peer-loop-check;
+                  #   peer-as 64512;
+                  #   local-as 64600;
+                  #   neighbor ${VETH6_K8S};
+                  #}
+               }
+               evpn {
+                  ip-prefix-routes {
+                     advertise direct-nexthop;
+                     encapsulation vxlan;
+                     vni 4096;
+                     # ***Include below line when running IPv4 only. Comment out if running dual stack.***
+                     export export-veth;
+                     # ***Include below line when running dual stack. Comment out if running IPv4 only.***
+                     #export [ export-veth export-veth-v6 ];
+                     route-attributes {
+                        community {
+                           import-action allow;
+                           export-action allow;
+                        }
+                     }
+                  }
+               }
+            }
+            interface veth-crpd;
+            vrf-target target:1:4;
+         }  
+      } 
+      routing-options {
+         route-distinguisher-id ${LO0_IP};
+         router-id ${LO0_IP};
+      }
+      protocols {
+         bgp {
+            group crpd-master-bgprtrgrp {
+               export export-direct;
+               peer-as 64500;
+               local-as 64500;
+               neighbor ${MASTER1_PEER_ENS4_IP};
+               neighbor ${MASTER2_PEER_ENS4_IP};
+            }
+            group crpd-worker-bgprtrgrp {
+               multihop;
+               export export-direct;
+               peer-as 64500;
+               local-as 64500;
+               neighbor ${WORKER1_PEER_ENS4_IP};
+               neighbor ${WORKER2_PEER_ENS4_IP};
+            }
+            group crpd-master-lo-bgprtrgrp {
+               local-address ${LO0_IP};
+               family evpn {
+                  signaling;
+               }
+               peer-as 64600;
+               local-as 64600;
+               neighbor ${MASTER1_EVPN_PEER_IP};
+               neighbor ${MASTER2_EVPN_PEER_IP};
+            }
+            group crpd-worker-lo-bgprtrgrp {
+               local-address ${LO0_IP};
+               family evpn {
+                  signaling;
+               }
+               peer-as 64600;
+               local-as 64600;
+               neighbor ${WORKER1_EVPN_PEER_IP};
+               neighbor ${WORKER2_EVPN_PEER_IP};
+            }
+            cluster ${LO0_IP};
+         }    
+      }
+   }
+}
+apply-groups base;
+apply-groups connectivity;</codeblock>
+        <table frame="all" rowsep="1" colsep="1" id="table_y3x_zb2_rdc">
+          <title>Node 1 (Control Plane Node) Example Settings</title>
+          <tgroup cols="2">
+            <colspec colname="c2" colnum="1" colwidth="1*"/>
+            <colspec colname="c3" colnum="2" colwidth="1*"/>
+            <thead>
+              <row>
+                <entry>
+                  <p>Variable</p>
+                </entry>
+                <entry>
+                  <p>Setting</p>
+                </entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>
+                  <p>LO0_IP_POOL</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.0/24</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>LO0_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_CRPD</p>
+                </entry>
+                <entry>
+                  <p>10.1.1.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_CRPD</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:1::2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_PREFIX</p>
+                </entry>
+                <entry>
+                  <p>10.1.1.0</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_PREFIX</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:1::0</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_K8S</p>
+                </entry>
+                <entry>
+                  <p>10.1.1.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_K8S</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:1::1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>POD_CIDR</p>
+                </entry>
+                <entry>
+                  <p>192.168.0.0/24</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER1_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER2_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.3</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER1_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.4</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER2_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.5</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER1_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.102</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER2_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.103</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER1_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.104</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER2_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.105</p>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+        <table frame="all" rowsep="1" colsep="1" id="table_wtf_cy2_rdc">
+          <title>Node 2 (Control Plane Node) Example Settings</title>
+          <tgroup cols="2">
+            <colspec colname="c2" colnum="1" colwidth="1*"/>
+            <colspec colname="c3" colnum="2" colwidth="1*"/>
+            <thead>
+              <row>
+                <entry>
+                  <p>Variable</p>
+                </entry>
+                <entry>
+                  <p>Setting</p>
+                </entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>
+                  <p>LO0_IP_POOL</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.0/24</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>LO0_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_CRPD</p>
+                </entry>
+                <entry>
+                  <p>10.1.2.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_CRPD</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:2::2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_PREFIX</p>
+                </entry>
+                <entry>
+                  <p>10.1.2.0</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_PREFIX</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:2::0</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_K8S</p>
+                </entry>
+                <entry>
+                  <p>10.1.2.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_K8S</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:2::1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>POD_CIDR</p>
+                </entry>
+                <entry>
+                  <p>192.168.0.0/24</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER1_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER2_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.3</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER1_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.4</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER2_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.5</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER1_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER2_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.3</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER1_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.4</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER2_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.5</p>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+        <table frame="all" rowsep="1" colsep="1" id="table_vkf_b3m_rdc">
+          <title>Node 3 (Control Plane Node) Example Settings</title>
+          <tgroup cols="2">
+            <colspec colname="c2" colnum="1" colwidth="1*"/>
+            <colspec colname="c3" colnum="2" colwidth="1*"/>
+            <thead>
+              <row>
+                <entry>
+                  <p>Variable</p>
+                </entry>
+                <entry>
+                  <p>Setting</p>
+                </entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>
+                  <p>LO0_IP_POOL</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.0/24</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>LO0_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.3</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_CRPD</p>
+                </entry>
+                <entry>
+                  <p>10.1.3.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_CRPD</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:3::2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_PREFIX</p>
+                </entry>
+                <entry>
+                  <p>10.1.3.0</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_PREFIX</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:3::0</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_K8S</p>
+                </entry>
+                <entry>
+                  <p>10.1.3.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_K8S</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:3::1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>POD_CIDR</p>
+                </entry>
+                <entry>
+                  <p>192.168.0.0/24</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER1_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER2_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER1_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.4</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER2_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.5</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER1_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER2_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER1_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.4</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>WORKER2_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.5</p>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
+      <section id="section_ax3_bkm_rdc">
+        <title>Example Worker Node Configuration File</title>
+        <p>This configuration file is referenced by <varname>CONFIG_TEMPLATE</varname> in the cRPD
+          installation script. There is one worker node configuration file per worker node. See
+            <xref href="#reference_egd_bsn_5dc/table_cx3_bkm_rdc" format="dita"/> and <xref href="#reference_egd_bsn_5dc/table_xlw_slm_rdc" format="dita"/> for the variable values
+          to set for each worker node.</p>
+        <p>worker_crpd_connectivity_template_5_node.conf:</p>
+        <codeblock id="codeblock_lld_1ch_ydc">
+groups {
+   base {
+      apply-flags omit;
+      system {
+         root-authentication {
+            encrypted-password "<varname>&lt;encrypted_password&gt;</varname>"
+         }
+         commit {
+            xpath;
+            constraints {
+               direct-access;
+            }
+            notification {
+               configuration-diff-format xml;
+            }
+         }
+         scripts {
+            action {
+               max-datasize 256m;
+            }
+            language python3;
+         }
+         services {
+            netconf {
+               ssh;
+            }
+            ssh {
+               root-login allow;
+               port 24;
+            }
+         }
+         license {
+            keys {
+               key "<varname>&lt;crpd_license_key&gt;</varname>";
+            }
+         }
+      }   
+   }
+   connectivity {
+      interfaces {
+         lo0 {
+            mtu 9216;
+            unit 0 {
+               family inet {
+                  address ${LO0_IP}/32;
+               }
+            }
+         }
+         veth-crpd {
+            mtu 9216;
+            unit 0 {
+               family inet {
+                  address ${VETH_CRPD}/30;
+               }
+               # *** uncomment below if running dual stack ***
+               #family inet6 {
+               #   address ${VETH6_CRPD}/126;
+               #}
+            }
+         }
+      }
+      policy-options {
+         policy-statement accept-podcidr {
+            term accept {
+               from {
+                  route-filter ${POD_CIDR} orlonger;
+               }
+               then accept;
+            }
+            then reject;
+         }
+         policy-statement export-direct {
+            term 1 {
+               from {
+                  route-filter ${LO0_IP_POOL} orlonger;
+               }
+               then accept;
+            }
+            then reject;
+         }
+         policy-statement export-evpn {
+            term 1 {
+               from protocol evpn;
+               then accept;
+            }
+            then reject;
+         }
+         policy-statement export-veth {
+            term 1 {
+               from {
+                  protocol direct;
+                  route-filter ${VETH_PREFIX}/30 exact;
+               }
+               then accept;
+            }
+            term 2 {
+               from protocol bgp;
+               then accept;
+            }
+            then {
+               # *** uncomment below if running dual stack ***
+               #next policy;
+               reject;
+            }
+         }
+         # *** uncomment below if running dual stack ***
+         #policy-statement export-veth-v6 {
+         #   term 1 {
+         #      from {
+         #         protocol direct;
+         #         route-filter ${VETH6_PREFIX}/126 exact;
+         #      }
+         #      then accept;
+         #   }
+         #   term 2 {
+         #      from protocol bgp;
+         #      then accept;
+         #   }
+         #   then reject;
+         #}
+      }
+      routing-instances {
+         worker-calico-ri {
+            instance-type vrf;
+            protocols {
+               bgp {
+                  group calico-bgprtrgrp-worker {
+                     multihop;
+                     local-address ${VETH_CRPD};
+                     import accept-podcidr;
+                     export export-evpn;
+                     remove-private no-peer-loop-check;
+                     peer-as 64512;
+                     local-as 64600;
+                     neighbor ${VETH_K8S};
+                  }
+                  # *** uncomment below if running dual stack ***
+                  #group calico-bgprtrgrp-worker6 {
+                  #    multihop;
+                  #    local-address ${VETH6_CRPD};
+                  #    export export-evpn;
+                  #    remove-private no-peer-loop-check;
+                  #    peer-as 64512;
+                  #    local-as 64600;
+                  #    neighbor ${VETH6_K8S};
+                  #}
+               }
+               evpn {
+                  ip-prefix-routes {
+                     advertise direct-nexthop;
+                     encapsulation vxlan;
+                     vni 4300;
+                     # ***Include below line when running IPv4 only. Comment out if running dual stack.***
+                     export export-veth;
+                     # ***Include below line when running dual stack. Comment out if running IPv4 only.***
+                     #export [ export-veth export-veth-v6 ];
+                     route-attributes {
+                        community {
+                           import-action allow;
+                           export-action allow;
+                        }
+                     }
+                  }
+               }
+            }
+            interface veth-crpd;
+            vrf-target target:1:4;
+         }
+      }
+      routing-options {
+         route-distinguisher-id ${LO0_IP};
+         router-id ${LO0_IP};
+      }
+      protocols {
+         bgp {
+            group crpd-master-bgprtrgrp {
+               multihop;
+               export export-direct;
+               peer-as 64500;
+               local-as 64500;
+               neighbor ${MASTER1_PEER_ENS4_IP};
+               neighbor ${MASTER2_PEER_ENS4_IP};
+               neighbor ${MASTER3_PEER_ENS4_IP};
+            }
+            group crpd-master-lo-bgprtrgrp {
+               local-address ${LO0_IP};
+               family evpn {
+                  signaling;
+               }
+               peer-as 64600;
+               local-as 64600;
+               neighbor ${MASTER1_EVPN_PEER_IP};
+               neighbor ${MASTER2_EVPN_PEER_IP};
+               neighbor ${MASTER3_EVPN_PEER_IP};
+            }
+         }
+      }
+   }
+}
+apply-groups base;
+apply-groups connectivity;</codeblock>
+        <table frame="all" rowsep="1" colsep="1" id="table_cx3_bkm_rdc">
+          <title>Node 4 (Worker Node) Example Settings</title>
+          <tgroup cols="2">
+            <colspec colname="c2" colnum="1" colwidth="1*"/>
+            <colspec colname="c3" colnum="2" colwidth="1*"/>
+            <thead>
+              <row>
+                <entry>
+                  <p>Variable</p>
+                </entry>
+                <entry>
+                  <p>Setting</p>
+                </entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>
+                  <p>LO0_IP_POOL</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.0/24</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>LO0_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.4</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_CRPD</p>
+                </entry>
+                <entry>
+                  <p>10.1.4.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_CRPD</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:4::2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_PREFIX</p>
+                </entry>
+                <entry>
+                  <p>10.1.4.0</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_PREFIX</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:4::0</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_K8S</p>
+                </entry>
+                <entry>
+                  <p>10.1.4.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_K8S</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:4::1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>POD_CIDR</p>
+                </entry>
+                <entry>
+                  <p>192.168.0.0/24</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER1_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER2_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER3_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.3</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER1_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.101</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER2_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.102</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER3_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.103</p>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+        <table frame="all" rowsep="1" colsep="1" id="table_xlw_slm_rdc">
+          <title>Node 5 (Worker Node) Example Settings</title>
+          <tgroup cols="2">
+            <colspec colname="c2" colnum="1" colwidth="1*"/>
+            <colspec colname="c3" colnum="2" colwidth="1*"/>
+            <thead>
+              <row>
+                <entry>
+                  <p>Variable</p>
+                </entry>
+                <entry>
+                  <p>Setting</p>
+                </entry>
+              </row>
+            </thead>
+            <tbody>
+              <row>
+                <entry>
+                  <p>LO0_IP_POOL</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.0/24</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>LO0_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.5</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_CRPD</p>
+                </entry>
+                <entry>
+                  <p>10.1.5.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_CRPD</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:5::2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_PREFIX</p>
+                </entry>
+                <entry>
+                  <p>10.1.5.0</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_PREFIX</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:5::0</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH_K8S</p>
+                </entry>
+                <entry>
+                  <p>10.1.5.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>VETH6_K8S</p>
+                </entry>
+                <entry>
+                  <p>2001:db8:5::1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>POD_CIDR</p>
+                </entry>
+                <entry>
+                  <p>192.168.0.0/24</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER1_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.1</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER2_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.2</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER3_EVPN_PEER_IP</p>
+                </entry>
+                <entry>
+                  <p>10.12.0.3</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER1_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.101</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER2_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.102</p>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <p>MASTER3_PEER_ENS4_IP</p>
+                </entry>
+                <entry>
+                  <p>192.168.1.103</p>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
+    </refbody>
+  </reference>
+    <reference id="reference_bzb_wzg_sdc">
+        <title>Host-Based Routing: Example Calico Configuration</title>
+        <refbody>
+            <section id="section_pgh_b1h_sdc">
+                <title>BGP Configuration Example</title>
+                <p>bgpconfig.yaml:</p>
+                <codeblock id="codeblock_ccc_tzs_rdc">
+apiVersion: crd.projectcalico.org/v1
+kind: BGPConfiguration
+metadata:
+   name: default
+spec:
+   asNumber: 64512
+   listenPort: 1179
+   logSeverityScreen: Debug
+   nodeToNodeMeshEnabled: false
+</codeblock>
+            </section>
+            <section id="section_xcz_q1h_sdc">
+                <title>IP Pool Configuration Example</title>
+                <p>ippool-v4.yaml:</p>
+                <codeblock id="codeblock_p3v_b1t_rdc">
+apiVersion: crd.projectcalico.org/v1
+kind: IPPool
+metadata:
+   name: default-ipv4-ippool
+   spec:
+   allowedUses:
+   - Workload
+   blockSize: 26
+   cidr: 192.168.7.0/24
+   ipipMode: Never
+   natOutgoing: true
+   nodeSelector: all()
+   vxlanMode: Never
+</codeblock>
+        <p>ippool-v6.yaml:</p>
+        <codeblock id="codeblock_npn_kmh_ydc">
+apiVersion: crd.projectcalico.org/v1
+kind: IPPool
+metadata:
+   name: default-ipv6-ippool
+   spec:
+   allowedUses:
+   - Workload
+   blockSize: 122
+   cidr: 2001:db8:42:0::/56
+   ipipMode: Never
+   natOutgoing: true
+   nodeSelector: all()
+   vxlanMode: Never
+</codeblock>
+            </section>
+            <section id="section_wmw_t1h_sdc">
+                <title>BGP Peer Configuration Example</title>
+                <p>bgppeers-v4.yaml:</p>
+                <codeblock id="codeblock_smt_qbt_rdc">
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+   name: node1
+spec:
+   sourceAddress: None
+   asNumber: 64600
+   node: node1
+   peerIP: 10.1.1.2:179
+---
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+   name: node2
+spec:
+   sourceAddress: None
+   asNumber: 64600
+   node: node2
+   peerIP: 10.1.2.2:179
+---
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+   name: node3
+spec:
+   sourceAddress: None
+   asNumber: 64600
+   node: node3
+   peerIP: 10.1.3.2:179
+---
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+   name: node4
+spec:
+   sourceAddress: None
+   asNumber: 64600
+   node: node4
+   peerIP: 10.1.4.2:179
+---
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+   name: node5
+spec:
+   sourceAddress: None
+   asNumber: 64600
+   node: node5
+   peerIP: 10.1.5.2:179
+</codeblock>
+        <p>bgppeers-v6.yaml:</p>
+        <codeblock id="codeblock_vfc_zdk_ydc">
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+# Change for every node
+   name: node1-ipv6
+spec:
+   sourceAddress: None
+   asNumber: 64600
+   node: node1
+   peerIP: '[2001:db8:1::2]:179'
+---
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+# Change for every node
+   name: node2-ipv6
+spec:
+   sourceAddress: None
+   asNumber: 64600
+   node: node2
+   peerIP: '[2001:db8:2::2]:179'
+---
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+# Change for every node
+   name: node3-ipv6
+spec:
+   sourceAddress: None
+   asNumber: 64600
+   node: node3
+   peerIP: '[2001:db8:3::2]:179'
+---
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+# Change for every node
+   name: node4-ipv6
+spec:
+   sourceAddress: None
+   asNumber: 64600
+   node: node4
+   peerIP: '[2001:db8:4::2]:179'
+---
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+# Change for every node
+   name: node5-ipv6
+spec:
+   sourceAddress: None
+   asNumber: 64600
+   node: node5
+   peerIP: '[2001:db8:5::2]:179'</codeblock>
+            </section>
+        </refbody>
+    </reference>
+    <reference id="reference_en1_1yb_sdc">
+        <title>Host-Based Routing: Example VxLAN and Route Target Pools</title>
+        <refbody>
+            <section id="section_yng_byb_sdc">
+                <title>VxLAN Pool Example</title>
+                <p>vxlan-pool.yaml:</p>
+                <codeblock id="codeblock_n52_cdb_sdc">
+apiVersion: core.svcmodule.juniper.net/v1
+kind: Pool
+metadata:
+   name: default-vni
+   namespace: svcmodule-system
+spec:
+   vxlanId:
+      start: 4096
+      end: 16777215</codeblock>
+            </section>
+            <section id="section_lgv_gyb_sdc">
+                <title>Route Target Pool Example</title>
+                <p>rt-pool.yaml:</p>
+                <codeblock id="codeblock_rsb_3yb_sdc">
+apiVersion: core.svcmodule.juniper.net/v1
+kind: Pool
+metadata:
+   name: default-route-target-number
+   namespace: svcmodule-system
+spec:
+   routeTarget:
+      start: 8000000
+      size: 2048</codeblock>
+            </section>
+        </refbody>
+    </reference>
+    <reference id="reference_vv2_g2c_sdc">
+        <title>Host-Based Routing: Example JCNR Configuration</title>
+        <refbody>
+            <section id="section_jxb_k2c_sdc">
+                <title>JCNR Configuration</title>
+                <p>jcnr-config.yaml:</p>
+                <codeblock id="codeblock_q23_m2c_sdc">apiVersion: configplane.juniper.net/v1
+kind: Jcnr
+metadata:
+   name: crpd-master
+   namespace: hbn
+spec:
+   replicas: 3
+   jcnrTemplate:
+      externallyInitialized: true
+      loopbackAddressInitialized: true
+      nodeSelector:
+         master: ""
+---
+apiVersion: configplane.juniper.net/v1
+kind: Jcnr
+metadata:
+   name: crpd-worker
+   namespace: hbn
+spec:
+   replicas: 2
+   jcnrTemplate:
+      externallyInitialized: true
+      loopbackAddressInitialized: true
+      nodeSelector:
+         worker: ""</codeblock>
+            </section>
+        </refbody>
+    </reference>
+    <reference id="reference_v1w_g3v_sdc">
+        <title>Host-Based Routing: Example Secondary CNI Configuration Files</title>
+        <refbody>
+            <section id="section_qrn_v2b_sdc">
+                <title>Example MACVLAN Custom Resource</title>
+                <p>macvlan-cr.yaml:</p>
+                <codeblock id="codeblock_sqj_jqb_sdc">apiVersion: core.svcmodule.juniper.net/v1
+kind: RoutingInstance
+metadata:
+  name: macvlan-ri-master
+  namespace: hbn
+spec:
+  crpdGroupReference:
+    name: crpd-master
+  instanceType: mac-vrf
+  vrfTarget:
+    importExport:
+      name: target:64512:8000000
+  routingOptions:
+    routeDistinguisherId: 192.168.100.2:11
+  bridgeDomains:
+  - name: test-domain
+    interface: vrf-end
+    vLanId: 100
+    vni: 4200
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: RoutingInstance
+metadata:
+  name: macvlan-ri-worker
+  namespace: hbn
+spec:
+  crpdGroupReference:
+    name: crpd-worker
+  instanceType: mac-vrf
+  vrfTarget:
+    importExport:
+      name: target:64512:8000000
+  routingOptions:
+    routeDistinguisherId: 192.168.100.2:11
+  bridgeDomains:
+  - name: test-domain
+    interface: vrf-end
+    vLanId: 100
+    vni: 4200
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: EVPN
+metadata:
+  name: macvlan-evpn-master
+  namespace: hbn
+spec:
+  encapsulation: vxlan
+  defaultGateway: no-gateway-community
+  routingInstanceParent:
+    name: macvlan-ri-master
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: EVPN
+metadata:
+  name: macvlan-evpn-worker
+  namespace: hbn
+spec:
+  encapsulation: vxlan
+  defaultGateway: no-gateway-community
+  routingInstanceParent:
+    name: macvlan-ri-worker
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: InterfaceGroup
+metadata:
+  name: jcnr-macvlan-master
+  namespace: hbn
+spec:
+  instanceParent:
+    parentType: jcnr
+  reference:
+    name: crpd-master
+interfaceName: vrf-end
+interfaceTemplate:
+  encapsulation: vlan-bridge
+  families:
+    - addressFamily: bridge
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: InterfaceGroup
+metadata:
+  name: jcnr-macvlan-worker
+  namespace: hbn
+spec:
+  instanceParent:
+    parentType: jcnr
+    reference:
+      name: crpd-worker
+  interfaceName: vrf-end
+  interfaceTemplate:
+    encapsulation: vlan-bridge
+    families:
+      - addressFamily: bridge</codeblock>
+            </section>
+            <section id="section_l14_kfc_sdc">
+                <title>Example MACVLAN Pods</title>
+                <p>macvlan-pods.yaml:</p>
+                <codeblock id="codeblock_m14_kfc_sdc">
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvlan-conf
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "plugins": [
+        {
+          "type": "macvlan",
+          "capabilities": { "ips": true },
+          "master": "host-end",
+          "mode": "bridge",
+          "ipam": {
+            "type": "static",
+            "routes": [
+              {
+                "dst": "0.0.0.0/0",
+                "gw": "10.9.1.1"
+              }
+            ]
+          }
+        }, {
+          "capabilities": { "mac": true },
+          "type": "tuning"
+        }
+      ]
+    }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: l2-pod-1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+            { "name": "macvlan-conf",
+              "ips": [ "10.9.1.101/24" ],
+              "mac": "00:53:57:49:47:aa",
+              "gateway": [ "10.9.1.1" ]
+            }]'
+spec:
+  containers:
+  - name: l2-pod-1
+    command: ["/bin/bash", "-c", "trap : TERM INT; sleep infinity &amp; wait"]
+    image: google-containers/toolbox
+    ports:
+    - containerPort: 80
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+      privileged: true
+  automountServiceAccountToken: false
+  nodeName: ${node-name}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: l2-pod-2
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+            { "name": "macvlan-conf",
+              "ips": [ "10.9.1.102/24" ],
+              "mac": "00:53:57:49:47:bb",
+              "gateway": [ "10.9.1.1" ]
+            }]'
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/bash", "-c", "trap : TERM INT; sleep infinity &amp; wait"]
+    image: google-containers/toolbox
+    ports:
+    - containerPort: 80
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+      privileged: true
+  automountServiceAccountToken: false
+  nodeName: ${node-name}</codeblock>
+            </section>
+            <section id="section_gn4_4wb_sdc">
+                <title>Example IPVLAN Custom Resource</title>
+                <p>ipvlan-cr.yaml:</p>
+                <codeblock id="codeblock_brb_qwb_sdc">apiVersion: core.svcmodule.juniper.net/v1
+kind: RoutingPolicy
+metadata:
+  name: static-rt
+  namespace: hbn
+spec:
+  terms:
+    - name: learned-from-static
+      from:
+        protocol: static
+      then:
+        accept: true
+  default:
+    accept: false
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: RoutingInstance
+metadata:
+  name: ipvlan-ri-master
+  namespace: hbn
+spec:
+  crpdGroupReference:
+    name: crpd-master
+  instanceType: vrf
+  interfaces:
+  - ipvlan-vrf
+  vrfTarget:
+    importExport:
+      name: target:11:11
+  routingOptions:
+    routeDistinguisherId: 11:11
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: RoutingInstance
+metadata:
+  name: ipvlan-ri-worker
+  namespace: hbn
+spec:
+  crpdGroupReference:
+    name: crpd-worker
+  instanceType: vrf
+  interfaces:
+  - ipvlan-vrf
+  vrfTarget:
+    importExport:
+      name: target:11:11
+  routingOptions:
+    routeDistinguisherId: 11:11
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: EVPN
+metadata:
+  name: ipvlan-evpn-master
+  namespace: hbn
+spec:
+  encapsulation: vxlan
+  exportPolicy:
+    name: static-rt
+  routingInstanceParent:
+    name: ipvlan-ri-master
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: EVPN
+metadata:
+  name: ipvlan-evpn-worker
+  namespace: hbn
+spec:
+  encapsulation: vxlan
+  exportPolicy:
+    name: static-rt
+  routingInstanceParent:
+    name: ipvlan-ri-worker
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: InterfaceGroup
+metadata:
+  name: jcnr-ipvlan-master
+  namespace: hbn
+spec:
+  instanceParent:
+    parentType: jcnr
+    reference:
+      name: crpd-master
+  interfaceName: ipvlan-vrf
+  interfaceTemplate:
+    families:
+      - addressFamily: inet
+        ipAddress: 10.19.19.1/24
+---
+apiVersion: core.svcmodule.juniper.net/v1
+kind: InterfaceGroup
+metadata:
+  name: jcnr-ipvlan-worker
+  namespace: hbn
+spec:
+  instanceParent:
+    parentType: jcnr
+    reference:
+      name: crpd-worker
+  interfaceName: ipvlan-vrf
+  interfaceTemplate:
+    families:
+      - addressFamily: inet
+        ipAddress: 10.19.19.1/24
+---
+apiVersion: configplane.juniper.net/v1
+kind: NodeConfiglet
+metadata:
+  labels:
+    core.juniper.net/nodeName: &lt;node-name where ipvlan-pod-1 will be scheduled&gt;
+  name: ipvlan-addon-node-1
+  namespace: hbn
+spec:
+  clis:
+  - set routing-instances &lt;name of RI to which node belongs to&gt; routing-options static route 10.19.19.101/32 nexthop 10.19.19.101
+  nodeName: &lt;node-name where ipvlan-pod-1 will be scheduled&gt;
+---
+apiVersion: configplane.juniper.net/v1
+kind: NodeConfiglet
+metadata:
+  labels:
+    core.juniper.net/nodeName: &lt;node-name where ipvlan-pod-2 will be scheduled&gt;
+  name: ipvlan-addon-node-2
+  namespace: hbn
+spec:
+  clis:
+  - set routing-instances &lt;name of RI to which node belongs to&gt; routing-options static route 10.19.19.102/32 nexthop 10.19.19.102
+  nodeName: &lt;node-name where ipvlan-pod-2 will be scheduled&gt;</codeblock>
+            </section>
+            <section id="section_xwk_rkc_sdc">
+                <title>Example IPVLAN Pods</title>
+                <p>ipvlan-pods.yaml:</p>
+                <codeblock id="codeblock_zrp_skc_sdc">
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ipvlan-conf
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "name": "ipvlan-conf",
+      "type": "ipvlan",
+      "master": "ipvlan-host",
+      "mode": "l2",
+      "ipam": {
+          "type": "static"
+      }
+    }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ipvlan-pod-1
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+            { "name": "ipvlan-conf",
+              "ips": [ "10.19.19.101/24" ]
+            }]'
+spec:
+  containers:
+  - name: samplepod-1
+    command: ["/bin/bash", "-c", "trap : TERM INT; sleep infinity &amp; wait"]
+    image: google-containers/toolbox
+    ports:
+    - containerPort: 80
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+      privileged: true
+  automountServiceAccountToken: false
+  nodeName: ${node-name}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ipvlan-pod-2
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+            { "name": "ipvlan-conf",
+              "ips": [ "10.19.19.102/24" ]
+            }]'
+spec:
+  containers:
+  - name: samplepod
+    command: ["/bin/bash", "-c", "trap : TERM INT; sleep infinity &amp; wait"]
+    image: google-containers/toolbox
+    ports:
+    - containerPort: 80
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+      privileged: true
+  automountServiceAccountToken: false
+  nodeName: ${node-name}</codeblock>
+            </section>
+        </refbody>
+    </reference>
+</topic-map>

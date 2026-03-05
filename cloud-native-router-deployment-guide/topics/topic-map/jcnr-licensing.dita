@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_73c1001ccde8abf9-1ccac70-18dea8feb50--7fd2" xml:lang="en-US">
+    <title>Manage Cloud-Native Router Licenses</title>
+    <shortdesc>Learn how to install and renew your Cloud-Native Router license.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody>
+        <p>A Cloud-Native Router license is required for you to use the containerized Routing
+            Protocol Daemon (cRPD). Cloud-Native Router licensing is aligned with the Juniper Agile
+            Licensing (JAL) model. JAL ensures that features are used in compliance with Juniper's
+            end-user license agreement. You can purchase licenses for Cloud-Native Router software
+            through your Juniper Networks representative.</p>
+        <p>For more information on JAL or for managing multiple license files for multiple
+            Cloud-Native Router deployments, see <xref format="html" href="https://www.juniper.net/documentation/us/en/software/license/licensing/topics/topic-map/jal-overview.html" scope="external">Juniper Agile Licensing Overview</xref>.</p>
+        <note id="note_p4f_gfm_51c">
+            <p>Starting with Cloud-Native Router Release 23.2, the Cloud-Native Router license
+                format has changed. Request a new license key from the JAL portal before deploying
+                or upgrading from a pre-23.2 release to this release.</p>
+        </note>
+    </tmbody>
+    <task id="task_tk3_jgp_41c">
+        <title>Installing Your License</title>
+        <taskbody>
+            <context id="context_mks_hzp_41c">Use this procedure to install your Cloud-Native Router
+                    license.<note id="note_hz1_qmm_51c">
+                    <p>You must obtain your license file from your account team and install it in
+                        the <filepath>jcnr-secrets.yaml</filepath> file as described in the
+                        procedures in this section. Without the proper base64-encoded license key
+                        and root password in the <filepath>jcnr-secrets.yaml</filepath> file, the
+                        cRPD pod may sometimes not enter Running state, but remain in
+                        CrashLoopBackOff state. </p>
+                </note></context>
+            <steps id="steps_ngq_jzp_41c">
+                <step>
+                    <cmd>Encode your license in base64.</cmd>
+                    <info><codeblock id="codeblock_g5q_pbq_41c">base64 -w 0 <filepath>licenseFile</filepath></codeblock>where
+                        licenseFile is the license file that you obtained from Juniper
+                            Networks.<p>The output of this command is your base64-encoded
+                            license.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Copy and paste your base64-encoded license into
+                            <filepath>secrets/jcnr-secrets.yaml</filepath>.</cmd>
+                    <info>The <filepath>secrets/jcnr-secrets.yaml</filepath> file contains a
+                        parameter called
+                            <codeph>crpd-license</codeph>:<codeblock id="codeblock_rql_wcq_41c">  crpd-license: |
+    &lt;add your license in base64 format&gt;</codeblock><p>If this is
+                            your first time adding your license, then replace <codeph>&lt;add your
+                                license in base64 format&gt;</codeph> with your base64-encoded
+                            license.</p><p>If you're renewing your license, then replace your old
+                            base64-encoded license with your new base64-encoded license.</p><p>Save
+                            and quit the file and continue with your installation.</p></info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_e15_krd_qjb">
+        <title>Renewing Your License</title>
+        <taskbody>
+            <context id="context_qfm_dgp_41c">
+                <p>Use this procedure to renew your Cloud-Native Router license.</p>
+                <p>When your Cloud-Native Router license expires, you'll receive a License Expired
+                    notification through syslog. Additionally, you can see the License Expired
+                    notification event in the Cloud-Native Router notification log file (typically
+                        <filepath>/var/log/jcnr/jcnr_notifications.json</filepath>). The
+                    notification looks something like this: <codeph>LICENSE_EXPIRED: License for
+                        feature Containerized routing protocol daemon with standard features(243)
+                        expired. Contact Juniper partner or account team.</codeph></p>
+                <p>All Cloud-Native Router features continue to function even after your license
+                    expires but will cease to function the next time the cRPD pod restarts. To
+                    prevent this from occurring, contact your Juniper Networks representative as
+                    soon as possible to receive a new license.</p>
+                <p>When you receive your new license, follow these steps to renew your license in
+                    the current cluster:</p>
+            </context>
+            <steps id="steps_hhq_52q_41c">
+                <step>
+                    <cmd>Follow <xref format="dita" href="#task_tk3_jgp_41c"/> to install your new
+                        license.</cmd>
+                </step>
+                <step>
+                    <cmd>Apply your new license to the cluster.</cmd>
+                    <info>
+                        <codeblock id="codeblock_eqr_z2q_41c">kubectl apply -f secrets/jcnr-secrets.yaml</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Restart the cRPD pod(s) to pick up the new license.</cmd>
+                    <info><codeblock id="codeblock_zr4_jfq_41c">kubectl delete pod jcnr-<varname>xxx</varname>-crpd-0 -n jcnr</codeblock>When
+                        you delete a cRPD pod, a new one (with the new license) will be instantiated
+                        in its place. If you have more than one cRPD pod, remember to delete them
+                        all.</info>
+                </step>
+                <step>
+                    <cmd>Verify that your license was installed properly.</cmd>
+                    <substeps id="substeps_xws_wfq_41c">
+                        <substep>
+                            <cmd>Access the cRPD pod.</cmd>
+                            <info>
+                                <codeblock id="codeblock_v2h_cjq_41c">kubectl exec -it jcnr-<varname>xxx</varname>-crpd-0 -n jcnr -- bash</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Enter CLI mode and show the license.</cmd>
+                            <info><codeblock id="codeblock_mhf_1gq_41c">cli</codeblock><codeblock id="codeblock_src_cgq_41c">show system license</codeblock>The
+                                output should show that the
+                                    <codeph>containerized-rpd-standard</codeph> license was
+                                installed.</info>
+                            <info>If the output shows that the license was not installed, then
+                                double check your steps or call Juniper Networks for support.</info>
+                        </substep>
+                    </substeps>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

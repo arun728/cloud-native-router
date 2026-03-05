@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_97ca4427c072890e-38403db6-189f3ce8904--7cd3" xml:lang="en-US">
+    <title>Install and Verify Juniper Cloud-Native Router for GCP Deployment</title>
+    <shortdesc>The Juniper Cloud-Native Router (cloud-native router) uses the the JCNR-Controller
+        (cRPD) to provide control plane capabilities and JCNR-CNI to provide a container network
+        interface. Juniper Cloud-Native Router uses the DPDK-enabled vRouter to provide
+        high-performance data plane capabilities and Syslog-NG to provide notification functions.
+        This section explains how you can install these components of the Cloud-Native Router. </shortdesc>
+    <prolog>
+        <author>tkaur</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <task id="task_rdw_nj5_mpb">
+        <title>Install Juniper Cloud-Native Router Using Juniper Support Site Package</title>
+        <taskbody>
+            <context id="context_zdt_npy_wtb">
+                <p>Read this section to learn the steps required to load the cloud-native router
+                    image components using Helm charts.</p>
+            </context>
+            <steps id="steps_gn1_m3l_gxb">
+                <step>
+                    <cmd>Review the <xref href="system-resource-requirements-gcp.dita"/> section to ensure the setup has all the required configuration. </cmd>
+                </step>
+                <step>
+                    <cmd>Download the desired Cloud-Native Router software package to the directory
+                        of your choice. </cmd>
+                    <info>You have the option of downloading the package to install Cloud-Native
+                        Router only or downloading the package to install JNCR together with Juniper
+                        cSRX. See <xref href="../ref/jcnr-sw-download-packages.dita"/> for a description of the packages available. If you don't want to install
+                        Juniper cSRX now, you can always choose to install Juniper cSRX on your
+                        working Cloud-Native Router installation later.</info>
+                </step>
+                <step>
+                    <cmd>Expand the file
+                                <filepath>Juniper_Cloud_Native_Router_<varname>release-number</varname>.tgz</filepath>.</cmd>
+                    <info>
+                        <codeblock>tar xzvf Juniper_Cloud_Native_Router_<varname>release-number</varname>.tgz</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change directory to the main installation directory.</cmd>
+                    <info>
+                        <ul id="ul_rkw_yf4_xbc">
+                            <li><p>If you're installing Cloud-Native Router only,
+                                then:</p><codeblock id="codeblock_eq4_cfj_1bc">cd Juniper_Cloud_Native_Router_<varname>&lt;release&gt;</varname></codeblock>This
+                                directory contains the Helm chart for Cloud-Native Router only.</li>
+                            <li><p>If you're installing Cloud-Native Router and cSRX at the same
+                                    time, then:
+                                </p><codeblock id="codeblock_ut5_l2j_1bc">cd Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname></codeblock>This
+                                directory contains the combination Helm chart for Cloud-Native
+                                Router and cSRX.</li>
+                        </ul>
+                        <note id="note_uxn_fg4_xbc">
+                            <p>All remaining steps in the installation assume that your current
+                                working directory is now either
+                                        <filepath>Juniper_Cloud_Native_Router_<varname>&lt;release&gt;</varname></filepath>
+                                or
+                                        <filepath>Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname>.</filepath></p>
+                        </note>
+                    </info>
+                </step>
+                <step>
+                    <cmd>View the contents in the current directory.</cmd>
+                    <info>
+                        <codeblock>ls
+helmchart  images  README.md  secrets</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Change to the <filepath>helmchart</filepath> directory and expand the Helm
+                        chart.</cmd>
+                    <info>
+                        <codeblock id="codeblock_pjq_21q_sbc">cd helmchart</codeblock>
+                        <ul id="ul_anj_224_xbc">
+                            <li><p>For Cloud-Native Router
+                                only:</p><codeblock id="codeblock_c2t_mfq_sbc">ls
+jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_cpv_n1q_sbc">tar -xzvf jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_ukc_1bq_sbc">ls
+jcnr   jcnr-<varname>&lt;release&gt;</varname>.tgz</codeblock>The
+                                Helm chart is located in the <filepath>jcnr</filepath>
+                                directory.</li>
+                            <li><p>For the combined Cloud-Native Router and
+                                cSRX:</p><codeblock id="codeblock_c33_xd4_xbc">ls
+jcnr_csrx-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_d33_xd4_xbc">tar -xzvf jcnr_csrx-<varname>&lt;release&gt;</varname>.tgz</codeblock><codeblock id="codeblock_e33_xd4_xbc">ls
+jcnr_csrx   jcnr_csrx-<varname>&lt;release&gt;</varname>.tgz</codeblock>The
+                                Helm chart is located in the <filepath>jcnr_csrx</filepath>
+                                directory.</li>
+                        </ul>
+                    </info>
+                </step>
+                <step>
+                    <cmd>The Cloud-Native Router container images are required for deployment.
+                        Choose one of the following options: </cmd>
+                    <info>
+                        <ul id="ul_kds_vb3_4bc">
+                            <li>
+                                <p>Configure your cluster to deploy images from the Juniper Networks
+                                        <codeph>enterprise-hub.juniper.net</codeph> repository. See
+                                        <xref href="cn-cloud-native-k8s-configure-secrets.dita"/> for instructions on how to configure repository credentials
+                                    in the deployment Helm chart.</p>
+                            </li>
+                            <li>
+                                <p>Configure your cluster to deploy images from the images tarball
+                                    included in the downloaded Cloud-Native Router software package.
+                                    See <xref href="../task/jcnr-deploy-prepackaged-images.dita"/> for instructions on how to import images to the local
+                                    container runtime.</p>
+                            </li>
+                        </ul>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Follow the steps in <xref href="../topic-map/jcnr-licensing.dita#task_tk3_jgp_41c"/> to
+                        install your Cloud-Native Router license.</cmd>
+                </step>
+                <step id="step_vtx_pzw_kxb">
+                    <cmd>Enter the root password for your host server into the
+                            <filepath>secrets/jcnr-secrets.yaml</filepath> file at the following
+                        line:</cmd>
+                    <info>
+                        <codeblock id="codeblock_kfz_1zz_51c">  root-password: &lt;add your password in base64 format&gt;</codeblock>
+                    </info>
+                    <info>You must enter the password in base64-encoded format. Encode your password
+                        as follows:
+                        <codeblock id="codeblock_eqx_kyz_51c">echo -n "<varname>password</varname>" | base64 -w0</codeblock>Copy
+                        the output of this command into
+                            <filepath>secrets/jcnr-secrets.yaml</filepath>.</info>
+                </step>
+                <step>
+                    <cmd>Apply <filepath>secrets/jcnr-secrets.yaml</filepath> to the cluster.</cmd>
+                    <info>
+                        <codeblock id="codeblock_qxz_skm_51c">kubectl apply -f secrets/jcnr-secrets.yaml
+namespace/jcnr created
+secret/jcnr-secrets created</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>If desired, configure how cores are assigned to the vRouter DPDK
+                        containers. See <xref href="../topic-map/jcnr-configure-vrouter-performance.dita"/>.</cmd>
+                </step>
+                <step>
+                    <cmd>Customize the Helm chart for your deployment using the
+                            <filepath>helmchart/jcnr/values.yaml</filepath> or
+                            <filepath>helmchart/jcnr_csrx/values.yaml</filepath> file.</cmd>
+                    <info>
+                        <p>See <xref href="deployment-config-files-gcp.dita"/> for descriptions of the Helm chart configurations.</p>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Optionally, customize Cloud-Native Router configuration.</cmd>
+                    <info>See, <xref href="crpd-customization-node-configlet.dita"/>
+                        for creating and applying the cRPD customizations.</info>
+                </step>
+                <step>
+                    <cmd>If you're installing Juniper cSRX now, then follow the procedure in <xref href="../topic-map/jcnr-deploy-csrx.dita#task_zly_rd3_1bc"/>.</cmd>
+                </step>
+                <step>
+                    <cmd>Label the nodes where you want Cloud-Native Router to be installed based on
+                        the <codeph>nodeaffinity</codeph> configuration (if defined in the
+                            <codeph>values.yaml</codeph>). For example:</cmd>
+                    <info>
+                        <codeblock id="codeblock_ozr_5hn_sbc">kubectl label nodes ip-10.0.100.17.lab.net key1=jcnr --overwrite</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Deploy the Juniper Cloud-Native Router using the Helm chart. </cmd>
+                    <info>Navigate to the <filepath>helmchart/jcnr</filepath> or the
+                            <filepath>helmchart/jcnr_csrx</filepath> directory and run the following
+                        command:<codeblock id="codeblock_pcr_gp4_xbc">helm install jcnr .</codeblock>or<codeblock id="codeblock_x5b_vk4_xbc">helm install jcnr-csrx .</codeblock><codeblock id="codeblock_nbg_yk4_xbc">NAME: jcnr
+LAST DEPLOYED: Fri Dec 22 06:04:33 2023
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None</codeblock>
+                    </info>
+                </step>
+                <step id="ds-v-jcnr-cni">
+                    <cmd>Confirm Juniper Cloud-Native Router deployment.</cmd>
+                    <info>
+                        <codeblock>helm ls</codeblock>
+                        <p>Sample output:</p>
+                        <codeblock>
+NAME		NAMESPACE	REVISION		UPDATED                                	STATUS  		CHART                  	APP VERSION
+jcnr		default  	1       		2023-09-22 06:04:33.144611017 -0400 EDT	deployed		jcnr-<varname>&lt;version&gt;</varname>				<varname>&lt;version&gt;</varname></codeblock>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_mqc_fhj_pzb">
+        <title>Install Juniper Cloud-Native Router Via Google Cloud Marketplace</title>
+        <taskbody>
+            <context id="context_nqc_fhj_pzb">
+                <p>Read this section to learn the steps required to deploy the cloud-native
+                    router.</p>
+            </context>
+            <steps id="steps_oqc_fhj_pzb">
+                <step>
+                    <cmd>Launch the Juniper Cloud-Native Router (PAYG) deployment wizard from the
+                        Google Cloud Marketplace.</cmd>
+                </step>
+                <step>
+                    <cmd>The table below lists the settings to be configured:</cmd>
+                    <info>
+                        <table frame="all" id="table_bcj_nsw_5zb">
+                            <tgroup cols="2">
+                                <colspec colname="c1" colnum="1" colwidth="1*"/>
+                                <colspec colname="c2" colnum="2" colwidth="1*"/>
+                                <thead>
+                                    <row>
+                                        <entry>
+                                            <p>Settings</p>
+                                        </entry>
+                                        <entry>
+                                            <p>Value</p>
+                                        </entry>
+                                    </row>
+                                </thead>
+                                <tbody>
+                                    <row>
+                                        <entry>
+                                            <p>Deployment name</p>
+                                        </entry>
+                                        <entry>
+                                            <p>Name of your deployment.</p>
+                                        </entry>
+                                    </row>
+                                    <row>
+                                        <entry>
+                                            <p>Zone</p>
+                                        </entry>
+                                        <entry>
+                                            <p>GCP zone.</p>
+                                        </entry>
+                                    </row>
+                                    <row>
+                                        <entry>
+                                            <p>Series</p>
+                                        </entry>
+                                        <entry>
+                                            <p>N2</p>
+                                        </entry>
+                                    </row>
+                                    <row>
+                                        <entry>Machine Type </entry>
+                                        <entry>n2-standard-32 (32 vCPU, 16 core, 128 GB)</entry>
+                                    </row>
+                                    <row>
+                                        <entry>
+                                            <p>SSH-Keys</p>
+                                        </entry>
+                                        <entry>
+                                            <p>SSH key pair for Compute Engine virtual machine (VM)
+                                                instances.</p>
+                                        </entry>
+                                    </row>
+                                    <row>
+                                        <entry>
+                                            <p>Cloud-Native Router License</p>
+                                        </entry>
+                                        <entry><p>Base64 encoded license key.</p>To encode the
+                                            license, copy the license key into a file on your host
+                                            server and issue the
+                                                command:<codeblock id="codeblock_vyh_qvw_5zb">base64 -w 0 <filepath>licenseFile</filepath></codeblock><p>Copy
+                                                and paste the base64 encoded license key in the
+                                                Cloud-Native Router license field.</p></entry>
+                                    </row>
+                                    <row>
+                                        <entry>
+                                            <p>cRPD Config Template </p>
+                                        </entry>
+                                        <entry>
+                                            <p>Create a config template to customize Cloud-Native
+                                                Router configuration. See <xref href="crpd-customization-node-configlet.dita"/> for sample cRPD template. The config template
+                                                must be saved in the GCP bucket as an object.
+                                                Provide the gsutil URI for the object in the cRPD
+                                                Config Template field. </p>
+                                        </entry>
+                                    </row>
+                                    <row>
+                                        <entry>
+                                            <p>cRPD Config Map</p>
+                                        </entry>
+                                        <entry>
+                                            <p>Create a config template to customize Cloud-Native
+                                                Router configuration. See, <xref href="crpd-customization-node-configlet.dita"/> for sample cRPD config map. The config template
+                                                must be saved in the GCP bucket as an object.
+                                                Provide the gsutil URI for the object in the cRPD
+                                                Config Map field. </p>
+                                        </entry>
+                                    </row>
+                                    <row>
+                                        <entry>
+                                            <p>Boot disk type</p>
+                                        </entry>
+                                        <entry>
+                                            <p>Standard Persistent Disk</p>
+                                        </entry>
+                                    </row>
+                                    <row>
+                                        <entry>
+                                            <p>Boot disk size in GB</p>
+                                        </entry>
+                                        <entry>
+                                            <p>50</p>
+                                        </entry>
+                                    </row>
+                                    <row>
+                                        <entry>
+                                            <p>Network Interfaces</p>
+                                        </entry>
+                                        <entry>Define additional network interface. An interface in
+                                            the VPC network is available by default.</entry>
+                                    </row>
+                                </tbody>
+                            </tgroup>
+                        </table>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Review the <xref href="system-resource-requirements-gcp.dita"/>
+                        section for additional minimum system requirements. Please note that the
+                        settings are pre-configured for the Cloud-Native Router deployment via
+                        Google Cloud Marketplace.</cmd>
+                </step>
+                <step>
+                    <cmd>Click <codeph>Deploy</codeph> to complete the Cloud-Native Router
+                        deployment.</cmd>
+                </step>
+                <step>
+                    <cmd>Once deployed, you can customize the Cloud-Native Router helm chart. Review
+                        the <xref href="deployment-config-files-gcp.dita"/>
+                        topic for more information. Once configured issue the <codeph>helm
+                            upgrade</codeph> command to deploy the customizations. </cmd>
+                    <info>
+                        <codeblock id="codeblock_h3g_cgx_5zb">helm upgrade jcnr .
+Release "jcnr" has been upgraded. Happy Helming!
+NAME: jcnr
+LAST DEPLOYED: Thu Dec 21 03:58:28 2023
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None</codeblock>
+                    </info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_tff_k2p_15b">
+        <title>Verify Installation</title>
+        <abstract>
+            <shortdesc>This section enables you to confirm a successful Cloud-Native Router
+                deployment.</shortdesc>
+        </abstract>
+        <taskbody>
+            <context id="context_gwg_wqy_tbc">
+                <note id="note_icd_xqy_tbc">
+                    <p>The output shown in this example procedure is affected by the number of nodes
+                        in the cluster. The output you see in your setup may differ in that
+                        regard.</p>
+                </note>
+            </context>
+            <steps id="steps_pbq_m2p_15b">
+                <step>
+                    <cmd>Verify the state of the Cloud-Native Router pods by issuing the
+                            <codeph>kubectl get pods -A</codeph> command.</cmd>
+                    <info>The output of the <codeph>kubectl</codeph> command shows all of the pods
+                        in the Kubernetes cluster in all namespaces. Successful deployment means
+                        that all pods are in the running state. In this example we have marked the
+                        Juniper Cloud-Native Router Pods in <b>bold</b>. For
+                        example:<codeblock>kubectl get pods -A</codeblock><codeblock scale="70">
+NAMESPACE         NAME                                              READY   STATUS    RESTARTS         AGE<b>
+contrail-deploy   contrail-k8s-deployer-579cd5bc74-g27gs            1/1     Running   0                103s
+contrail          jcnr-0-dp-contrail-vrouter-nodes-b2jxp            2/2     Running   0                87s
+contrail          jcnr-0-dp-contrail-vrouter-nodes-vrdpdk-g7wrk     1/1     Running   0                87s
+jcnr              jcnr-0-crpd-0                                     1/1     Running   0                103s
+jcnr              syslog-ng-ds5qd                                   1/1     Running   0                103s</b>
+kube-system       calico-kube-controllers-5f4fd8666-m78hk           1/1     Running   0                4h2m
+kube-system       calico-node-28w98                                 1/1     Running   0                86d
+kube-system       coredns-54bf8d85c7-vkpgs                          1/1     Running   0                3h8m
+kube-system       dns-autoscaler-7944dc7978-ws9fn                   1/1     Running   0                86d
+kube-system       kube-apiserver-ix-esx-06                          1/1     Running   0                86d
+kube-system       kube-controller-manager-ix-esx-06                 1/1     Running   0                86d
+kube-system       kube-multus-ds-amd64-jl69w                        1/1     Running   0                86d
+kube-system       kube-proxy-qm5bl                                  1/1     Running   0                86d
+kube-system       kube-scheduler-ix-esx-06                          1/1     Running   0                86d
+kube-system       nodelocaldns-bntfp                                1/1     Running   0                86d</codeblock></info>
+                </step>
+                <step>
+                    <cmd>Verify the Cloud-Native Router daemonsets by issuing the <codeph>kubectl
+                            get ds -A</codeph> command.</cmd>
+                    <info>
+                        <p>Use the <codeph>kubectl get ds -A</codeph> command to get a list of
+                            daemonsets. The Cloud-Native Router daemonsets are highlighted in bold
+                            text.</p>
+                        <codeblock>kubectl get ds -A</codeblock>
+                        <codeblock id="codeblock_orr_wsj_t1c" scale="70">
+NAMESPACE     NAME                                        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR              AGE<b>
+contrail      jcnr-0-dp-contrail-vrouter-nodes            1         1         1       1            1           &lt;none&gt;                     90m
+contrail      jcnr-0-dp-contrail-vrouter-nodes-vrdpdk     1         1         1       1            1           &lt;none&gt;                     90m
+jcnr          syslog-ng                                   1         1         1       1            1           &lt;none&gt;                     90m</b>
+kube-system   calico-node                                 1         1         1       1            1           kubernetes.io/os=linux     86d
+kube-system   kube-multus-ds-amd64                        1         1         1       1            1           kubernetes.io/arch=amd64   86d
+kube-system   kube-proxy                                  1         1         1       1            1           kubernetes.io/os=linux     86d
+kube-system   nodelocaldns                                1         1         1       1            1           kubernetes.io/os=linux     86d
+</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Verify the Cloud-Native Router statefulsets by issuing the <codeph>kubectl
+                            get statefulsets -A</codeph> command.</cmd>
+                    <info>
+                        <p>The command output provides the statefulsets.</p>
+                        <codeblock>kubectl get statefulsets -A</codeblock>
+                        <codeblock id="codeblock_brs_jwy_tbc">
+NAMESPACE   NAME          READY   AGE
+jcnr        jcnr-0-crpd   1/1     27m</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Verify if the cRPD is licensed and has the appropriate configurations</cmd>
+                    <substeps id="substeps_v4c_p4k_3xb">
+                        <substep>
+                            <cmd>View the <xref keyref="cloud-native-router-user.accessing-crpd-cli"/> section to access the cRPD CLI. </cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Once you have access the cRPD CLI, issue the <codeph>show system
+                                    license</codeph> command in the cli mode to view the system
+                                licenses. For example:</cmd>
+                            <info>
+                                <codeblock>root@jcnr-01:/# cli
+root@jcnr-01&gt; show system license
+License usage:
+                                 Licenses     Licenses    Licenses    Expiry
+  Feature name                       used    installed      needed
+  containerized-rpd-standard            1        1           0    2024-09-20 16:59:00 PDT
+ 
+Licenses installed:
+  License identifier: 85e5229f-0c64-0000-c10e4-a98c09ab34a1
+  License SKU: S-CRPD-10-A1-PF-5
+  License version: 1
+  Order Type: commercial
+  Software Serial Number: 1000098711000-iHpgf
+  Customer ID: Juniper Networks Inc.
+  License count: 15000
+  Features:
+    containerized-rpd-standard - Containerized routing protocol daemon with standard features
+      date-based, 2022-08-21 17:00:00 PDT - 2027-09-20 16:59:00 PDT</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd> Issue the <codeph>show configuration | display set</codeph>
+                                command in the cli mode to view the cRPD default and custom
+                                configuration. The output will be based on the custom configuration
+                                and the Cloud-Native Router deployment mode.</cmd>
+                            <info>
+                                <codeblock>root@jcnr-01# cli          
+root@jcnr-01&gt; show configuration | display set </codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Type the <codeph>exit</codeph> command to exit from the pod shell.
+                            </cmd>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Verify the vRouter interfaces configuration</cmd>
+                    <substeps id="substeps_edk_3nk_3xb">
+                        <substep>
+                            <cmd>View the <xref keyref="cloud-native-router-user.accessing-vrouter-cli"/>
+                                section to access the vRouter CLI. </cmd>
+                        </substep>
+                        <substep>
+                            <cmd>Once you have accessed the vRouter CLI, issue the <codeph>vif
+                                    --list</codeph> command to view the vRouter interfaces . The
+                                output will depend upon the Cloud-Native Router deployment mode and
+                                configuration. An example for L3 mode deployment, with one fabric
+                                interface configured, is provided below:</cmd>
+                            <info>
+                                <codeblock>$ vif --list 
+
+Vrouter Interface Table
+
+Flags: P=Policy, X=Cross Connect, S=Service Chain, Mr=Receive Mirror
+       Mt=Transmit Mirror, Tc=Transmit Checksum Offload, L3=Layer 3, L2=Layer 2
+       D=DHCP, Vp=Vhost Physical, Pr=Promiscuous, Vnt=Native Vlan Tagged
+       Mnp=No MAC Proxy, Dpdk=DPDK PMD Interface, Rfl=Receive Filtering Offload, Mon=Interface is Monitored
+       Uuf=Unknown Unicast Flood, Vof=VLAN insert/strip offload, Df=Drop New Flows, L=MAC Learning Enabled
+       Proxy=MAC Requests Proxied Always, Er=Etree Root, Mn=Mirror without Vlan Tag, HbsL=HBS Left Intf
+       HbsR=HBS Right Intf, Ig=Igmp Trap Enabled, Ml=MAC-IP Learning Enabled, Me=Multicast Enabled
+
+vif0/0      Socket: unix MTU: 1514
+            Type:Agent HWaddr:00:00:5e:00:01:00
+            Vrf:65535 Flags:L2 QOS:-1 Ref:3
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+
+vif0/1      PCI: 0000:5a:02.1 (Speed 10000, Duplex 1) NH: 6 MTU: 9000
+            Type:Physical HWaddr:ba:9c:0f:ab:e2:c9 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:L3L2Vof QOS:0 Ref:12
+            RX port   packets:66 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:5a:02.1  Status: UP  Driver: net_iavf
+            RX packets:66  bytes:5116 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+
+vif0/2      PMD: eno3v1 NH: 9 MTU: 9000
+            Type:Host HWaddr:ba:9c:0f:ab:e2:c9 IPaddr:0.0.0.0
+            DDP: OFF SwLB: ON
+            Vrf:0 Mcast Vrf:65535 Flags:L3L2DProxyEr QOS:-1 Ref:13 TxXVif:1 
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:66  bytes:5116 errors:0
+            Drops:0
+            TX queue  packets:66 errors:0
+            TX device packets:66  bytes:5116 errors:0</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Type the <codeph>exit</codeph> command to exit the pod shell.
+                            </cmd>
+                        </substep>
+                    </substeps>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>

@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_a80d54bf200c39a9--49174253-179093887e2--7892" xml:lang="en-US">
+  <title>System Requirements for Baremetal Servers</title>
+  <abstract>
+    <p>Read this section to understand the system, resource, port, and licensing requirements for
+      installing Juniper Cloud-Native Router on a baremetal server.</p>
+  </abstract>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <section id="section_kh4_wdk_gxb">
+      <title>Minimum Host System Requirements for Bare Metal</title>
+      <p><xref format="dita" href="#xd_a80d54bf200c39a9--49174253-179093887e2--7892/table_jsl_zdk_gxb"/> through <xref format="dita" href="#xd_a80d54bf200c39a9--49174253-179093887e2--7892/table_bx4_vsn_s1c"/>
+        list the host system requirements for installing Cloud-Native Router on bare metal servers. </p>
+      <table colsep="1" frame="all" id="table_jsl_zdk_gxb" rowsep="1">
+        <title>Minimum Host System Requirements (DPDK) for Bare Metal</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="2.3*"/>
+          <colspec colname="newCol6" colnum="2" colwidth="1.09*"/>
+          <colspec colname="newCol7" colnum="3" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry align="center" valign="bottom">Component</entry>
+              <entry>Value/Version</entry>
+              <entry>Notes</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>CPU</entry>
+              <entry>Intel x86 </entry>
+              <entry>The tested CPU is Intel Xeon Gold 6212U 24-core @2.4 GHz</entry>
+            </row>
+            <row>
+              <entry morerows="2">Host OS</entry>
+              <entry>
+                <p>RedHat Enterprise Linux</p>
+              </entry>
+              <entry>
+                <p>Version 8.4, 8.5, 8.6</p>
+              </entry>
+            </row>
+            <row>
+              <entry>Rocky Linux</entry>
+              <entry>8.6, 8.7, 8.8, 8.9, 9.3</entry>
+            </row>
+            <row>
+              <entry>Ubuntu</entry>
+              <entry>22.04.4 LTS</entry>
+            </row>
+            <row>
+              <entry>Kernel Version</entry>
+              <entry>
+                <p>RedHat Enterprise Linux (RHEL): 4.18.X</p>
+                <p>Rocky Linux: 4.18.X, 5.14.X</p>
+                <p>Ubuntu: 5.15.X</p>
+              </entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>NIC</entry>
+              <entry namest="newCol6" nameend="newCol7">See <xref href="#xd_a80d54bf200c39a9--49174253-179093887e2--7892/table_nzz_rrx_vgc"/>.</entry>
+            </row>
+            <row>
+              <entry>IAVF driver</entry>
+              <entry>4.8.2 </entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>ICE_COMMS</entry>
+              <entry>1.3.35.0 </entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>ICE</entry>
+              <entry>1.11.20.13</entry>
+              <entry>ICE driver is used only with the Intel E810 NIC</entry>
+            </row>
+            <row>
+              <entry>i40e</entry>
+              <entry>2.22.18.1 </entry>
+              <entry>i40e driver is used only with the Intel XL710 NIC</entry>
+            </row>
+            <row>
+              <entry>Kubernetes (K8s)</entry>
+              <entry>1.22.x, 1.23.x, 1.25x, 1.28.x, 1.29.x</entry>
+              <entry>Cloud-Native Router supports an all-in-one or multinode Kubernetes cluster,
+                with master and worker nodes running on virtual machines (VMs) or bare metal servers
+                (BMS).</entry>
+            </row>
+            <row>
+              <entry>Calico</entry>
+              <entry>3.22.x</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Multus</entry>
+              <entry>3.8</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>SR-IOV CNI</entry>
+              <entry>v2.10</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Helm</entry>
+              <entry>3.9.x</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Container-RT</entry>
+              <entry>containerd 1.6.x, 1.7.x</entry>
+              <entry>Other container runtimes may work but have not been tested with Cloud-Native
+                Router.</entry>
+            </row>
+            <row>
+              <entry nameend="newCol7" namest="c1">
+                <note id="note_k2g_l5f_zcc">
+                  <p>The component versions listed in this table are expected to work with the
+                    Cloud-Native Router, but not every version or combination is tested in every
+                    release.</p>
+                </note>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <table conref="../ref/jcnr-supported-nics-container.dita#xd_d951126c758aab5b-604623a6-199a5a8e913--7f0a/table_dbx_pxq_vgc" id="table_nzz_rrx_vgc">
+        <tgroup cols="1">
+          <tbody>
+            <row>
+              <entry/>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <table colsep="1" frame="all" id="table_bx4_vsn_s1c" rowsep="1">
+        <title>Minimum Host System Requirements (eBPF) for Bare Metal</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="2.3*"/>
+          <colspec colname="newCol6" colnum="2" colwidth="1.09*"/>
+          <colspec colname="newCol7" colnum="3" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry align="center" valign="bottom">Component</entry>
+              <entry>Value/Version</entry>
+              <entry>Notes</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>CPU</entry>
+              <entry>Intel x86 </entry>
+              <entry>The tested CPU is Intel Xeon Gold 6212U 24-core @2.4 GHz</entry>
+            </row>
+            <row>
+              <entry>Host OS</entry>
+              <entry>
+                <p>Ubuntu </p>
+              </entry>
+              <entry>
+                <p>Version 22.04</p>
+              </entry>
+            </row>
+            <row>
+              <entry>Kernel Version</entry>
+              <entry>Recommended Linux 5.10.x or higher</entry>
+              <entry>The tested kernel version is 5.15.x</entry>
+            </row>
+            <row>
+              <entry>NIC</entry>
+              <entry>
+                <ul id="ul_x1q_yk5_51c">
+                  <li>
+                    <p>Intel XL710 with Firmware 9.20 0x8000e0e9 0.0.0</p>
+                  </li>
+                </ul>
+              </entry>
+              <entry/>
+            </row>
+            <row>
+              <entry morerows="1">Drivers</entry>
+              <entry>virtio</entry>
+              <entry morerows="1"/>
+            </row>
+            <row>
+              <entry>i40e version 2.22.18.1 </entry>
+            </row>
+            <row>
+              <entry>Kubernetes (K8s)</entry>
+              <entry>Version 1.22.x, 1.23.x, 1.25x</entry>
+              <entry>The tested K8s version is 1.22.4. K8s version 1.22.2 also works.<p>Cloud-Native
+                  Router supports an all-in-one or multinode Kubernetes cluster, with control plane
+                  and worker nodes running on virtual machines (VMs) or bare metal servers
+                  (BMS).</p></entry>
+            </row>
+            <row>
+              <entry>Calico</entry>
+              <entry>Version 3.22.x</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Multus</entry>
+              <entry>Version 3.8</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Helm</entry>
+              <entry>3.9.x</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Container-RT</entry>
+              <entry>containerd 1.7.x</entry>
+              <entry>Other container runtimes may work but have not been tested with Cloud-Native
+                Router.</entry>
+            </row>
+            <row>
+              <entry nameend="newCol7" namest="c1">
+                <note id="note_k5k_psg_zcc">
+                  <p>The component versions listed in this table are expected to work with
+                    Cloud-Native Router, but not every version or combination is tested in every
+                    release.</p>
+                </note>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+      <note id="note_fgt_k5n_s1c">
+        <p>Cloud-Native Router eBPF XDP Datapath is a <xref keyref="cloud-native-router-user.juniper-jcnr-tech-preview">Juniper Technology Preview
+            (Tech Preview)</xref> feature. Limited features are supported. Please review <xref keyref="cloud-native-router-deployment-guide.jcnr-datapath"/> for more details.</p>
+      </note>
+    </section>
+    <section id="section_sz1_d2k_gxb">
+      <title>Resource Requirements for Bare Metal</title>
+      <p><xref format="dita" href="#xd_a80d54bf200c39a9--49174253-179093887e2--7892/table_owl_sxr_wtb"/> lists the
+        resource requirements for installing Cloud-Native Router on bare metal servers. </p>
+      <table colsep="1" frame="all" id="table_owl_sxr_wtb" rowsep="1">
+        <title>Resource Requirements for Bare Metal</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="1.47*"/>
+          <colspec colname="newCol4" colnum="2" colwidth="1*"/>
+          <colspec colname="newCol5" colnum="3" colwidth="3.82*"/>
+          <thead>
+            <row>
+              <entry align="center" valign="bottom">Resource</entry>
+              <entry>Value</entry>
+              <entry>Usage Notes</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>Data plane forwarding cores</entry>
+              <entry>1 core (1P + 1S)</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Service/Control Cores</entry>
+              <entry>0</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>UIO Driver</entry>
+              <entry>VFIO-PCI</entry>
+              <entry>To enable, follow the steps
+                below:<codeblock>cat /etc/modules-load.d/vfio.conf
+vfio
+vfio-pci</codeblock></entry>
+            </row>
+            <row>
+              <entry>Hugepages (1G)</entry>
+              <entry>6 Gi</entry>
+              <entry>See <xref href="../topic-map/jcnr-configure-hugepages.dita#task_yml_55h_vcc"/>.</entry>
+            </row>
+            <row>
+              <entry>Cloud-Native Router Controller cores</entry>
+              <entry>.5</entry>
+              <entry/>
+            </row>
+            <row>
+              <entry>Cloud-Native Router vRouter Agent cores</entry>
+              <entry>.5</entry>
+              <entry/>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_ekg_f2k_gxb">
+      <title>Miscellaneous Requirements for Bare Metal</title>
+      <p><xref format="dita" href="#xd_a80d54bf200c39a9--49174253-179093887e2--7892/table_op3_bbm_wtb"/> lists
+        additional requirements for installing Cloud-Native Router on bare metal servers. </p>
+      <table colsep="1" frame="all" id="table_op3_bbm_wtb" rowsep="1">
+        <title id="title_ttx_dyg_yxb">Miscellaneous Requirements for Bare Metal</title>
+        <tgroup cols="2">
+          <colspec colname="newCol1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>
+                <p>Requirement</p>
+              </entry>
+              <entry>
+                <p>Example</p>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <p>Enable the host with SR-IOV and VT-d in the system's BIOS.</p>
+              </entry>
+              <entry>
+                <p>Depends on BIOS.</p>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Enable VLAN driver at system boot.</p>
+              </entry>
+              <entry>
+                <p>Configure <filepath>/etc/modules-load.d/vlan.conf</filepath> as follows:</p>
+                <codeblock>cat /etc/modules-load.d/vlan.conf
+8021q</codeblock>
+                <p>Reboot and verify by executing the command:</p>
+                <codeblock>lsmod | grep 8021q</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Enable VFIO-PCI driver at system boot.</p>
+              </entry>
+              <entry>
+                <p>Configure <filepath>/etc/modules-load.d/vfio.conf</filepath> as follows:</p>
+                <codeblock id="codeblock_jrv_nbw_vbc">cat /etc/modules-load.d/vfio.conf
+vfio
+vfio-pci</codeblock>
+                <p>Reboot and verify by executing the command:</p>
+                <codeblock id="codeblock_krv_nbw_vbc">lsmod | grep vfio</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Set IOMMU and IOMMU-PT in GRUB.</p>
+              </entry>
+              <entry>Add the following line to
+                  <filepath>/etc/default/grub</filepath>.<codeblock>GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 default_hugepagesz=1G hugepagesz=1G hugepages=64 <b>intel_iommu=on iommu=pt</b>"</codeblock><p>Update
+                  grub and
+                reboot.</p><codeblock>grub2-mkconfig -o /boot/grub2/grub.cfg </codeblock><codeblock id="codeblock_uyr_gmk_xbc">reboot</codeblock></entry>
+            </row>
+            <row>
+              <entry>
+                <p>Disable spoofcheck on VFs allocated to Cloud-Native Router.</p>
+                <note id="note_o1k_scw_vbc">
+                  <p>Applicable for L2 deployments only.</p>
+                </note>
+              </entry>
+              <entry><codeph>ip link set &lt;interfacename&gt; vf 1 spoofcheck off</codeph>.</entry>
+            </row>
+            <row>
+              <entry>
+                <p>Set trust on VFs allocated to Cloud-Native Router.</p>
+                <note id="note_avs_scw_vbc">
+                  <p>Applicable for L2 deployments only.</p>
+                </note>
+              </entry>
+              <entry><codeph>ip link set &lt;interfacename&gt; vf 1 trust on</codeph></entry>
+            </row>
+            <row>
+              <entry>
+                <p>Additional kernel modules need to be loaded on the host before deploying
+                  Cloud-Native Router in L3 mode. These modules are usually available in
+                    <codeph>linux-modules-extra</codeph> or <codeph>kernel-modules-extra</codeph>
+                  packages. </p>
+                <note id="note_ff4_ncw_vbc">
+                  <p>Applicable for L3 deployments only.</p>
+                </note>
+              </entry>
+              <entry>
+                <p>Create a <filepath>/etc/modules-load.d/crpd.conf</filepath> file and add the
+                  following kernel modules to it:</p>
+                <codeblock id="codeblock_gf4_ncw_vbc">tun
+fou
+fou6
+ipip
+ip_tunnel
+ip6_tunnel
+mpls_gso
+mpls_router
+mpls_iptunnel
+vrf
+vxlan</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Enable kernel-based forwarding on the Linux host.</p>
+              </entry>
+              <entry>
+                <codeblock id="codeblock_ypl_xcw_vbc">ip fou add port 6635 ipproto 137</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Exclude Cloud-Native Router interfaces from NetworkManager control.</p>
+              </entry>
+              <entry>
+                <p>NetworkManager is a tool in some operating systems to make the management of
+                  network interfaces easier. NetworkManager may make the operation and configuration
+                  of the default interfaces easier. However, it can interfere with Kubernetes
+                  management and create problems.</p>
+                <p>To avoid NetworkManager from interfering with Cloud-Native Router interface
+                  configuration, exclude Cloud-Native Router interfaces from NetworkManager control.
+                  Here's an example on how to do this in some Linux distributions:</p>
+                <ol id="ol_fl4_24r_xxb">
+                  <li> Create the <filepath>/etc/NetworkManager/conf.d/crpd.conf</filepath> file and
+                    list the interfaces that you don't want NetworkManager to manage. <p>For
+                      example:</p><codeblock id="codeblock_u4r_fkk_xbc">[keyfile]
+ unmanaged-devices+=interface-name:enp*;interface-name:ens*</codeblock>where
+                      <codeph>enp*</codeph> and <codeph>ens*</codeph> refer to your Cloud-Native
+                    Router interfaces.<note id="note_pdd_gkk_xbc">
+                      <codeph>enp*</codeph> indicates all interfaces starting with
+                        <codeph>enp</codeph>. For specific interface names, provided a
+                      comma-separated list. </note></li>
+                  <li> Restart the NetworkManager
+                    service:<codeblock id="codeblock_v51_clk_xbc">sudo systemctl restart NetworkManager</codeblock>
+                    . </li>
+                  <li> Edit the <filepath>/etc/sysctl.conf</filepath> file on the host and paste the
+                    following content in it:
+                    <codeblock id="codeblock_fqj_jlk_xbc">net.ipv6.conf.default.addr_gen_mode=0
+net.ipv6.conf.all.addr_gen_mode=0
+net.ipv6.conf.default.autoconf=0
+net.ipv6.conf.all.autoconf=0</codeblock></li>
+                  <li> Run the command <codeph>sysctl -p /etc/sysctl.conf</codeph> to load the new
+                      <filepath>sysctl.conf</filepath> values on the host. </li>
+                  <li>
+                    <p>Create the bond interface manually. For example:</p>
+                    <codeblock id="codeblock_gqj_jlk_xbc">ifconfig ens2f0 down
+ifconfig ens2f1 down
+ip link add bond0 type bond mode 802.3ad
+ip link set ens2f0 master bond0
+ip link set ens2f1 master bond0
+ifconfig ens2f0 up ; ifconfig ens2f1 up; ifconfig bond0 up</codeblock>
+                  </li>
+                </ol>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Verify the core_pattern value is set on the host before deploying Cloud-Native
+                  Router.</p>
+              </entry>
+              <entry>
+                <codeblock id="codeblock_ihl_pdw_vbc">sysctl kernel.core_pattern
+kernel.core_pattern = |/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h %e</codeblock>
+                <!--Removed as per Vinod Nair since it is not persistent - You may change the value with the following commands:<codeblock>sysctl -w kernel.core_pattern="&lt;path&gt;"</codeblock> For example:<codeblock>sysctl -w kernel.core_pattern="/var/crash/%p.core") </codeblock>-->
+                <p>You can update the core_pattern in <codeph>/etc/sysctl.conf</codeph>. For
+                  example:</p>
+                <codeblock id="codeblock_jhl_pdw_vbc">kernel.core_pattern=/var/crash/core_%e_%p_%i_%s_%h_%t.gz</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <p>Set <codeph>MACAddressPolicy</codeph> (Ubuntu only).</p>
+              </entry>
+              <entry>
+                <p>On all nodes running DPDK on a Ubuntu OS, set <codeph>MACAddressPolicy</codeph>
+                  to <codeph>none</codeph> and reboot. For example:</p>
+                <codeblock id="codeblock_evk_vxs_rcc">sudo sed -i 's/MACAddressPolicy=.*/MACAddressPolicy=none/'  /usr/lib/systemd/network/99-default.link</codeblock>
+                <codeblock id="codeblock_zcx_zxs_rcc">sudo reboot</codeblock>
+              </entry>
+            </row>
+            <row>
+              <entry>Set adequate send and receive buffer sizes.</entry>
+              <entry>
+                <codeblock id="codeblock_oqc_d3t_w2c">sysctl -w net.core.rmem_default=67108864
+sysctl -w net.core.rmem_max=67108864
+sysctl -w net.core.wmem_default=67108864
+sysctl -w net.core.wmem_max=6710886</codeblock>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section id="section_ufy_y2k_gxb">
+      <title>Port Requirements</title>
+      <p>Juniper Cloud-Native Router listens on certain TCP and UDP ports. This section lists the
+        port requirements for the cloud-native router.</p>
+      <table>
+        <title>Cloud-Native Router Listening Ports</title>
+        <tgroup cols="3">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <colspec colname="c3" colnum="3" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>Protocol</entry>
+              <entry>Port</entry>
+              <entry>Description</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>TCP</entry>
+              <entry>8085</entry>
+              <entry>vRouter introspect–Used to gain internal statistical information about
+                vRouter</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8070</entry>
+              <entry>Telemetry Information- Used to see telemetry data from the Cloud-Native Router
+                vRouter</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8072</entry>
+              <entry>Telemetry Information-Used to see telemetry data from Cloud-Native Router
+                control plane</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8075, 8076</entry>
+              <entry>Telemetry Information- Used for gNMI requests</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>9091</entry>
+              <entry>vRouter health check–cloud-native router checks to ensure the vRouter agent is
+                running.</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>9092</entry>
+              <entry>vRouter health check–cloud-native router checks to ensure the vRouter DPDK is
+                running.</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>50052</entry>
+              <entry>gRPC port–Cloud-Native Router listens on both IPv4 and IPv6</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>8081</entry>
+              <entry>Cloud-Native Router Deployer Port</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>24</entry>
+              <entry>cRPD SSH</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>830</entry>
+              <entry>cRPD NETCONF</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>666</entry>
+              <entry><filepath>rpd</filepath></entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>1883</entry>
+              <entry>Mosquito mqtt–Publish/subscribe messaging utility</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>9500</entry>
+              <entry><filepath>agentd</filepath> on cRPD</entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>21883</entry>
+              <entry><filepath>na-mqttd</filepath></entry>
+            </row>
+            <row>
+              <entry>
+                <p>TCP</p>
+              </entry>
+              <entry>
+                <p>50053</p>
+              </entry>
+              <entry>
+                <p>Default gNMI port that listens to the client subscription request</p>
+              </entry>
+            </row>
+            <row>
+              <entry>TCP</entry>
+              <entry>51051</entry>
+              <entry><filepath>jsd</filepath> on cRPD</entry>
+            </row>
+            <row>
+              <entry>UDP</entry>
+              <entry>50055</entry>
+              <entry>Syslog-NG</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+    <section>
+      <title>Download Options</title>
+      <p>See <xref href="../ref/jcnr-sw-download-packages.dita"/>.</p>
+    </section>
+    <section id="section_jm3_ggk_gxb">
+      <title>Cloud-Native Router Licensing</title>
+      <p>See <xref href="../topic-map/jcnr-licensing.dita"/>.</p>
+    </section>
+  </conbody>
+</concept>

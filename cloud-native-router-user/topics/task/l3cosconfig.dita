@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE task PUBLIC "-//Juniper//DTD DITA 1.3 General Task//EN" "/SysSchema/dita13/dtd/subsection/dtd/generalTask.dtd">
+<task xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_5db4c6d51f2bfde1-6cb03e6b-1918e87234e--7c50" xml:lang="en-US">
+  <!--Use the Task template to document a procedure.-->
+  <!--Start with the imperative verb. Do not use the gerund (-ing) form. For example: “Replace a Fan Module.” For best or safe practices, start with “How to”. For example: “How to Hold an MX960 MPC."-->
+  <title>L3 CoS Configuration</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <taskbody>
+    <prereq id="prereq_r5q_qf4_2yb">You must configure a CoS scheduler profile per interface in the
+      helm chart that defines the number of scheduler lcores and bandwidth. Review <xref keyref="cloud-native-router-deployment-guide.deployment-config-files-bms">Helm Chart
+        customization</xref> for more details. </prereq>
+    <prereq id="prereq_gvw_4m3_4cc">You must perform CoS configuration on the Cloud-Native Router
+      control plane using a Configlet. Review <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet"/> for more
+      details. Sample configlets are provided below:<subsection id="subsection_vfj_j1r_ydc">
+        <title>Configure Forwarding Classes</title>
+      </subsection><p>Cloud-Native Router does not have any forwarding classes configured by
+        default. You can configure upto 16 forwarding classes, mapped to 8 queues. The user-defined
+        queue mapping is ignored since queue numbers are derived from the priority defined in the
+        scheduler configuration, mapped one-on-one with the queue number:</p><codeblock>apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set class-of-service forwarding-classes class af11 queue-num 3
+    set class-of-service forwarding-classes class af12 queue-num 3
+    set class-of-service forwarding-classes class af13 queue-num 3
+    set class-of-service forwarding-classes class af21 queue-num 4
+    set class-of-service forwarding-classes class af22 queue-num 4
+    set class-of-service forwarding-classes class af23 queue-num 4
+    set class-of-service forwarding-classes class af31 queue-num 5
+    set class-of-service forwarding-classes class af32 queue-num 5
+    set class-of-service forwarding-classes class af33 queue-num 5
+    set class-of-service forwarding-classes class cs1 queue-num 6
+    set class-of-service forwarding-classes class cs2 queue-num 6
+    set class-of-service forwarding-classes class cs3 queue-num 7
+    set class-of-service forwarding-classes class cs4 queue-num 7
+    set class-of-service forwarding-classes class ef queue-num 1
+    set class-of-service forwarding-classes class nc1 queue-num 0
+    set class-of-service forwarding-classes class nc2 queue-num 0
+  crpdSelector:
+    matchLabels:
+      node: worker</codeblock><subsection>
+        <title>Configure Classifiers</title>
+        <p>You can configure a BA classifier and apply it on an interface:</p>
+        <codeblock>apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set class-of-service classifiers dscp BA_1 forwarding-class af11 loss-priority high code-points 000001
+    set class-of-service classifiers dscp BA_1 forwarding-class af11 loss-priority low code-points 001010
+    set class-of-service classifiers dscp BA_1 forwarding-class af11 loss-priority medium-high code-points 001110
+    set class-of-service classifiers dscp BA_1 forwarding-class af11 loss-priority medium-low code-points 001100
+    set class-of-service classifiers dscp BA_1 forwarding-class ef loss-priority low code-points 101111
+    set class-of-service classifiers dscp BA_1 forwarding-class nc1 loss-priority low code-points 110000
+    set class-of-service classifiers dscp BA_1 forwarding-class nc1 loss-priority low code-points 111000
+    set class-of-service classifiers dscp-ipv6 BA6_1 forwarding-class ef loss-priority low code-points 101111
+    set class-of-service classifiers dscp-ipv6 BA6_1 forwarding-class nc2 loss-priority high code-points 111000
+    set class-of-service interfaces eno2 unit 0 classifiers dscp BA_1
+    set class-of-service interfaces eno2 unit 0 classifiers dscp-ipv6 BA6_1
+  crpdSelector:
+    matchLabels:
+      node: worker</codeblock>
+        <p>You can configure MF classifier as a firewall filter:</p>
+        <codeblock>apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set firewall family inet filter MCFF_1 term 1 from source-port 1001
+    set firewall family inet filter MCFF_1 term 1 then forwarding-class af11
+    set firewall family inet filter MCFF_1 term 1 then loss-priority medium-low
+    set firewall family inet filter MCFF_1 term 2 from icmp-type echo-request
+    set firewall family inet filter MCFF_1 term 2 then forwarding-class af31
+    set firewall family inet filter MCFF_1 term 2 then loss-priority medium-low
+    set firewall family inet filter MCFF_1 term 3 then accept
+    set firewall family inet6 filter MCFF6_1 term 1 from source-port 1001
+    set firewall family inet6 filter MCFF6_1 term 1 then forwarding-class af11
+    set firewall family inet6 filter MCFF6_1 term 1 then loss-priority low
+    set firewall family inet6 filter MCFF6_1 term 2 then accept
+    set interfaces eno2 unit 0 family inet filter input MCFF_1
+    set interfaces eno2 unit 0 family inet6 filter input MCFF6_1
+  crpdSelector:
+    matchLabels:
+      node: worker</codeblock>
+      </subsection><subsection>
+        <title>Configure Policers</title>
+        <p>You can configure the policer with the action type <codeph>three-color-policer</codeph>
+          as follows:</p>
+        <p>Single Rate Three Color Meter (srTCM) Policer:</p>
+        <codeblock>apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set firewall three-color-policer srTCM_1 action loss-priority high then discard
+    set firewall three-color-policer srTCM_1 single-rate color-aware
+    set firewall three-color-policer srTCM_1 single-rate committed-information-rate 500m
+    set firewall three-color-policer srTCM_1 single-rate committed-burst-size 20k
+    set firewall three-color-policer srTCM_1 single-rate excess-burst-size 20k
+    set firewall family inet filter FF_1 term 1 then three-color-policer single-rate srTCM_1
+    set firewall family inet6 filter FF6_1 term 1 then three-color-policer single-rate srTCM_1
+  crpdSelector:
+    matchLabels:
+      node: worker </codeblock>
+        <p>Two Rate Three Color Meter (trTCM) Policer:</p>
+        <codeblock>apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set firewall three-color-policer trTCM_1 action loss-priority high then discard
+    set firewall three-color-policer trTCM_1 two-rate color-aware
+    set firewall three-color-policer trTCM_1 two-rate committed-information-rate 100m
+    set firewall three-color-policer trTCM_1 two-rate committed-burst-size 2048
+    set firewall three-color-policer trTCM_1 two-rate peak-information-rate 200m
+    set firewall three-color-policer trTCM_1 two-rate peak-burst-size 2048
+    set firewall family inet filter FF_1 term 1 from forwarding-class af11
+    set firewall family inet filter FF_1 term 1 then three-color-policer two-rate trTCM_1
+    set firewall family inet6 filter FF6_1 term 1 from forwarding-class af11
+    set firewall family inet6 filter FF6_1 term 1 then three-color-policer two-rate trTCM_1
+  crpdSelector:
+    matchLabels:
+      node: worker</codeblock>
+        <p>You can configure classifiers with policers.</p>
+        <p>BA classifier with policer:</p>
+        <codeblock>apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample           
+  namespace: jcnr
+spec:
+  config: |-
+    set firewall family inet filter FF_1 term 1 from forwarding-class af11
+    set firewall family inet filter FF_1 term 1 then three-color-policer single-rate srTCM_1
+    set firewall family inet6 filter FF6_1 term 1 from forwarding-class af11
+    set firewall family inet6 filter FF6_1 term 1 then three-color-policer single-rate srTCM_1
+    set class-of-service interfaces eno2 unit 0 classifiers dscp BA_1
+    set class-of-service interfaces eno2 unit 0 classifiers dscp-ipv6 BA6_1
+    set interfaces eno2 unit 0 family inet filter input FF_1
+    set interfaces eno2 unit 0 family inet6 filter input FF6_1
+  crpdSelector:
+    matchLabels:
+      node: worker</codeblock>
+        <p>MF classifier as a firewall filter with policer:</p>
+        <codeblock id="codeblock_iws_4pr_ydc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set firewall family inet filter MCFF_1 term 1 from source-port 1001
+    set firewall family inet filter MCFF_1 term 1 then forwarding-class af11
+    set firewall family inet filter MCFF_1 term 1 then three-color-policer single-rate srTCM_1
+    set firewall family inet filter MCFF_1 term 2 from icmp-type echo-request
+    set firewall family inet filter MCFF_1 term 2 then forwarding-class af31
+    set firewall family inet filter MCFF_1 term 2 then three-color-policer single-rate srTCM_1
+    set firewall family inet filter MCFF_1 term 3 then accept
+    set firewall family inet6 filter MCFF6_1 term 1 from source-port 1001
+    set firewall family inet6 filter MCFF6_1 term 1 then forwarding-class af11
+    set firewall family inet6 filter MCFF6_1 term 1 then three-color-policer single-rate srTCM_1
+    set firewall family inet6 filter MCFF6_1 term 2 then accept
+    set interfaces eno2 unit 0 family inet filter input MCFF_1
+    set interfaces eno2 unit 0 family inet6 filter input MCFF6_1
+  crpdSelector:
+    matchLabels:
+      node: worker</codeblock>
+        <note id="note_pcp_ppr_ydc">When the same policer is configured for multiple firewall filter
+          terms, multiple policer instances are created, one per term.</note>
+      </subsection><subsection id="subsection_j54_rpr_ydc">
+        <title>Configure Rewrite/Marker</title>
+        <p>You can configure the rewrite/marker as follows:</p>
+        <codeblock id="codeblock_p5s_spr_ydc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set class-of-service rewrite-rules dscp RE_1 forwarding-class af11 loss-priority high code-point 010010
+    set class-of-service rewrite-rules dscp RE_1 forwarding-class af11 loss-priority low code-point 001100
+    set class-of-service rewrite-rules dscp RE_1 forwarding-class af11 loss-priority medium-high code-point 000001
+    set class-of-service rewrite-rules dscp RE_1 forwarding-class af11 loss-priority medium-low code-point 001110
+    set class-of-service rewrite-rules dscp RE_1 forwarding-class ef loss-priority low code-point 001010
+    set class-of-service rewrite-rules dscp RE_1 forwarding-class ef loss-priority medium-high code-point 001001
+    set class-of-service rewrite-rules dscp-ipv6 RE6_1 forwarding-class af11 loss-priority high code-point 010010
+    set class-of-service rewrite-rules dscp-ipv6 RE6_1 forwarding-class af11 loss-priority low code-point 001100
+    set class-of-service rewrite-rules dscp-ipv6 RE6_1 forwarding-class af11 loss-priority medium-high code-point 000001
+    set class-of-service rewrite-rules dscp-ipv6 RE6_1 forwarding-class af11 loss-priority medium-low code-point 001110
+    set class-of-service rewrite-rules dscp-ipv6 RE6_1 forwarding-class ef loss-priority low code-point 001001
+    set class-of-service interfaces eno3 unit 0 rewrite-rules dscp RE_1
+    set class-of-service interfaces eno3 unit 0 rewrite-rules dscp-ipv6 RE6_1
+  crpdSelector:
+    matchLabels:
+      node: worker</codeblock>
+        <p>MPLS Exp Rewrite for tunnel packets:</p>
+        <codeblock id="codeblock_ic5_tpr_ydc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set class-of-service rewrite-rules exp RE_3 forwarding-class af11 loss-priority low code-point 111
+    set class-of-service rewrite-rules exp RE_3 forwarding-class af11 loss-priority medium-high code-point 101
+    set class-of-service rewrite-rules exp RE_3 forwarding-class af11 loss-priority medium-low code-point 110
+    set class-of-service interfaces eno3 unit 0 rewrite-rules exp RE_3
+  crpdSelector:
+    matchLabels:
+      node: worker</codeblock>
+      </subsection><subsection id="subsection_td4_5pr_ydc">
+        <title>Configure Schedulers</title>
+        <p>You can configure the schedulers to one of 8 priorities. The scheduler map configures the
+          forwarding class to scheduler mapping and is applied at the interface level.</p>
+        <codeblock id="codeblock_p2p_2qr_ydc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set class-of-service schedulers S1 priority medium-high
+    set class-of-service schedulers S2 priority strict-high
+    set class-of-service schedulers S3 priority high
+    set class-of-service schedulers S4 priority low
+    set class-of-service scheduler-maps VOICE-SCHED-MAP forwarding-class af11 scheduler S1
+    set class-of-service scheduler-maps VOICE-SCHED-MAP forwarding-class af12 scheduler S2
+    set class-of-service scheduler-maps VOICE-SCHED-MAP forwarding-class ef scheduler S3
+    set class-of-service scheduler-maps VOICE-SCHED-MAP forwarding-class nc1 scheduler S4
+    set class-of-service interfaces eno2 scheduler-map VOICE-SCHED-MAP
+  crpdSelector:
+    matchLabels:
+      node: worker </codeblock>
+        <note id="note_ypz_cqr_ydc">The CoS configuration is valid only if the fabric interface is
+          mapped to a <codeph>qos-scheduler-profile</codeph> in the helm chart. The scheduler
+          profile must be configured with CPU and bandwidth allocation. Please see <xref keyref="cloud-native-router-deployment-guide.deployment-config-files-bms">Helm Chart
+            customization</xref> for more details. </note>
+      </subsection><subsection id="subsection_m2d_gws_rfc">
+        <title>Configuring Dropper and Shaper</title>
+      </subsection><p>You can configure dropper and shaper modules within the scheduler block.
+        Define a drop profile map and assign it to the scheduler along with the transmit
+      rate.</p><codeblock id="codeblock_bk2_vks_kfc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set class-of-service drop-profiles dp1 min-threshold 25
+    set class-of-service drop-profiles dp1 max-threshold 75
+    set class-of-service drop-profiles dp1 mark-probablility-denominator 90
+    set class-of-service drop-profiles dp2 min-threshold 35
+    set class-of-service drop-profiles dp2 max-threshold 60
+    set class-of-service drop-profiles dp2 mark-probablility-denominator 80
+    set class-of-service schedulers S1 drop-profile-map loss-priority low protocol any drop-profile dp2
+    set class-of-service schedulers S1 drop-profile-map loss-priority high protocol any drop-profile dp2
+    set class-of-service schedulers S1 drop-profile-map loss-priority medium-high protocol any drop-profile dp1
+    set class-of-service schedulers S1 priority low
+    set class-of-service schedulers S1 transmit-rate 50M
+    set class-of-service schedulers S2 drop-profile-map loss-priority any protocol any drop-profile dp1
+    set class-of-service schedulers S2 priority high
+    set class-of-service schedulers S2 transmit-rate 50M
+    set class-of-service scheduler-maps VOICE-SCHED-MAP forwarding-class af11 scheduler S1
+    set class-of-service scheduler-maps VOICE-SCHED-MAP forwarding-class af12 scheduler S2
+    set class-of-service interfaces eno2 scheduler-map VOICE-SCHED-MAP
+  crpdSelector:
+    matchLabels:
+      node: worker </codeblock></prereq>
+  </taskbody>
+</task>

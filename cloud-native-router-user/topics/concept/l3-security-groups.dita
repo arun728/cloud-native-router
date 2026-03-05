@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7dea" xml:lang="en-US">
+  <title>Security Groups</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Starting in Juniper Cloud-Native Router Release 22.4, you control the types of traffic with
+      the use of security groups when you use cloud-native router in L3 mode.</p>
+    <p>A security group is a container for security group rules. Security groups and security group
+      rules allow administrators to specify the type of traffic that passes through an interface
+      port. When you create a pod in a virtual network (VN), you can associate a security group with
+      the pod and its virtual machine interface (VMI). The VMI is the interface connecting the pod
+      to the vrouter-dpdk. When the cloud-native router launches the pod, it applies the rules in
+      the security group to the pod's VMI port. If you do not specify a security group for the pod,
+      the cloud-native router associates a default security group with the pod's VMI. The default
+      security group rule is to allow all traffic to and from the port. The default security group
+      allows both ingress and egress traffic. Security rules can be added to the default security
+      group to change the traffic behavior.</p>
+    <p>You can apply each rule in the security group to either ingress or egress traffic. Ingress
+      traffic is the traffic coming to the pod's VMI. Egress traffic is the traffic that leaves the
+      pod through the VMI.</p>
+
+    <section><title>Configuration Example</title>With the Cloud-Native Router, you configure
+      networking policy, including security groups, locally using gRPC messages from the
+      cloud-native router controller (cRPD). You can configure security groups using API calls,
+      NETCONF, or <xref href="monitor-jcnr-via-cli.dita#xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7cfa/section_tqb_z4k_3xb">by accessing the cRPD shell</xref>. Use the <userinput>edit routing-options flow
+        security-group <varname>security group name</varname> rule <varname>rule name</varname>
+      </userinput> command hierarchy. For
+        example:<codeblock>set routing-options flow security-group sg rule rule-1 match destination 40.0.0.1/24
+set routing-options flow security-group sg rule rule-1 match source 1.1.1.2/30
+set routing-options flow security-group sg rule rule-1 then discard
+set interfaces vhostnet1-2ea6a5c8-90ed-4c78-9c unit 0 security-group sg</codeblock><p>You
+        can verify the flow tables in the <xref href="troubleshooting-vrouter.dita#xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7c86/section_dsy_dhh_hxb">vRouter shell</xref> using the <codeph>flow -l</codeph> command. For
+      example:</p><codeblock>$ flow -l
+Flow table(size 161218560, entries 629760)
+
+Entries: Created 10913 Added 10913 Deleted 21824 Changed 21847Processed 10913 Used Overflow entries 0
+(Created Flows/CPU: 0 0 0 0 0 0 0 0 0 0 10913 0)(oflows 0)
+
+Action:F=Forward, D=Drop N=NAT(S=SNAT, D=DNAT, Ps=SPAT, Pd=DPAT, L=Link Local Port)
+Other:K(nh)=Key_Nexthop, S(nh)=RPF_Nexthop
+Flags:E=Evicted, Ec=Evict Candidate, N=New Flow, M=Modified Dm=Delete Marked
+TCP(r=reverse):S=SYN, F=FIN, R=RST, C=HalfClose, E=Established, D=Dead
+
+Index                Source:Port/Destination:Port                      Proto(V)
+-----------------------------------------------------------------------------------
+86900&lt;=&gt;368972       1.1.1.2:1234                                        6 (4)
+40.0.0.1:5678 
+(Gen: 10, K(nh):13, <b>Action:D(SG)</b>, Flags:, TCP:, QOS:-1, S(nh):13,  Stats:19680480/1180828800,   
+SPort 55245, TTL 0, Sinfo 4.0.0.0)
+
+368972&lt;=&gt;86900        40.0.0.1:5678                                       6 (4)
+1.1.1.2:1234 
+(Gen: 217, K(nh):13, Action:D(Unknown), Flags:, TCP:, QOS:-1, S(nh):26, 
+Stats:0/0,  SPort 57268, TTL 0, Sinfo 0.0.0.0)</codeblock></section>
+  </conbody>
+</concept>

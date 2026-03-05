@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7de1" xml:lang="en-US">
+  <title>L3 Features Overview</title>
+  <shortdesc>Read this topic to learn about the features available in the Juniper Cloud-Native
+    Router when deployed in L3 (router) mode.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>The Juniper Cloud-Native Router supports multiple <xref href="jcnr-deployment-modes.dita">deployment modes</xref>.</p>
+    <p>In L3 mode, the cloud-native router behaves like a router and so performs routing functions
+      and runs routing protocols such as ISIS, BGP, OSPF, and segment routing-MPLS. In L3 mode, the
+      pod network is divided into an IPv6 underlay network and an IPv4 or IPv6 overlay network. The
+      IPv6 underlay network is used for control plane traffic. All L3 features are supported with
+      DPDK datapath. Please review <xref keyref="cloud-native-router-deployment-guide.jcnr-datapath/subsection_gt4_xcj_p1c"/> to
+      verify feature support for eBPF XDP datapath.</p>
+    <p>This chapter provides information about the various L3 features supported by JCNR.</p>
+  </conbody>
+</concept>

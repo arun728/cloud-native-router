@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN" "/SysSchema/dita13/dtd/technicalContent/dtd/map.dtd">
+<map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" outputclass="release-notes" xml:lang="en-US">
+    <!--Make sure that the map element for a release notes ditamap has the outputclass=release-notes attribute.  -->    
+    <title>Juniper Cloud-Native Router 22.3 Release Notes </title>
+    <topicmeta>
+        <author>probbins</author>
+    </topicmeta>
+    <topicref href="concept/jcnr-22.3-cover-page.dita" toc="no"/>
+    <topicref href="new-features/new-features-jcnr-22.3.dita"/>
+    <topicref href="resolved-issues/jcnr-22.3-resolved-issues.dita"/>
+    <topicref href="known-issues/jcnr-22.3-known-issues.dita"/>
+</map>

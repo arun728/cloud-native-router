@@ -1,0 +1,623 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_d78d6c140c7125b6--7d105ff8-191b148414f--7f71" xml:lang="en-US">
+ <!--Use the Task - Verification template to explain to users how to confirm that a configuration is as it should be or to describe how to monitor their network.-->
+ <!--Start with "Verify," "Confirm," or "Monitor."-->
+ <title>L3 CoS Verification</title>
+ <prolog>
+  <author>tkaur</author>
+  <data name="cli-help-filename"/>
+  <data name="cli-help-text"/>
+  <data name="jweb-help-filename"/>
+ </prolog>
+ <conbody>
+  <section id="section_ty5_j3y_s3b">
+   <title>CLI commands to verify L3 CoS configuration</title>
+      <subsection id="subsection_j31_vcs_ydc">
+        <title>Verify Classifier Configuration on cRPD</title>
+        <p>You can verify the L3 CoS configuration using the following commands on the cRPD
+          shell:</p>
+        <ul id="ul_p52_hrr_ydc">
+          <li>Verify the classifier configuration using the <codeph>show class-of-service
+              classifier</codeph> command. An example output is provided
+            below:<codeblock id="codeblock_crm_mqr_ydc">user@host&gt; show class-of-service classifier
+ 
+Classifier: BA_1, Code point type: dscp
+Code point             Forwarding class                Loss priority
+000001                 af11                            high
+001000                 cs1                             medium-high
+001010                 af11                            low
+001100                 af11                            medium-low
+001110                 af11                            medium-high
+010000                 cs1                             medium-high
+010010                 af21                            medium-low
+010100                 af22                            medium-high
+010110                 af23                            high
+011100                 af32                            high
+101111                 ef                              low
+110000                 nc1                             low
+111000                 nc1                             low
+111010                 af31                            low
+ 
+Classifier: BA6_1, Code point type: dscp-ipv6
+Code point             Forwarding class                Loss priority
+001010                 af33                            low
+010000                 cs2                             medium-high
+011000                 cs3                             medium-low
+101111                 ef                              low
+110000                 cs4                             medium-low
+111000                 nc2                             high</codeblock></li>
+        </ul>
+        <ul id="ul_fs1_jrr_ydc">
+          <li>Verify the code-point-alisases configuration using the <codeph>show class-of-service
+              code-point-aliases</codeph> command. An example output is provided
+            below:<codeblock id="codeblock_byw_2sr_ydc">user@host&gt; show class-of-service code-point-aliases
+ 
+Code point type: dscp
+Alias                       Bit pattern
+af11                        001010
+af12                        001100
+af13                        001110
+af21                        010010
+af22                        010100
+af23                        010110
+af31                        011010
+af32                        011100
+af33                        011110
+af41                        100010
+af42                        100100
+af43                        100110
+be                          000000
+cs1                         001000
+cs2                         010000
+cs3                         011000
+cs4                         100000
+cs5                         101000
+cs6                         110000
+cs7                         111000
+ef                          101110
+nc1                         110000
+nc2                         111000
+ 
+Code point type: dscp-ipv6
+  Alias              Bit pattern
+af11                        001010
+af12                        001100
+af13                        001110
+af21                        010010
+af22                        010100
+af23                        010110
+af31                        011010
+af32                        011100
+af33                        011110
+af41                        100010
+af42                        100100
+af43                        100110
+be                          000000
+cs1                         001000
+cs2                         010000
+cs3                         011000
+cs4                         100000
+cs5                         101000
+cs6                         110000     
+cs7                         111000     
+ef                          101110
+nc1                         110000
+nc2                         111000</codeblock></li>
+        </ul>
+        <ul id="ul_rqf_wcs_ydc">
+          <li>Verify the CoS configuration on an interface using the <codeph>show class-of-service
+              interface</codeph> command. An example output is provided
+            below:<codeblock id="codeblock_jtw_fsr_ydc">user@host&gt; show class-of-service interface eno2
+Physical interface: eno2
+Maximum usable queues: 8, Queues in use: 8
+
+  Logical interface: eno2.0
+Object                  Name                   Type                    
+Classifier              BA_1                   dscp  
+Classifier              BA6_1                  dscp-ipv6</codeblock></li>
+        </ul>
+        <ul id="ul_j1n_gsr_ydc">
+          <li>Verify the rewrite rule configuration using the <codeph>show class-of-service
+              rewrite-rule</codeph> command. Example outputs are provided
+            below:<codeblock id="codeblock_apt_gsr_ydc">user@host&gt; show class-of-service rewrite-rule
+ 
+Rewrite rule: RE_1, Code point type: dscp
+Forwarding class            Loss priority        Code point
+ef                          low                  100001
+af11                        low                  000010
+af11                        high                 000101
+af11                        medium-low           000011
+af11                        medium-high          000100
+af21                        medium-low           000110
+af22                        medium-high          000111
+af23                        high                 001000
+af31                        low                  001111
+af32                        high                 001010
+cs1                         medium-high          001011
+nc1                         low                  001101
+ 
+Rewrite rule: RE6_1, Code point type: dscp-ipv6
+Forwarding class            Loss priority        Code point
+ef                          low                  000001
+af33                        low                  001110
+cs2                         medium-high          010011
+cs3                         medium-low           101010
+cs4                         medium-low           111111
+nc2                         high                 111100
+ 
+Rewrite rule: RE_3, Code point type: exp
+Forwarding class            Loss priority        Code point
+af11                        low                  111
+af11                        medium-low           110
+af11                        medium-high          101</codeblock></li>
+        </ul>
+        <ul id="ul_gbx_br5_pfc">
+          <li>
+            <p>Verify the scheduler, dropper and shaper configuration using the <codeph>show
+                class-of-service schedulers</codeph> command. Example output is provided below:</p>
+            <codeblock id="codeblock_hlc_2r5_pfc">user@host&gt; show class-of-service schedulers
+S1 {
+    transmit-rate 50m;
+    drop-profile-map loss-priority low protocol any drop-profile dp2;
+    drop-profile-map loss-priority high protocol any drop-profile dp2;
+    drop-profile-map loss-priority medium-high protocol any drop-profile dp1;
+    priority low;
+}
+S2 {
+    transmit-rate 50m;
+    drop-profile-map loss-priority any protocol any drop-profile dp1;
+    priority high;
+}</codeblock>
+          </li>
+        </ul>
+      </subsection>
+      <subsection id="subsection_b3r_f5r_ydc">
+        <title>Verify CoS Classifiers on vRouter</title>
+        <codeblock id="codeblock_jpz_qtr_ydc">bash-5.1# qosdpdk --list cla       
+Classifer name: BA_1 Traffic-class: dscp
+===============================================================
+code-points          loss priority          forwarding-class-id 
+===============================================================
+   000000(0)            n/a                           n/a
+   000001(1)            high                          65
+   000010(2)            n/a                           n/a
+   000011(3)            n/a                           n/a
+   000100(4)            n/a                           n/a
+   000101(5)            n/a                           n/a
+   000110(6)            n/a                           n/a
+   000111(7)            n/a                           n/a
+   001000(8)            medium-high                   74
+   001001(9)            n/a                           n/a
+   001010(10)           low                           65
+   001011(11)           n/a                           n/a
+   001100(12)           medium-low                    65
+   001101(13)           n/a                           n/a
+   001110(14)           medium-high                   65
+   001111(15)           n/a                           n/a
+   010000(16)           medium-high                   74
+   010001(17)           n/a                           n/a
+   010010(18)           medium-low                    68
+   010011(19)           n/a                           n/a
+   010100(20)           medium-high                   69
+   010101(21)           n/a                           n/a
+   010110(22)           high                          70
+   010111(23)           n/a                           n/a
+   011000(24)           n/a                           n/a
+   011001(25)           n/a                           n/a
+   011010(26)           n/a                           n/a
+   011011(27)           n/a                           n/a
+   011100(28)           high                          72
+   011101(29)           n/a                           n/a
+   011110(30)           n/a                           n/a
+   011111(31)           n/a                           n/a
+ 
+======================================================================
+ 
+ 
+Classifer name: BA6_1 Traffic-class: dscpv6
+===============================================================
+code-points          loss priority          forwarding-class-id 
+===============================================================
+   000000(0)            n/a                           n/a
+   000001(1)            n/a                           n/a
+   000010(2)            n/a                           n/a
+   000011(3)            n/a                           n/a
+   000100(4)            n/a                           n/a
+   000101(5)            n/a                           n/a
+   000110(6)            n/a                           n/a
+   000111(7)            n/a                           n/a
+   001000(8)            n/a                           n/a
+   001001(9)            n/a                           n/a
+   001010(10)           low                           73
+   001011(11)           n/a                           n/a
+   001100(12)           n/a                           n/a
+   001101(13)           n/a                           n/a
+   001110(14)           n/a                           n/a
+   001111(15)           n/a                           n/a
+   010000(16)           medium-high                   75
+   010001(17)           n/a                           n/a
+   010010(18)           n/a                           n/a
+   010011(19)           n/a                           n/a
+   010100(20)           n/a                           n/a
+   010101(21)           n/a                           n/a
+   010110(22)           n/a                           n/a
+   010111(23)           n/a                           n/a
+   011000(24)           medium-low                    76
+   011001(25)           n/a                           n/a
+   011010(26)           n/a                           n/a
+   011011(27)           n/a                           n/a
+   011100(28)           n/a                           n/a
+   011101(29)           n/a                           n/a
+   011110(30)           n/a                           n/a
+   011111(31)           n/a                           n/a
+ 
+======================================================================
+</codeblock>
+      </subsection>
+      <subsection id="subsection_fnb_g5r_ydc">
+        <title>Verify Rewrite Rules</title>
+        <codeblock id="codeblock_yfv_g5r_ydc">bash-5.1# qosdpdk --list re-write
+Re-Write name: RE_1 Traffic-class: dscp
+======================================================================
+loss priority            Forwarding-class            re-write prio
+======================================================================
+   low                         0                            001100(12)
+   low                         1                            n/a
+   low                         2                            n/a
+   low                         3                            101111(47)
+   low                         4                            001010(10)
+   low                         5                            010100(20)
+   low                         6                            111010(58)
+   low                         7                            011100(28)
+   low                         8                            n/a
+   low                         9                            n/a
+   low                         10                           010000(16)
+   low                         11                           n/a
+   low                         12                           n/a
+   low                         13                           n/a
+   low                         14                           n/a
+   low                         15                           111100(60)
+   high                        0                            010010(18)
+   high                        1                            n/a
+   high                        2                            n/a
+   high                        3                            n/a
+   high                        4                            n/a
+   high                        5                            n/a
+   high                        6                            n/a
+   high                        7                            n/a
+   high                        8                            n/a
+   high                        9                            n/a
+   high                        10                           n/a
+   high                        11                           n/a
+   high                        12                           n/a
+   high                        13                           n/a
+   high                        14                           n/a
+   high                        15                           n/a
+   medium-low                  0                            001110(14)
+   medium-low                  1                            110000(48)
+   medium-low                  2                            010110(22)
+   medium-low                  3                            100000(32)
+   medium-low                  4                            n/a
+   medium-low                  5                            n/a
+   medium-low                  6                            n/a
+   medium-low                  7                            n/a
+   medium-low                  8                            n/a
+   medium-low                  9                            n/a
+   medium-low                  10                           n/a
+   medium-low                  11                           n/a
+   medium-low                  12                           n/a
+   medium-low                  13                           n/a
+   medium-low                  14                           n/a
+   medium-low                  15                           n/a
+   medium-high                 0                            000001(1)
+   medium-high                 1                            n/a
+   medium-high                 2                            n/a
+   medium-high                 3                            n/a
+   medium-high                 4                            001001(9)
+   medium-high                 5                            n/a
+   medium-high                 6                            n/a
+   medium-high                 7                            n/a
+   medium-high                 8                            n/a
+   medium-high                 9                            n/a
+   medium-high                 10                           n/a
+   medium-high                 11                           n/a
+   medium-high                 12                           n/a
+   medium-high                 13                           n/a
+   medium-high                 14                           n/a
+   medium-high                 15                           n/a
+ 
+======================================================================
+ 
+ 
+Re-Write name: RE6_1 Traffic-class: dscpv6
+======================================================================
+loss priority            Forwarding-class            re-write prio
+======================================================================
+   low                         0                            001100(12)
+   low                         1                            n/a
+   low                         2                            n/a
+   low                         3                            101111(47)
+   low                         4                            001001(9)
+   low                         5                            010100(20)
+   low                         6                            111010(58)
+   low                         7                            011100(28)
+   low                         8                            n/a
+   low                         9                            n/a
+   low                         10                           010000(16)
+   low                         11                           n/a
+   low                         12                           n/a
+   low                         13                           n/a
+   low                         14                           n/a
+   low                         15                           111100(60)
+   high                        0                            010010(18)
+   high                        1                            n/a
+   high                        2                            n/a
+   high                        3                            n/a
+   high                        4                            n/a
+   high                        5                            n/a
+   high                        6                            n/a
+   high                        7                            n/a
+   high                        8                            n/a
+   high                        9                            n/a
+   high                        10                           n/a
+   high                        11                           n/a
+   high                        12                           n/a
+   high                        13                           n/a
+   high                        14                           n/a
+   high                        15                           n/a
+   medium-low                  0                            001110(14)
+   medium-low                  1                            110000(48)
+   medium-low                  2                            010110(22)
+   medium-low                  3                            100000(32)
+   medium-low                  4                            n/a
+   medium-low                  5                            n/a
+   medium-low                  6                            n/a
+   medium-low                  7                            n/a
+   medium-low                  8                            n/a
+   medium-low                  9                            n/a
+   medium-low                  10                           n/a
+   medium-low                  11                           n/a
+   medium-low                  12                           n/a
+   medium-low                  13                           n/a
+   medium-low                  14                           n/a
+   medium-low                  15                           n/a
+   medium-high                 0                            000001(1)
+   medium-high                 1                            n/a
+   medium-high                 2                            n/a
+   medium-high                 3                            n/a
+   medium-high                 4                            n/a
+   medium-high                 5                            n/a
+   medium-high                 6                            n/a
+   medium-high                 7                            n/a
+   medium-high                 8                            n/a
+   medium-high                 9                            n/a
+   medium-high                 10                           n/a
+   medium-high                 11                           n/a
+   medium-high                 12                           n/a
+   medium-high                 13                           n/a
+   medium-high                 14                           n/a
+   medium-high                 15                           n/a
+ 
+======================================================================
+ </codeblock>
+      </subsection>
+      <subsection id="subsection_kpp_35r_ydc">
+        <title>Verify ACLs for MF Classifier</title>
+        <codeblock id="codeblock_r3w_j5r_ydc">bash-5.1# acl --list-filters --family inet
+=======================================
+Filter: MCFF_3
+=======================================
+Term: 1
+-----
+Priority:                256
+Src ports:            [1005 - 1005]
+POLICER Id:                      0
+Action:                 policer (V4MCFF_31trTCM_2)
+Action:                 fc (af11)
+=======================================
+=======================================
+Filter: MCFF_3
+=======================================
+Term: 2
+-----
+Priority:                255
+ICMP Type:        8
+POLICER Id:                      1
+Action:                 policer (V4MCFF_32trTCM_2)
+Action:                 fc (af31)
+=======================================
+=======================================
+Filter: MCFF_3
+=======================================
+Term: 3
+-----
+Priority:                254
+Action:                 accept (n/a)
+=======================================
+bash-5.1#
+bash-5.1# acl --list-filters --family inet6
+=======================================
+Filter: MCFF6_3
+=======================================
+Term: 1
+-----
+Priority:                256
+Dest IP:                ::/0
+Src IP:   ::/0
+Src ports:            [1005 - 1005]
+POLICER Id:                      2
+Action:                 policer (V6MCFF6_31trTCM_2)
+Action:                 fc (af11)
+=======================================
+=======================================
+Filter: MCFF6_3
+=======================================
+Term: 2
+-----
+Priority:                255
+Dest IP:                ::/0
+Src IP:   ::/0
+Dst ports:           [2152 - 2152]
+POLICER Id:                      3
+Action:                 policer (V6MCFF6_32trTCM_2)
+Action:                 fc (nc2)
+=======================================
+=======================================
+Filter: MCFF6_3
+=======================================
+Term: 3
+-----
+Priority:                254
+Dest IP:                ::/0
+Src IP:   ::/0
+Action:                 accept (n/a)
+=======================================
+bash-5.1#</codeblock>
+        <note id="note_yfw_l5r_ydc">Each term has its own policer instance, for example Term 1 for
+          family inet has policer instance <codeph>V4MCFF_31trTCM_2</codeph> and Term 2 has policer
+          instance <codeph>V4MCFF_32trTCM_2</codeph> for the same policer
+          <codeph>srTCM_2.</codeph></note>
+      </subsection>
+      <subsection id="subsection_t11_45r_ydc">
+        <title>Verify Policer Statistics</title>
+        <codeblock id="codeblock_sjh_xvr_ydc">bash-5.1# qosdpdk --get policer --name V4MCFF_32trTCM_2
+=====================================
+Policer parameters:
+=====================================
+                policer name: V4MCFF_32trTCM_2
+                policer id: 1
+                policer type: trTCM
+                policer loss_priority: high
+                policer tcm_action: tcm_discard
+                policer color type: color_aware
+                policer_cir: 6250000
+                policer_pir: 8750000
+                policer_cbs: 10000
+                policer_pbs: 10000
+                rx_pkts: 1
+	         rx_bytes: 54
+	         drop_pkts: 1
+	         drop_bytes: 54
+ 
+=====================================</codeblock>
+        <codeblock id="codeblock_uwh_1my_mdc">bash-5.1# acl --family inet --filter FF_1 --action V4FF_11srTCM_1
+inet filter "FF_1": Policer "V4FF_11srTCM_1"
+                        Rx Packets: 1 Rx Bytes: 54
+			   Dropped Packets: 1 Dropped Bytes: 54</codeblock>
+      </subsection>
+      <subsection id="subsection_qqj_bwr_ydc">
+        <title>Verify Scheduler Statistics</title>
+        <codeblock id="codeblock_szs_cwr_ydc">bash-5.1# qosdpdk --get sch --name VOICE-SCHED-MAP
+Fetch Qos FC info
+Scheduler name: VOICE-SCHED-MAP Scheduler  Index: 0
+================================================================
+ priority 	 forwarding 	 shaping 	 drop 
+          	 class      	 rate    	 profiles
+          	            	         	 low,high,med
+================================================================
+strict-high(0)   none            NA              NA,NA,NA
+high(1)          af12(65)        50.000 Mbps     0,0,0
+medium-high(2)   none            NA              NA,NA,NA
+medium-low(3)    none            NA              NA,NA,NA
+low-latency(4)   none            NA              NA,NA,NA
+low-high(5)      none            NA              NA,NA,NA
+low-medium(6)    none            NA              NA,NA,NA
+low(7)           af11(64)        50.000 Mbps     1,1,0
+ </codeblock>
+        <p>Verify dropper statistics:</p>
+        <codeblock id="codeblock_mjj_fms_kfc">bash-5.1# qosdpdk --get dropper --name dp1
+Fetch Qos FC info
+Drop Profiles 
+============================================================
+Idx  Name        Min          Max          Mark Probability
+                 Threshold    Threshold    Denominator
+============================================================
+0    dp1          25           75           90
+</codeblock>
+        <p>Verify interface rate statistics:</p>
+        <codeblock id="codeblock_wqb_2wr_ydc">bash-5.1# scheduler --rate  
+
+Interface rate statistics  
+-------------------------  
+Interface Vif Scheduler  Sched-core-Rx  Sched-Port-Rx    Sched-Port-Tx  
+          ID   core      Errors Packets Errors Packets Errors Packets  
+
+eno2       2   4         0       123123 1003 123123      0    123123</codeblock>
+        <p>Verify scheduler port statistics:</p>
+        <codeblock id="codeblock_eyq_2wr_ydc">bash-5.1# scheduler --port 2
+Scheduler port stats for vif 2, lcore id 4
+------------------------------------------------------------------------------------------------------------------------
+Prio  Pkts                     Bytes                  Pkts                      Bytes                 Avg     Wred
+      OK                       OK                     Dropped                   Dropped               Qlen    Drops
+------------------------------------------------------------------------------------------------------------------------
+[00]  23302064                23768105280             4325778                 4412293560              0       0
+[01]  23301994                23768033880             4325848                 4412364960              0       0
+[02]  23301921                23767959420             4325921                 4412439420              0       0
+[03]  23301913                23767951260             4325930                 4412448600              0       0
+[04]  27627842                28180398840             0                       0                       0       0
+[05]  27627842                28180398840             0                       0                       0       0
+[06]  26805889                27342006780             821954                  838393080               0       266904
+[07]  5195092308              5298994154160           1084208                 1105892160              32      0
+------------------------------------------------------------------------------------------------------------------------</codeblock>
+        <p>Verify scheduler port rate statistics:</p>
+        <codeblock id="codeblock_sgh_yzr_ydc">bash-5.1# scheduler –-portrate 2  
+
+Scheduler port stats for vif0/2  
+-------------------------------  
+Scheduler port stats for vif 2, lcore id 4 
+--------------------------------------------------------------------
+Prio    Pkts     Bytes       Pkts       Bytes       Avg       Wred
+        OK       OK          Dropped    Dropped     Qlen      Drops 
+--------------------------------------------------------------------
+[00]    68195    102839272   0          0           0         0
+[01]    136391   205678545   0          0           0         0
+[02]    68196    102840779   0          0           0         0
+[03]    68197    102842285   0          0           0         0
+[04]    68196    102840779   0          0           0         0
+[05]    68196    102840779   0          0           0         0
+[06]    68196    102840779   0          0           0         0
+[07]    136390   205677038   0          0           0         0
+
+--------------------------------------------------------------------- </codeblock>
+        <p>Clear scheduler port statistics:</p>
+        <codeblock id="codeblock_uzp_xzr_ydc">bash-5.1# scheduler --port 2 --clear
+Counters cleared for scheduler port 2</codeblock>
+      </subsection>
+      <subsection id="subsection_y5j_f1s_ydc">
+        <title>Verify CoS Features Applied on an Interface</title>
+        <codeblock id="codeblock_dcs_g1s_ydc">bash-5.1# vif --get 2
+Vrouter Interface Table
+
+Flags: P=Policy, X=Cross Connect, S=Service Chain, Mr=Receive Mirror
+       Mt=Transmit Mirror, Tc=Transmit Checksum Offload, L3=Layer 3, L2=Layer 2
+       D=DHCP, Vp=Vhost Physical, Pr=Promiscuous, Vnt=Native Vlan Tagged
+       Mnp=No MAC Proxy, Dpdk=DPDK PMD Interface, Rfl=Receive Filtering Offload, Mon=Interface is Monitored
+       Uuf=Unknown Unicast Flood, Vof=VLAN insert/strip offload, Df=Drop New Flows, L=MAC Learning Enabled
+       Proxy=MAC Requests Proxied Always, Er=Etree Root, Mn=Mirror without Vlan Tag, HbsL=HBS Left Intf
+       HbsR=HBS Right Intf, Ig=Igmp Trap Enabled, Ml=MAC-IP Learning Enabled, Me=Multicast Enabled
+       LsDp=Link down in DP only, Ccc=CCC Enabled, HwTs=Hardware support for Timestamp
+
+vif0/2      PCI: 0000:ca:01.2 (Speed 10000, Duplex 1) NH: 8 MTU: 9216
+            Type:Physical HWaddr:48:5a:0d:6f:b2:1a IPaddr:10.0.1.1
+            IP6addr:1001::1
+            DDP: ON SwLB: ON
+            Vrf:0 Mcast Vrf:0 Flags:L3Vof QOS:0 Ref:17
+            RX port   packets:37865806023 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:ca:01.2  Status: UP  Driver: net_iavf
+            Qos classifier: dscp:BA_1 dscpv6:BA6_1
+                Rewrite:    dscp:RE_1 dscpv6:RE6_1
+                Scheduler:  VOICE-SCHED-MAP
+            RX packets:3160058  bytes:3910471152 errors:0
+            TX packets:1224847957  bytes:186064373590 errors:0
+            Drops:13116
+            Scheduler Enqueue   packets:1218217596 errors:0
+            Scheduler Dequeue   packets:1218217596 errors:0
+            TX queue  packets:1218219665 errors:6627728
+            TX port   packets:1218218121 errors:0
+            inet acl MCFF_1
+            inet6 acl MCFF6_1</codeblock>
+      </subsection>
+  </section>
+ </conbody>
+</concept>

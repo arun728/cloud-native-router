@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE reference PUBLIC "-//Juniper//DTD DITA 1.3 Reference//EN" "/SysSchema/dita13/dtd/subsection/dtd/reference.dtd">
+<reference xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b0836fd7d6536646-294b527a-181238eba6d--7ce8" xml:lang="en-US">
+    <title>CLI Commands</title>
+    <prolog>
+        <author>dgv</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <refbody>
+        <section id="section_nnr_4cm_5tb">
+            <title>Show Command 1</title>
+            <p/>
+        </section>
+        <section id="section_tmq_pcm_5tb">
+            <title>Show Command 2</title>
+            <p/>
+        </section>
+        <section id="section_yhd_qcm_5tb">
+            <title>Show Command 3</title>
+            <p/>
+        </section>
+    </refbody>
+    <related-links/>
+</reference>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_ef094a73502120b8--51ca2f83-1889e4c7645--7da4" xml:lang="en-US">
+  <title>Virtual Routing Instance (VRF-Lite)</title>
+  <shortdesc>Read this topic to understand the implementation of virtual routing instances in JCNR. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Virtual routing instances allow administrators to divide the cloud-native router into
+      multiple independent virtual routers, each with its own routing table. Splitting a device into
+      many virtual routing instances isolates traffic traveling across the network without requiring
+      multiple devices to segment the network. You can use virtual routing instances to isolate
+      customer traffic on your network and to bind customer-specific instances to customer-owned
+      interfaces. Virtual routing and forwarding (VRF) is often used in conjunction with Layer 3
+      subinterfaces, allowing traffic on a single physical interface to be differentiated and
+      associated with multiple virtual routers. Each logical Layer 3 subinterface can belong to only
+      one routing instance. Review the <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/multicast-l2/topics/topic-map/virtual-routing-instances.html" scope="external">Virtual Router Instances</xref> topic for more
+      information.</p>
+    <section id="section_wsz_gdr_dzb">
+      <title>Configuration</title>
+      <p>You can create a virtual routing instance in <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>via a network attachment definition (NAD)
+        manifest. Here is an example NAD to create a <codeph>bluenet</codeph> virtual router routing
+        instance:</p>
+      <codeblock id="codeblock_i5x_f2r_dzb">apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: blue
+spec:
+  config: '{
+    "cniVersion":"0.4.0",
+    "name": "blue-net",
+    "plugins": [
+      {
+        "type": "jcnr",
+        "args": {
+          "instanceName": "bluenet",
+          "instanceType": "virtual-router"
+        },
+        "kubeConfig":"/root/.kube/config"
+      }
+    ]
+  }'</codeblock>
+      <p>Note the <codeph>instanceType</codeph> is set to <codeph>virtual-router</codeph>. Refer to
+          <xref href="config-examples-overview.dita"/> for more information on
+        NAD.</p>
+      <p>Here is an example configuration for a <codeph>podblue</codeph> pod with an interface
+          (<codeph>192.168.11.10/24)</codeph> attached to the <codeph>blue</codeph> network (output
+        is trimmed for brevity):</p>
+      <codeblock id="codeblock_pnq_sfr_dzb">apiVersion: v1
+kind: Pod
+metadata:
+  name: podblue
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |
+      [
+        {
+          "name": "blue",
+          "interface":"net1",
+          "cni-args": {
+            "interfaceType":"veth",
+            "dataplane":"dpdk",
+            "mac":"aa:bb:cc:dd:ee:10",
+            "ipConfig":{
+              "ipv4":{
+                "address":"192.168.11.10/24",
+                "gateway":"192.168.11.1",
+                "routes":["192.168.11.0/24"]
+              },
+              "ipv6":{
+                "address":"abcd::192.168.11.10/112",
+                "gateway":"abcd::192.168.11.1",
+                "routes":["abcd::192.168.11.0/112"]
+              }
+            }
+          }
+        }
+      ]
+spec:
+...</codeblock>
+      <p>As you apply the NAD and the pod manifests using the <codeph>kubectl apply -f
+            <varname>manifest</varname></codeph> command, the <codeph>bluenet</codeph> routing
+        instance and <codeph>bluenet.inet.0</codeph> routing table is created in the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>controller. You can configure <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>to enable communication from <codeph>podblue</codeph> to
+        pods on the remote network. </p>
+      <note id="note_k1m_cxn_sbc">
+        <p>Use the <xref keyref="cloud-native-router-deployment-guide.crpd-customization-node-configlet">configlet resource</xref> to configure the cRPD pods.</p>
+      </note>
+      <p>Here is an example cRPD configuration:</p>
+      <ol>
+        <li><p>Configure the local fabric interface and the BGP
+            protocol:</p><codeblock id="codeblock_sfz_13r_dzb">set interfaces ens2f0 unit 0 family inet address 10.10.10.11/24
+set protocols bgp group overlay type internal
+set protocols bgp group overlay local-address 10.10.10.11
+set protocols bgp group overlay local-as 64520
+set protocols bgp group overlay neighbor 10.10.10.12 peer-as 64520</codeblock><p>where
+              <codeph>10.10.10.12/24</codeph> is the IP address of the BGP peer or neighbor router.
+          </p></li>
+        <li><p>Export the <codeph>inet</codeph> routes using the BGP
+          protocol:</p><codeblock id="codeblock_sdl_r3r_dzb">set policy-options policy-statement send_direct term 1 from protocol direct
+set policy-options policy-statement send_direct term 1 then accept
+set policy-options policy-statement send_direct term reject then reject
+set protocols bgp group overlay export send_direct</codeblock></li>
+        <li><p>Leak the routes from the <codeph>bluenet</codeph> routing instance to the
+              <codeph>default</codeph> routing
+          instance:</p><codeblock id="codeblock_psx_53r_dzb">set groups cni routing-instances bluenet routing-options interface-routes rib-group inet blue_to_inet
+set routing-options rib-groups blue_to_inet import-rib bluenet.inet.0
+set routing-options rib-groups blue_to_inet import-rib inet.0</codeblock></li>
+        <li><p>Leak only the BGP routes matching prefix <codeph>192.168.12.0</codeph> from
+              <codeph>inet.0</codeph> to the <codeph>bluenet</codeph> routing instance, where
+              <codeph>192.168.12.0/24</codeph> is the remote pod
+          network:</p><codeblock id="codeblock_gvt_nkr_dzb">set policy-options policy-statement inet_to_blue term from_bgp from instance master
+set policy-options policy-statement inet_to_blue term from_bgp from protocol bgp
+set policy-options policy-statement inet_to_blue term from_bgp from route-filter 192.168.12.0/24 orlonger
+set policy-options policy-statement inet_to_blue term from_bgp then accept
+set policy-options policy-statement inet_to_blue term reject then reject
+set routing-options rib-groups inet_to_blue import-rib inet.0
+set routing-options rib-groups inet_to_blue import-rib bluenet.inet.0
+set routing-options rib-groups inet_to_blue import-policy inet_to_blue
+set groups cni routing-instances bluenet routing-options instance-import inet_to_blue</codeblock></li>
+      </ol>
+      <note id="note_twn_s4r_dzb">
+        <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports route leaking between virtual router routing instances for routes with
+          interface, receive, resolve and table next-hops.</p>
+      </note>
+    </section>
+  </conbody>
+
+  <related-links>
+    <link format="html" href="https://www.juniper.net/documentation/us/en/software/junos/static-routing/topics/ref/statement/rib-groups-edit-routing-options.html" scope="external">
+      <linktext>Rib-Groups</linktext>
+    </link>
+  </related-links>
+</concept>

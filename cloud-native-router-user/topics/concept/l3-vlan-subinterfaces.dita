@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_4c6d88350d41a1cd-2baf0cb8-18e0e3b28c6--7f33" xml:lang="en-US">
+  <title>Layer-3 VLAN Sub-Interfaces</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>VLAN sub-interfaces are like logical interfaces on a physical switch or router. They access
+      only tagged packets that match the configured VLAN tag. A sub-interface has a parent
+      interface. A parent interface can have multiple sub-interfaces, each with a VLAN ID. When you
+      run the cloud-native router, you must associate each sub-interface with a specific VLAN.
+      Starting in Juniper Cloud-Native Router Release 23.2, the cloud-native router supports the use
+      of VLAN sub-interfaces in L3 mode along with the previously supported L2 mode.</p>
+
+    <section><title>Configuration Example</title>
+      <p>The VLAN sub-interfaces are configured using the Netowrk Attachment Definition (NAD) and
+        pod YAML manifests. Please see the <xref href="config-examples-overview.dita"/>
+        and relevant configuration examples for more information.</p>
+      <p>The <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>controller interface configuration viewed using the <codeph>show
+          configuration</codeph> command is as shown below (the output is trimmed for brevity).</p>
+      <p>For L3 mode:</p>
+      <codeblock>enp24s0f0 {
+        unit 1 {
+            vlan-id 10;
+            family inet {
+                address 172.168.20.3/24;
+            }
+        }
+}</codeblock>
+      <p>On the vRouter, a VLAN sub-interface configuration is as shown below:</p>
+      <p>For L3 mode:</p>
+      <codeblock>vif0/9      <b>Virtual: ens1f0v1.201</b> Vlan(o/i)(,S): <b>201/201</b> <b>Parent:vif0/2</b> NH: 36 MTU: 1514 
+            Type:Virtual(Vlan) HWaddr:d6:93:87:91:45:6c IPaddr:103.1.1.2
+            IP6addr:fe80::d493:87ff:fe91:456c
+            DDP: OFF SwLB: ON
+            Vrf:1 Mcast Vrf:1 Flags:L3DProxyEr QOS:-1 Ref:4
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0
+ 
+vif0/10     <b>Virtual: ens1f0v1.201</b> Vlan(o/i)(,S): <b>201/201 Parent:vif0/5</b> NH: 21 MTU: 9000
+            Type:Virtual(Vlan) HWaddr:d6:93:87:91:45:6c IPaddr:103.1.1.2
+            IP6addr:fe80::d493:87ff:fe91:456c
+            DDP: OFF SwLB: ON
+            Vrf:1 Mcast Vrf:65535 Flags:L3DProxyEr QOS:-1 Ref:4 TxXVif:9 
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            RX packets:0  bytes:0 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:0</codeblock></section>
+  </conbody>
+
+  <related-links/>
+</concept>

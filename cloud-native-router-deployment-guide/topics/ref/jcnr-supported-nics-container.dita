@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE reference PUBLIC "-//Juniper//DTD DITA 1.3 Reference//EN" "/SysSchema/dita13/dtd/subsection/dtd/reference.dtd">
+<reference xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_d951126c758aab5b-604623a6-199a5a8e913--7f0a" xml:lang="en-US">
+    <title>Cloud-Native Router Supported NICs Container Topic</title>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <refbody>
+        <!--This is a container topic containing the Supported NICs (DPDK) table that is reused across different platforms in JCNR Deployment Guide. Currently, all platforms except OpenShift use the same table (Default). Each table is in its own section because this makes adding an xref to the table easier. When adding an xref, just search for the table within the named section.-->
+        <section id="section_cyh_fln_2yb">
+            <title>Default</title>
+            <!--This is the default table to use across platforms.-->
+            <table frame="all" rowsep="1" colsep="1" id="table_dbx_pxq_vgc">
+                <title>Supported NICs (DPDK)</title>
+                <tgroup cols="5">
+                    <colspec colname="c1" colnum="1" colwidth="1*"/>
+                    <colspec colname="c2" colnum="2" colwidth="1*"/>
+                    <colspec colname="newCol3" colnum="3" colwidth="1*"/>
+                    <colspec colname="newCol4" colnum="4" colwidth="1*"/>
+                    <colspec colname="newCol5" colnum="5" colwidth="1*"/>
+                    <thead>
+                        <row>
+                            <entry>Controller Family</entry>
+                            <entry>NIC</entry>
+                            <entry>Firmware</entry>
+                            <entry>Driver</entry>
+                            <entry>COMMS DDP</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>Intel Ethernet 700 Series</entry>
+                            <entry>
+                                <p>Intel XL710</p>
+                            </entry>
+                            <entry>9.50</entry>
+                            <entry>2.26.8</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel X710-DA4 (4 x 10G) </p>
+                            </entry>
+                            <entry>9.50</entry>
+                            <entry>2.26.8</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel XXV710-DA2 (2 x 25G)</p>
+                            </entry>
+                            <entry>9.50</entry>
+                            <entry>2.26.8</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry>Intel Ethernet 800 Series</entry>
+                            <entry>
+                                <p>Intel E810 CPK</p>
+                            </entry>
+                            <entry>2.20</entry>
+                            <entry>1.9.11.9</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel E810 CVL</p>
+                            </entry>
+                            <entry>4.60</entry>
+                            <entry>1.15.4</entry>
+                            <entry>1.3.46.0</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel E810-C (4 x 25G)</p>
+                            </entry>
+                            <entry>4.60</entry>
+                            <entry>1.15.4</entry>
+                            <entry>1.3.46.0</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel E810-C (2 x 100G)</p>
+                            </entry>
+                            <entry>4.60</entry>
+                            <entry>1.15.4</entry>
+                            <entry>1.3.46.0</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel E810-CQDA2</p>
+                            </entry>
+                            <entry>4.60</entry>
+                            <entry>1.15.4</entry>
+                            <entry>1.3.46.0</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel E810-XXV</p>
+                            </entry>
+                            <entry>4.60</entry>
+                            <entry>1.15.4</entry>
+                            <entry>1.3.46.0</entry>
+                        </row>
+                        <row>
+                            <entry>Nvidia Mellanox<sup>1</sup></entry>
+                            <entry>
+                                <p>Mellanox ConnectX-6</p>
+                            </entry>
+                            <entry>26.43.1014</entry>
+                            <entry>24.10-0.7.0.0</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Mellanox ConnectX-7</p>
+                            </entry>
+                            <entry>28.43.1014</entry>
+                            <entry>24.10-0.7.0.0</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry namest="c1" nameend="newCol5">
+                                <p><sup>1</sup>When using Nvidia Mellanox NICs, ensure your
+                                    interface names do not exceed 11 characters in length.</p>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+        <section id="section_zl2_vxx_vgc">
+            <title>OpenShift</title>
+            <!--This is the table for OpenShift.-->
+            <table frame="all" rowsep="1" colsep="1" id="table_tp5_tvx_vgc">
+                <title>Supported NICs (DPDK)</title>
+                <tgroup cols="5">
+                    <colspec colname="c1" colnum="1" colwidth="1*"/>
+                    <colspec colname="c2" colnum="2" colwidth="1*"/>
+                    <colspec colname="newCol3" colnum="3" colwidth="1*"/>
+                    <colspec colname="newCol4" colnum="4" colwidth="1*"/>
+                    <colspec colname="newCol5" colnum="5" colwidth="1*"/>
+                    <thead>
+                        <row>
+                            <entry>Controller Family</entry>
+                            <entry>NIC</entry>
+                            <entry>Firmware</entry>
+                            <entry>Driver</entry>
+                            <entry>COMMS DDP</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>Intel Ethernet 700 Series</entry>
+                            <entry>
+                                <p>Intel XL710</p>
+                            </entry>
+                            <entry>9.50</entry>
+                            <entry>2.26.8</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel X710-DA4 (4 x 10G) </p>
+                            </entry>
+                            <entry>9.50</entry>
+                            <entry>2.26.8</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel XXV710-DA2 (2 x 25G)</p>
+                            </entry>
+                            <entry>9.50</entry>
+                            <entry>2.26.8</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry>Intel Ethernet 800 Series</entry>
+                            <entry>
+                                <p>Intel E810 CPK</p>
+                            </entry>
+                            <entry>2.20</entry>
+                            <entry>1.9.11.9</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel E810 CVL</p>
+                            </entry>
+                            <entry>4.60</entry>
+                            <entry>1.15.4</entry>
+                            <entry>1.3.46.0</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel E810-C (4 x 25G)</p>
+                            </entry>
+                            <entry>4.60</entry>
+                            <entry>1.15.4</entry>
+                            <entry>1.3.46.0</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel E810-C (2 x 100G)</p>
+                            </entry>
+                            <entry>4.60</entry>
+                            <entry>1.15.4</entry>
+                            <entry>1.3.46.0</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel E810-CQDA2</p>
+                            </entry>
+                            <entry>4.60</entry>
+                            <entry>1.15.4</entry>
+                            <entry>1.3.46.0</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Intel E810-XXV</p>
+                            </entry>
+                            <entry>4.60</entry>
+                            <entry>1.15.4</entry>
+                            <entry>1.3.46.0</entry>
+                        </row>
+                        <row>
+                            <entry>Nvidia Mellanox<sup>1,2</sup></entry>
+                            <entry>
+                                <p>Mellanox ConnectX-6</p>
+                            </entry>
+                            <entry>26.43.1014</entry>
+                            <entry>24.10-0.7.0.0</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry/>
+                            <entry>
+                                <p>Mellanox ConnectX-7</p>
+                            </entry>
+                            <entry>28.43.1014</entry>
+                            <entry>24.10-0.7.0.0</entry>
+                            <entry>–</entry>
+                        </row>
+                        <row>
+                            <entry namest="c1" nameend="newCol5">
+                                <p><sup>1</sup>When using Nvidia Mellanox NICs, ensure your
+                                    interface names do not exceed 11 characters in length.</p>
+                                <p><sup>2</sup>When using Nvidia Mellanox NICs, follow the interface
+                                    naming procedure in <xref href="../concept/system-resource-requirements-ocp.dita#xd_97ca4427c072890e-38403db6-189f3ce8904--7ce5/section_dsz_kjc_v1c"/>.</p>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </section>
+    </refbody>
+</reference>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7f74" xml:lang="en-US">
+  <title>Kubernetes Overview</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+
+    <section>
+      <title>Kubernetes Overview</title>
+      <note>
+        <p>Juniper Networks refers to primary nodes and backup nodes. Kubernetes refers to master
+          nodes and worker nodes. References in this guide to primary and backup correlate with
+          master and worker in the Kubernetes world.</p>
+      </note>
+      <p>Kubernetes is an orchestration platform for running containerized applications in a
+        clustered computing environment. It provides automatic deployment, scaling, networking, and
+        management of containerized applications. </p>
+      <p>A Kubernetes pod consists of one or more containers, with each pod representing an instance
+        of the application. A pod is the smallest unit that Kubernetes can manage. All containers in
+        the pod share the same network name space.</p>
+      <p>We rely on Kubernetess to orchestrate the infrastructure that the cloud-native router needs
+        to operate. However, we do not supply Kubernetes installation or management instructions in
+        this documentation. See <xref href="https://kubernetes.io" format="html" scope="external"/>
+        for Kubernetes documentation. Currently, Juniper Cloud-Native Router requires that the
+        Kubernetes cluster be a standalone cluster, meaning that the Kubernetes primary and backup
+        functions both run on a single node.</p>
+      <p>The major components of a Kubernetes cluster are: </p>
+      <ul id="ul_lmn_zzs_zrb">
+        <li><b>Nodes</b><p>Kubernetes uses two types of nodes: a primary (control) node and a
+            compute (worker) node. A Kubernetes cluster usually consists of one or more master nodes
+            (in active/standby mode) and one or more worker nodes. You create a node on a physical
+            computer or a virtual machine (VM).</p></li>
+        <li><b>Pods</b><p>Pods live in nodes and provide a space for containerized applications to
+            run. A Kubernetes pod consists of one or more containers, with each pod representing an
+            instance of the application(s). A pod is the smallest unit that Kubernetes can manage.
+            All containers in a pod share the same network namespace.</p></li>
+        <li>
+          <p><b>Namespaces</b></p>
+          <p>In Kubernetes, pods operate within a namespace to isolate groups of resources within a
+            cluster. All Kubernetes clusters have a <i>kube-system</i> namespace, which is for
+            objects created by the Kubernetes system. Kubernetes also has a <i>default</i>
+            namespace, which holds all objects that don't provide their own namespace. The last two
+            preconfigured Kubernetes namespaces are <i>kube-public</i> and <i>kube-node-lease</i>.
+            The <filepath>kube-public</filepath> namespace is used to allow authenticated and
+            unauthenticated users to read some aspects of the cluster. Node leases allow the
+              <filepath>kubelet</filepath> to send heartbeats so that the control plane can detect
+            node failure. </p>
+        </li>
+        <li>
+          <p><b>Kubelet</b></p>
+          <p>The kubelet is the primary node agent that runs on each node. In the case of Juniper
+            Cloud-Native Router, only a single kubelet runs on the cluster since we do not support
+            multinode deployments.</p>
+        </li>
+        <li><b>Containers</b><p>A container is a single package that consists of an entire runtime
+            environment including the application and its:</p><ul id="ul_wmf_y1s_55b">
+            <li>
+              <p>Configuration files</p>
+            </li>
+            <li>
+              <p>Dependencies</p>
+            </li>
+            <li>
+              <p>Libraries</p>
+            </li>
+            <li>
+              <p>Other binaries</p>
+            </li>
+          </ul><p>Software that runs in containers can, for the most part, ignore the differences in
+            the those binaries, libraries, and configurations that may exist between the container
+            environment and the environment that hosts the container. Common container types are
+            docker, containerd, and Container Runtime Interface using Open Container Initiative
+            compatible runtimes (CRI-O).</p></li>
+      </ul>
+    </section>
+  </conbody>
+
+  <related-links/>
+</concept>

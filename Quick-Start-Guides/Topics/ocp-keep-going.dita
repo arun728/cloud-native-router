@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_16e9ffdde92d095d--4c26246f-1898c6bf578--7cad" xml:lang="en-US">
+  <title>Keep Going</title>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Congratulations! You have installed and configured Juniper Cloud-Native Router on Red Hat®
+      OpenShift® Container Platform. Here are some things you can do next:</p>
+
+    <section><title>What's Next?</title>
+      <table colsep="1" frame="all" id="table_swr_d44_hyb" rowsep="1">
+        <title>What's Next</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>If you want to</entry>
+              <entry>Then</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>Learn about the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Deployment Modes</entry>
+              <entry>See the <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.2/cloud-native-router-user/topics/concept/jcnr-deployment-modes.html" scope="external">JCNR Deployment Modes</xref></entry>
+            </row>
+            <row>
+              <entry>Learn about the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>network communication interfaces</entry>
+              <entry>See the <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.2/cloud-native-router-user/topics/concept/jcnr-interfaces-overview.html" scope="external">JCNR Interfaces Overview</xref></entry>
+            </row>
+            <row>
+              <entry>Learn about the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Common Features</entry>
+              <entry>See the  <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.2/cloud-native-router-user/topics/concept/l2-l3-common-features.html" scope="external">JCNR Common Features</xref></entry>
+            </row>
+            <row>
+              <entry>Learn about the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>L2 Features</entry>
+              <entry>See the <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.2/cloud-native-router-user/topics/concept/l2-deployment-mode-intro.html" scope="external">JCNR L2 Features Overview</xref></entry>
+            </row>
+            <row>
+              <entry>Learn about the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>L3 Features</entry>
+              <entry>See the <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.2/cloud-native-router-user/topics/concept/l3-deployment-mode-intro.html" scope="external">JCNR L3 Features Overview</xref></entry>
+            </row>
+            <row>
+              <entry>View Configuration Examples</entry>
+              <entry>See the <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.2/cloud-native-router-user/topics/concept/config-examples-overview.html" scope="external">JCNR Use-Cases and Configuration
+                Overview</xref></entry>
+            </row>
+            <row>
+              <entry>Manage and Troubleshooting JCNR</entry>
+              <entry>See <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.2/cloud-native-router-deployment-guide/topics/concept/monitor-jcnr-via-cli.html" scope="external">Monitor JCNR via CLI</xref> and <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.2/cloud-native-router-deployment-guide/topics/concept/troubleshooting-vrouter.html" scope="external">Troubleshooting JCNR via CLI</xref></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table></section>
+    <section id="section_idk_jp4_hyb">
+      <title>General Information</title>
+      <table colsep="1" frame="all" id="table_oph_kp4_hyb" rowsep="1">
+        <title>General Information</title>
+        <tgroup cols="2">
+          <colspec colname="c1" colnum="1" colwidth="1*"/>
+          <colspec colname="c2" colnum="2" colwidth="1*"/>
+          <thead>
+            <row>
+              <entry>If you want to</entry>
+              <entry>Then</entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>See all Juniper Cloud-Native documentation</entry>
+              <entry>Visit <xref format="html" href="https://www.juniper.net/documentation/product/us/en/juniper-cloud-native-router/" scope="external">JCNR Documentation</xref>
+              </entry>
+            </row>
+            <row>
+              <entry>Stay up-to-date about new and changed features and known and resolved issues in
+                <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>23.2</entry>
+              <entry>See <xref format="html" href="https://www.juniper.net/documentation/us/en/software/cloud-native-router23.2/release-notes/23.2/jcnr-23.2-release-notes/index.html" scope="external">release notes</xref>.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+  </conbody>
+
+  <related-links/>
+</concept>

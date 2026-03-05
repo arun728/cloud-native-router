@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7e94" xml:lang="en-US">
+  <title>Quality of Service (QoS)</title>
+  <shortdesc>Read this topic to learn about the quality of service (QoS) feature of the Juniper
+    Cloud-Native Router when deployed in L2 mode. </shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Starting in Juniper Cloud-Native Router Release 22.4, you can configure quality of service
+      (QoS) parameters including classification, marking, and queuing. The cloud-native router
+      performs classification and marking operations in vRouter and queing (scheduling) operations
+      in the physical network interface card (NIC). Scheduling is only supported on the E810
+      NIC.</p>
+
+    <section><title>QoS Overview</title>
+      <p>You enable QoS prior to the deploy time by editing the <codeph>values.yaml</codeph> file in
+            <filepath>Juniper-Cloud-Native-Router-<varname>version-number</varname>/helmchart</filepath>
+        directory and changing the <codeph>qosEnable</codeph> value to <codeph>true</codeph>. The
+        default value for the QoS feature is <codeph>false</codeph> (disabled). For example:</p>
+      <codeblock># Set true/false to Enable or Disable QOS, note: QOS is not supported on X710 NIC.
+  qosEnable: true</codeblock>
+      <note>
+        <p>You can only enable the QoS feature if the host server on which you install your
+          cloud-native router contains an Intel E810 NIC that is running lldp.</p>
+      </note>
+      <p>You enable lldp on the NIC using the <codeph>lldptool</codeph> which runs on the host
+        server as a CLI application. Issue the following command to enable lldp on the E810 NIC. For
+        example, you could use the following command:</p>
+      <codeblock>lldptool -T -i <varname>INTERFACE</varname> -V ETS-CFG willing=no 
+tsa=0:strict,1:strict,2:strict,3:strict,4:strict,
+5:strict,6:strict,7:strict
+up2tc=0:0,1:1,2:2,3:3,4:0,5:1,6:2,7:3</codeblock>
+      <p>The details of the above command are:</p>
+      <ul id="ul_z14_hns_mwb">
+        <li>
+          <p><b>ETS</b>–Enhanced Transmission Selection</p>
+        </li>
+        <li>
+          <p><b>willing</b>–The willing attribute determines whether the system uses locally
+            configured packet forwarding classification (PFC) or not. If you set
+              <codeph>willing</codeph> to <codeph>no</codeph>(the default setting), the cloud-native
+            router applies local PFC configuration. If you set willing to yes, and the cloud-native
+            router receives TLV from the peer router, the cloud-native router applies the received
+            values.</p>
+        </li>
+        <li>
+          <p><b>tsa</b>–The transmission selection algorithm is a comma seperated list of traffic
+            class to selection algorithm maps. You can choose <codeph>ets</codeph>,
+              <codeph>strict</codeph>, or <codeph>vendor</codeph> as selection algorithms.</p>
+        </li>
+        <li>
+          <p><b>up2tc</b>–Comma-separated list that maps user priorities to traffic classes</p>
+        </li>
+      </ul>
+      <p>The list below provides an overview of the classification, marking, and queueing operations
+        performed by cloud-native router.</p>
+      <ul id="ul_ukp_ryr_mwb">
+        <li>
+          <p>Classification:</p>
+          <ul id="ul_ynm_wyr_mwb">
+            <li>
+              <p>vRouter classifies packets by examining the priority bits in the packet</p>
+            </li>
+            <li>
+              <p>vRouter derives traffic class and loss priority</p>
+            </li>
+            <li>
+              <p>vRouter can apply traffic classifiers to fabric, traffic, and workload interface
+                types</p>
+            </li>
+            <li>
+              <p>vRouter maintains 16 entries in its classifier map</p>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <p>Marking (Re-write):</p>
+          <ul id="ul_jtc_xyr_mwb">
+            <li>
+              <p> vRouter performs marking operations</p>
+            </li>
+            <li>
+              <p>vRouter performs rewriting of p-bits in the egress path</p>
+            </li>
+            <li>
+              <p>vRouter derives new traffic priority based on traffic class and drop priority at
+                egress</p>
+            </li>
+            <li>
+              <p>vRouter can apply marking to packets only on fabric interfaces</p>
+            </li>
+            <li>
+              <p>vRouter maintains 8 entries in its marking map</p>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <p>Queueing (Scheduling):</p>
+          <ul id="ul_rvn_xyr_mwb">
+            <li>
+              <p>Cloud-native router performs strict priority scheduling in hardware (E810 NIC) </p>
+            </li>
+            <li>
+              <p>Cloud-native router maps each traffic class to one queue</p>
+            </li>
+            <li>
+              <p>Cloud-native router limits the maximum number of traffic queue to 4</p>
+            </li>
+            <li>
+              <p>Cloud-native router maps 8 possible priorities to 4 traffic classes; It also maps
+                each traffic class 1 hardware queue</p>
+            </li>
+            <li>
+              <p>Cloud-native router can apply scheduling to fabric interface only</p>
+            </li>
+            <li>
+              <p>Virtual functions (VFs) leverage the queues that you configure in the physical
+                functions (interfaces)</p>
+            </li>
+            <li>
+              <p>vRouter maintains 8 entries in its scheduler map</p>
+            </li>
+          </ul>
+        </li>
+      </ul></section>
+    <section id="section_ngz_21h_mxb"><title>Configuration Example</title><p>You configure QoS
+        classifiers, rewrite rules, and schedulers in the controller using Junos set commands or
+        remotely using NETCONF. We display a Junos-based example configuration
+        below:</p><codeblock>set class-of-service classifiers ieee-802.1 class1 forwarding-class assured-forwarding loss-priority high code-points 011
+set class-of-service rewrite-rules ieee-802.1 Rule_1 forwarding-class assured-forwarding loss-priority high code-point 110
+set class-of-service schedulers sch1 priority high
+set class-of-service scheduler-maps sch1 forwarding-class assured-forwarding scheduler sch1
+set class-of-service interfaces enp175s1 scheduler-map sch1
+set class-of-service interfaces enp175s1 unit 0 rewrite-rules ieee-802.1 Rule_1
+set class-of-service interfaces vhostnet123-3546aefd-7af8-4fe5 unit 0 classifiers ieee-802.1 class1</codeblock><p>You
+        view the QoS configuration by <xref href="accessing-crpd-cli.dita">accessing the JCNR controller CLI</xref>. Use the <codeph>show</codeph> commands in Junos
+        operation mode. The show commands reveal the configuration of classifiers, rewrite rules, or
+        scheduler maps individually. For example:</p><b>Show
+          Classifier</b><codeblock>user@jcnr-01&gt; <b>show class-of-service classifier</b>
+
+Classifier: class1, Code point type: ieee802.1p
+Code point             Forwarding class                Loss priority
+011                    assured-forwarding              high
+</codeblock><p><b>Show
+          Rewrite-Rule</b></p><codeblock>user@jcnr-01&gt; <b>show class-of-service rewrite-rule</b>
+
+Rewrite rule: Rule_1, Code point type: ieee802.1p
+Forwarding class            Loss priority        Code point
+assured-forwarding          high                 110</codeblock><p><b>Show
+          Scheduler-Map</b></p><codeblock>user@jcnr-01&gt; <b>show class-of-service scheduler-map sch1</b>
+Scheduler map: sch1
+  Scheduler: sch1,  Forwarding class: assured-forwarding
+    Transmit rate: unspecified, Rate Limit: none, Priority: high</codeblock><b>Show
+        Interface
+      </b><codeblock>user@jcnr-01&gt; <b>show class-of-service interface vhostnet123-5a1e3079-d45e-4ab5</b>
+Physical interface: vhostnet123-5a1e3079-d45e-4ab5
+Maximum usable queues: 4, Queues in use: 4
+
+  Logical interface: vhostnet123-5a1e3079-d45e-4ab5.0
+Object            Name               Type
+Classifier        class1             ieee802.1p</codeblock><codeblock>user@jcnr-01&gt; <b>show class-of-service interface enp175s1</b>
+Physical interface: enp175s1
+Maximum usable queues: 4, Queues in use: 4
+  Scheduler map: sch1
+  Logical interface: enp175s1.0
+Object            Name               Type
+Rewrite-Output    Rule_1             ieee802.1p</codeblock></section>
+    <section id="section_k1d_3zs_qxb"><title>Troubleshooting</title><p>You can troubleshooting the
+        QoS configuration <xref href="accessing-vrouter-cli.dita">by accessing
+          the vRouter CLI</xref>. Use the <codeph>purel2cli</codeph> command and by viewing the
+        interface mapping. </p><p><b>Display Classifier
+        Config</b></p><codeblock><b>purel2cli --qos cla class1</b>
+Classifer name: class1 Classifier Index: 0
+===============================================
+code-points   loss priority    forwarding-class
+===============================================
+   000           low            best-effort
+   001           low            best-effort
+   010           low            best-effort
+   0<b>11           high           assured-forwarding
+</b>  100           low            best-effort
+   101           low            best-effort
+   110           low            best-effort
+   111           low            best-effort</codeblock><codeblock><b>vif0/2      PMD:</b> <b>vhostnet123-3546aefd-7af8-4fe5
+</b>            Type:Virtual HWaddr:aa:bb:cc:dd:ee:12
+            Vrf:0 Flags:L2Mon QOS:-1 Ref:13
+            RX port   packets:20 errors:0
+            RX queue  packets:20 errors:0
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Vlan Mode: Trunk  Vlan: 100 200 300
+            <b>Qos classifier: class1
+</b>           RX packets:20  bytes:1200 errors:0
+            TX packets:0  bytes:0 errors:0
+            Drops:40</codeblock><b>Display
+        Re-write
+        Config</b><codeblock><b>purel2cli --qos rw Rule_1</b>
+Re-Write name: Rule_1 Re-write Index: 0
+=========================================loss priority      Forwarding-class      re-write prio
+=========================================
+   low           best-effort                  n/a
+   low           expedited-forwarding         n/a
+   low           assured-forwarding           n/a
+   low           network-control              n/a
+   high          best-effort                  n/a
+   high          expedited-forwarding         n/a
+   <b>high          assured-forwarding           110</b>
+   high          network-control              n/a</codeblock><codeblock><b>vif0/1</b>      <b>PCI: 0000:af:01.0 (Speed 10000, Duplex 1)</b>
+            Type:Physical HWaddr:46:d5:f3:fc:fc:92
+            Vrf:0 Flags:L2Vof QOS:-1 Ref:42
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:af:01.0  Status: UP  Driver: net_iavf
+            Vlan Mode: Trunk  Vlan: 100 200 300 700-705 2001
+                <b>Rewrite:    Rule_1
+</b>               Scheduler:  sch1
+            RX packets:0  bytes:0 errors:0
+            TX packets:20  bytes:1200 errors:0
+            Drops:0
+            TX port   packets:20 errors:0</codeblock><b>Display
+        Scheduler
+      Output</b><codeblock><b>purel2cli --qos sch sch1</b>
+Scheduler name: sch1 Scheduler  Index: 0
+=====================================
+ forwarding-class 	 priority_map
+=====================================
+  best-effort                         0
+  expedited-forwarding      0
+  assured-forwarding          2
+  network-control               0</codeblock><codeblock><b>vif0/1      PCI: 0000:af:01.0 (Speed 10000, Duplex 1)</b>
+            Type:Physical HWaddr:46:d5:f3:fc:fc:92
+            Vrf:0 Flags:L2Vof QOS:-1 Ref:42
+            RX queue errors to lcore 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+            Fabric Interface: 0000:af:01.0  Status: UP  Driver: net_iavf
+            Vlan Mode: Trunk  Vlan: 100 200 300 700-705 2001
+               Rewrite:    Rule_1
+               <b>Scheduler:  sch1</b>
+            RX packets:0  bytes:0 errors:0
+            TX packets:20  bytes:1200 errors:0
+            Drops:0
+            TX port   packets:20 errors:0</codeblock></section>
+  </conbody>
+
+  <related-links/>
+</concept>

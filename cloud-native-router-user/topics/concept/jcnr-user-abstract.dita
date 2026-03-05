@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_b2e72d2fc490b097-645c59e9-18817f4f2c4--7c79" xml:lang="en-US">
+  <title>About This Guide</title>
+
+  <conbody>
+    <p>Use this guide to learn about the Juniper Cloud-Native Router. This user guide includes a
+      high-level overview along with information about Juniper Cloud-Native Router's deployment
+      modes, features, and configuration examples.</p>
+  </conbody>
+</concept>

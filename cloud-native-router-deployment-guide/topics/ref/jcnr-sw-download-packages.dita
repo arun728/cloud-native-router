@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE reference PUBLIC "-//Juniper//DTD DITA 1.3 Reference//EN" "/SysSchema/dita13/dtd/subsection/dtd/reference.dtd">
+<reference xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6e389dfcf6e0ccd1-2b9339cf-18ebe20edd7--7ffc" xml:lang="en-US">
+    <title>Cloud-Native Router Software Download Packages</title>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <refbody>
+        <section id="section_mxd_m1v_5bc">
+            <title>Cloud-Native Router Software Download Packages</title>
+            <p><xref format="dita" href="#xd_6e389dfcf6e0ccd1-2b9339cf-18ebe20edd7--7ffc/table_zlb_x51_1bc"/> shows the software packages available from the Juniper Networks
+                software download <xref format="html" href="https://support.juniper.net/support/downloads/?p=juniper-cloud-native-router" scope="external">site</xref>:</p>
+            <table colsep="1" frame="all" id="table_zlb_x51_1bc" rowsep="1">
+                <title>Cloud-Native Router Software Download Packages</title>
+                <tgroup cols="2">
+                    <colspec colname="c1" colnum="1" colwidth="1*"/>
+                    <colspec colname="c2" colnum="2" colwidth="1*"/>
+                    <thead>
+                        <row>
+                            <entry>
+                                <p>Package</p>
+                            </entry>
+                            <entry>
+                                <p>Description</p>
+                            </entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>
+                                <p>Juniper_Cloud_Native_Router_<varname>&lt;release&gt;</varname>.tar.gz</p>
+                            </entry>
+                            <entry>
+                                <p>This contains the Helm chart for installing Cloud-Native Router
+                                    on all deployments.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>Juniper_Cloud_Native_Router_CSRX_<varname>&lt;release&gt;</varname>.tar.gz</p>
+                            </entry>
+                            <entry>
+                                <p>This contains the combined Helm chart for installing Cloud-Native
+                                    Router and cSRX on all deployments.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>Juniper_Cloud_Native_Router_Trial_<varname>&lt;release&gt;</varname>.tar.gz</p>
+                            </entry>
+                            <entry>
+                                <p>See <xref href="https://www.juniper.net/us/en/dm/jcnr-free-trial.html" format="html" scope="external"/>.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>junos_csrx_<varname>&lt;release&gt;</varname>.tar.gz</p>
+                            </entry>
+                            <entry>
+                                <p>This contains the Helm chart for installing cSRX on an existing
+                                    Cloud-Native Router installation on all deployments.</p>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>Juniper_Cloud_Native_Router_Service_Module_<varname>&lt;release&gt;</varname>.tar.gz</p>
+                            </entry>
+                            <entry>
+                                <p>This contains the Cloud-Native Router Operator Service Module
+                                    Helm chart for the following:</p>
+                                <ul id="ul_swv_kpk_sdc">
+                                    <li>
+                                        <p>installing the Cloud-Native Router VPC Gateway on an
+                                            Amazon EKS deployment</p>
+                                    </li>
+                                    <li>
+                                        <p>installing the Cloud-Native Router host-based routing
+                                            solution on a bare metal deployment</p>
+                                    </li>
+                                </ul>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>JCNR_Validation_Factory_<varname>&lt;release&gt;</varname>.tar.gz</p>
+                            </entry>
+                            <entry>
+                                <p>This contains the Helm chart for installing Validation
+                                    Factory.</p>
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+            <note id="note_y53_sz5_5bc">
+                <p>By default, the provided Helm charts download container images from the Juniper
+                    Networks <codeph>enterprise-hub.juniper.net</codeph> repository. Be sure to
+                    whitelist the <xref format="html" href="https://enterprise-hub.juniper.net" scope="external"/> URL if you intend to use this default repository.</p>
+            </note>
+        </section>
+    </refbody>
+</reference>

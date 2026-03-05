@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_aa1b6500adc67cb2-c89f836-18ff470b581--7db1" xml:lang="en-US">
+  <title>Install and Verify Juniper Cloud-Native Router for VMWare Tanzu</title>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>The procedure for installing and verifying Cloud-Native Router on VMWare Tanzu is the same as
+      the procedure for installing and verifying Cloud-Native Router on baremetal.</p>
+    <p>See <xref href="install-jcnr-bms.dita"/>.</p>
+  </conbody>
+</concept>

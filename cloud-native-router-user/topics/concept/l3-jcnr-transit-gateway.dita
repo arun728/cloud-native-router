@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_365a4d48bf5a7276--1cb4a940-1885d3c0a4b--7e44" xml:lang="en-US">
+  <!--JCNR-288; Release 23.2-->
+  <title><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>as a Transit Gateway</title>
+  <abstract>
+    <shortdesc><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>can act as a transit gateway for external traffic. As a transit gateway, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is
+      neither the source nor the destination for the traffic, but an intermediate hop. It acts as a
+      vanilla router to switch traffic between multiple physical interfaces.</shortdesc>
+  </abstract>
+  <prolog>
+    <author>dgv</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>Starting with Juniper Cloud-Native Router (JCNR) Release 23.2, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>can now act as a transit
+      gateway for external traffic. As a transit gateway, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>is neither the source nor the
+      destination for the traffic, but an intermediate hop. It acts as a vanilla router to switch
+      traffic between multiple physical interfaces. Depending on the forwarding state, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>can
+      encapsulate or decapsulate the traffic between interfaces.</p>
+    <note>
+      <p>Starting with <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Release 23.2, <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>supports multiple fabric interfaces that enable it to
+        function as a transit gateway. </p>
+    </note>
+    <p><?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>has to be deployed in the L3 mode to perform the transit router functionality. Add all
+      physical interfaces (physical and virtual functions) as fabric interfaces in the helm chart
+      before deploying the JCNR. The deployed <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>does not support editing or changing the fabric
+      interfaces during run time. However, you can create or remove pod interfaces during run time.
+      Here are example helm chart configurations:</p>
+    <codeblock>fabricInterface:
+  - ens2f2:
+      ddp: "auto"
+  - ens1f1:
+      ddp: "auto"</codeblock>
+    <codeblock> fabricInterface:
+    - subnet: 10.0.3.0/24
+      gateway: 10.0.3.1
+      ddp: "off"
+    - subnet: 10.0.5.0/24
+      gateway: 10.0.5.1
+      ddp: "off"</codeblock>
+    <p>You need to configure an IP address on the loopback interface and use it as a tunnel endpoint
+      for each <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>instance. The loopback IP address is the next hop address which BGP advertises
+      to its peers. All data packets with encapsulations like MPLSoUDP will have the outer IP
+      address as this loopback IP address. The loopback IP address is reachable via any of the
+      physical interfaces. The loopback IP address should be in a /32 subnet without a MAC address.
+      For example:</p>
+    <codeblock>set interfaces lo1 unit 1 family inet address 10.0.0.1/32</codeblock>
+  </conbody>
+
+  <related-links/>
+</concept>

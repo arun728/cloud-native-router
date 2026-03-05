@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_bf86f85739b0a0bc-9e35083-191eb42b1de--7fa8" xml:lang="en-US">
+    <title>Troubleshoot Deployment</title>
+    <shortdesc>Learn how to troubleshoot your Cloud-Native Router deployment.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody>
+        <note id="note_tth_qzg_scc">
+            <p>We use the JSON processor jq to format the output of some commands. If jq is not
+                installed on your OS by default, install it using the appropriate package manager
+                for your OS. For example:</p>
+            <codeblock id="codeblock_uxs_h1h_scc">dnf install jq</codeblock>
+            <codeblock id="codeblock_wzh_31h_scc">apt install jq</codeblock>
+        </note>
+    </tmbody>
+    <concept id="concept_d1d_qzv_45b">
+        <title>Common Problems</title>
+        <conbody>
+            <p><xref format="dita" href="#concept_d1d_qzv_45b/table_bny_r1w_45b"/> lists some common
+                deployment problems and remedies. </p>
+            <table colsep="1" frame="all" id="table_bny_r1w_45b" rowsep="1">
+                <title>Common Problems</title>
+                <tgroup cols="3">
+                    <colspec colname="c1" colnum="1" colwidth="1*"/>
+                    <colspec colname="c2" colnum="2" colwidth="1*"/>
+                    <colspec colname="c3" colnum="3" colwidth="1*"/>
+                    <thead>
+                        <row>
+                            <entry>Potential issue</entry>
+                            <entry>What to check</entry>
+                            <entry>Related Commands</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>Image not found</entry>
+                            <entry>Check if the images are uploaded to the local docker using the
+                                command <codeph>docker images</codeph>. If not, then the registry
+                                configured in <codeph>values.yaml</codeph> should be accessible.
+                                Ensure image tags are correct.</entry>
+                            <entry>
+                                <codeblock id="codeblock_drq_qpj_scc">kubectl -n jcnr describe pod &lt;crpd-pod-name&gt;</codeblock>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>Initialization errors</entry>
+                            <entry>Check if jcnr-secrets is loaded and has a valid license
+                                key</entry>
+                            <entry><codeblock id="codeblock_shj_fpj_scc">[root@jcnr-01]# kubectl get secrets -n jcnr
+NAME                  TYPE                                  DATA   AGE
+crpd-token-zp8kc      kubernetes.io/service-account-token   3      29d
+default-token-zn6p9   kubernetes.io/service-account-token   3      29d
+jcnr-secrets          Opaque                                2      29d</codeblock>Confirm
+                                that root password and license key are present in
+                                    <codeph>/var/run/jcnr/juniper.conf</codeph></entry>
+                        </row>
+                        <row>
+                            <entry>cRPD Pod in CrashLoopBackOff state</entry>
+                            <entry>
+                                <ul id="ul_xwj_dbw_45b">
+                                    <li>Check if startup/liveness probe is failing or vrouter pod
+                                        not running</li>
+                                    <li>rpd-vrouter-agent gRPC connection not UP</li>
+                                    <li>Composed configuration is invalid or config template is
+                                        invalid</li>
+                                </ul>
+                            </entry>
+                            <entry>
+                                <ul id="ul_ks5_hbw_45b">
+                                    <li>
+                                        <codeblock id="codeblock_thj_fpj_scc">kubectl get pods -A</codeblock>
+                                        <codeblock id="codeblock_uhj_fpj_scc">kubectl -n jcnr describe pod &lt;crpd-pod-name&gt;</codeblock>
+                                        <codeblock id="codeblock_vhj_fpj_scc">tail –f /var/log/jcnr/jcnr-cni.log​</codeblock>
+                                        <codeblock id="codeblock_whj_fpj_scc">tail –f /var/log/jcnr/jcnr_notifications.json</codeblock>
+                                    </li>
+                                    <li>
+                                        <p>See <xref keyref="cloud-native-router-user.accessing-crpd-cli"/> to enter the cRPD CLI and run the following
+                                            command:</p>
+                                        <codeblock id="codeblock_xhj_fpj_scc">show krt state channel vrouter</codeblock>
+                                    </li>
+                                    <li>
+                                        <codeblock id="codeblock_yhj_fpj_scc">cat /var/run/jcnr/juniper.conf</codeblock>
+                                    </li>
+                                </ul>
+                            </entry>
+                        </row>
+                        <row>
+                            <entry>
+                                <p>vRouter Pod in CrashLoopBackOff state</p>
+                            </entry>
+                            <entry>Check the contail-k8s-deployer logs for errors</entry>
+                            <entry>See <xref format="dita" href="#task_izg_svj_scc"/>.</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </conbody>
+    </concept>
+    <task id="task_izg_svj_scc">
+        <title>Check Deployer Logs</title>
+        <taskbody>
+            <context id="context_azz_svj_scc">The deployer logs should be one of the first places
+                you look when you run into installation problems.</context>
+            <steps id="steps_k1t_5vj_scc">
+                <step>
+                    <cmd>To check the deployer logs:</cmd>
+                    <substeps id="substeps_efb_wvj_scc">
+                        <substep>
+                            <cmd>List the deployer pod.</cmd>
+                            <info>
+                                <codeblock id="codeblock_f4j_xvj_scc">kubectl get pods -n contrail-deploy</codeblock>
+                                <p>Sample output:</p>
+                                <codeblock id="codeblock_hv5_zvj_scc">NAME                                    READY   STATUS    RESTARTS   AGE
+contrail-k8s-deployer-6fbf77bc7-5j67d   1/1     Running   0          24h
+</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>View the deployer logs.</cmd>
+                            <info>
+                                <codeblock id="codeblock_ul2_cwj_scc">kubectl logs contrail-k8s-deployer-6fbf77bc7-5j67d -n contrail-deploy</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_crk_vtj_scc">
+        <title>Verify vRouter and cRPD Health</title>
+        <taskbody>
+            <steps id="steps_d5k_xtj_scc">
+                <step>
+                    <cmd>Check the vRouter daemonset.</cmd>
+                    <substeps id="substeps_dvk_ztj_scc">
+                        <substep>
+                            <cmd>List the daemonsets.</cmd>
+                            <info>
+                                <codeblock id="codeblock_gr2_b5j_scc">kubectl get ds -n contrail</codeblock>
+                                <p>Sample output:</p>
+                                <codeblock id="codeblock_lp3_cwh_scc">
+NAME                                   DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+jcnr-0-contrail-vrouter-nodes          1         1         1       1            1           &lt;none&gt;          24h
+jcnr-0-contrail-vrouter-nodes-vrdpdk   1         1         1       1            1           &lt;none&gt;          24h
+</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Get vRouter daemonset details.</cmd>
+                            <info>
+                                <codeblock id="codeblock_amj_j5j_scc">kubectl get ds jcnr-0-contrail-vrouter-nodes -n contrail -o json | jq</codeblock>
+                                <p>Sample output:</p>
+                                <codeblock id="codeblock_lpk_mvj_scc">{
+  "apiVersion": "apps/v1",
+  "kind": "DaemonSet",
+  "metadata": {
+    "annotations": {
+      "deprecated.daemonset.template.generation": "1"
+    },
+    "creationTimestamp": "2024-09-12T21:29:31Z",
+    "generation": 1,
+    "labels": {
+      "app": "contrail-vrouter-nodes",
+      "core.juniper.net/jcnrInstance": "jcnr-0",
+      "core.juniper.net/jcnrInstanceNs": "jcnr",
+      "core.juniper.net/nodeName": "k8s-worker0"
+&lt;trimmed&gt;
+
+  "status": {
+    "currentNumberScheduled": 1,
+    "desiredNumberScheduled": 1,
+    "numberAvailable": 1,
+    "numberMisscheduled": 0,
+    "numberReady": 1,
+    "observedGeneration": 1,
+    "updatedNumberScheduled": 1
+  }
+}
+</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+                <step>
+                    <cmd>Check the cRPD stateful set.</cmd>
+                    <substeps id="substeps_llg_w5j_scc">
+                        <substep>
+                            <cmd>List the stateful sets.</cmd>
+                            <info>
+                                <codeblock id="codeblock_xnv_w5j_scc">kubectl get sts -n jcnr</codeblock>
+                                <p>Sample output:</p>
+                                <codeblock id="codeblock_hqf_x5j_scc">NAME          READY   AGE
+jcnr-0-crpd   1/1     24h
+</codeblock>
+                            </info>
+                        </substep>
+                        <substep>
+                            <cmd>Get the cRPD stateful set details.</cmd>
+                            <info>
+                                <codeblock id="codeblock_rv1_bvj_scc">kubectl get sts -n jcnr -o json | jq</codeblock>
+                                <p>Sample output:</p>
+                                <codeblock id="codeblock_o2p_fvj_scc">{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "apps/v1",
+      "kind": "StatefulSet",
+      "metadata": {
+        "creationTimestamp": "2024-09-12T21:29:23Z",
+        "generation": 1,
+        "labels": {
+          "core.juniper.net/jcnrInstance": "jcnr-0",
+          "core.juniper.net/jcnrInstanceNs": "jcnr"
+        },
+        "name": "jcnr-0-crpd",
+        "namespace": "jcnr",
+        "resourceVersion": "5502485",
+        "uid": "025bc4b3-62eb-4552-9a83-b7e0123435d1"
+      },
+&lt;trimmed&gt;</codeblock>
+                            </info>
+                        </substep>
+                    </substeps>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <concept id="concept_rwj_bsj_scc">
+        <title>Verify cRPD Configuration</title>
+        <conbody>
+            <p>The Cloud-Native Router deployment process creates a cRPD configuration file from the
+                parameters in <filepath>values.yaml</filepath> for L2 mode and custom configuration
+                via node annotations in L3 mode. This cRPD configuration file is at
+                    <filepath>/var/run/jcnr/juniper.conf</filepath> on any node running JCNR.</p>
+            <p>The cRPD configuration can be customized using node annotations. The cRPD pod will
+                stay in <codeph>pending</codeph> state if the applied configuration is invalid. </p>
+            <p>The rendered custom configuration is in
+                    <filepath>/etc/crpd/juniper.conf.master</filepath>.</p>
+            <p>In an AWS EKS deployment you can see the rendered custom configuration by <xref keyref="cloud-native-router-user.accessing-crpd-cli">accessing the cRPD
+                    CLI</xref> and navigating to the <filepath>/config</filepath> directory.</p>
+        </conbody>
+    </concept>
+    <concept id="concept_lmm_hsj_scc">
+        <title>View Log Files</title>
+        <conbody>
+            <p>You can find the Cloud-Native Router log files in the default
+                    <codeph>log_path</codeph> directory (<filepath>/var/log/jcnr/</filepath>) on any
+                node running JCNR. You can change this location by changing the value of the
+                    <codeph>log_path</codeph> or <codeph>syslog_notifications</codeph> parameters in
+                the <filepath>values.yaml</filepath> file prior to deployment.</p>
+            <p>Here's an example of some of the log files that Cloud-Native Router keeps.</p>
+            <codeblock id="codeblock_c3j_fpj_scc">ls /var/log/jcnr</codeblock>
+            <codeblock id="codeblock_d3j_fpj_scc">applier
+contrail-vrouter-agent.log
+contrail-vrouter-dpdk-init.log
+contrail-vrouter-dpdk.log
+jcnr-cni.log
+jcnr_notifications.json
+license
+messages
+mgd-api
+mosquitto
+na-grpcd
+vrouter-kernel-init.log</codeblock>
+            <note id="note_z2x_jdr_tcc">
+                <p>If your deployment fails, check the applier logs in
+                        <filepath>applier/applier.log</filepath> for more information.</p>
+            </note>
+        </conbody>
+    </concept>
+    <topic-map id="topic-map_iz3_tjq_4fc">
+        <title>Contrail Tools</title>
+        <tmbody>
+            <p>Contrail Tools is an optional package that contains troubleshooting utilities that
+                you can use to debug your installation.</p>
+            <p>To install Contrail Tools, set the <codeph>contrail-tools install</codeph> flag to
+                    <codeph>true</codeph> in the Cloud-Native Router installation Helm chart and
+                then install Cloud-Native Router as you normally do.</p>
+            <codeblock id="codeblock_lgc_skv_nfc">contrail-tools:
+  install: true
+</codeblock>
+        </tmbody>
+        <task id="task_un3_v2v_nfc">
+            <title>Collect Debug and Support Information</title>
+            <taskbody>
+                <context id="context_tvn_x2v_nfc">
+                    <p>To facilitate the gathering of debug information, we provide a single utility
+                        that you can run to take a snapshot of the state and condition of all
+                        Cloud-Native Router components. This snapshot contains logs, traces, and
+                        other useful data that you can analyze yourself or provide to Juniper
+                        Networks Support. Collected information is placed in a tarball in
+                            <filepath>/var/log/jcnr</filepath> and includes:</p>
+                    <ul id="ul_rfj_x4v_nfc">
+                        <li>
+                            <p>CPU and memory usage</p>
+                        </li>
+                        <li>
+                            <p>node and pod states and events</p>
+                        </li>
+                        <li>
+                            <p>cRPD data and traces</p>
+                        </li>
+                        <li>
+                            <p>vRouter data and traces</p>
+                        </li>
+                        <li>
+                            <p>log files</p>
+                        </li>
+                        <li>
+                            <p>optional crash (core dump) files</p>
+                        </li>
+                        <li>
+                            <p>optional debug information</p>
+                        </li>
+                        <li>
+                            <p>plus much more</p>
+                        </li>
+                    </ul>
+                    <note id="note_fyd_q1w_nfc">This utility is only supported on DPDK
+                        installations. It is not supported on eBPF installations.</note>
+                </context>
+                <steps id="steps_ivv_5jv_nfc">
+                    <step>
+                        <cmd>Ensure <codeph>contrail-tools</codeph> is installed in your
+                            cluster.</cmd>
+                        <info>
+                            <p>If you do not have <codeph>contrail-tools</codeph> installed in your
+                                cluster, then you will need to reinstall Cloud-Native Router with
+                                    <codeph>contrail-tools</codeph> before you can run this
+                                collection utility.</p>
+                        </info>
+                    </step>
+                    <step>
+                        <cmd>Exec into the <codeph>contrail-tools</codeph> container on the node
+                            where you want to collect the information.</cmd>
+                        <info>
+                            <codeblock id="codeblock_j4q_xhw_nfc">kubectl exec -it contrail-tools-<varname>&lt;xxx&gt;</varname> -- /bin/bash</codeblock>
+                        </info>
+                    </step>
+                    <step>
+                        <cmd>Run the collection utility.</cmd>
+                        <info>
+                            <ul id="ul_wsm_y2w_nfc">
+                                <li>
+                                    <p>To collect essential data:
+                                            <codeph>collect_jcnr_support_info</codeph></p>
+                                    <p>This command may take several minutes to run.</p>
+                                </li>
+                                <li>
+                                    <p>To collect essential and crash data:
+                                            <codeph>collect_jcnr_support_info -crash</codeph></p>
+                                    <p>This command may take many minutes to run.</p>
+                                </li>
+                                <li>
+                                    <p>To collect essential and additional debug data:
+                                            <codeph>collect_jcnr_support_info -debug</codeph></p>
+                                    <p>This command may affect performance and may take many minutes
+                                        to run.</p>
+                                </li>
+                                <li>
+                                    <p>To collect all data: <codeph>collect_jcnr_support_info
+                                            -all</codeph></p>
+                                    <p>This command may affect performance and may take many minutes
+                                        to run.</p>
+                                </li>
+                            </ul>
+                            <p>You can find the collected data, gzipped and tarred, in the
+                                    <codeph>contrail-tools</codeph> container (and on the underlying
+                                host) at:</p>
+                            <codeblock id="codeblock_kyp_cgw_nfc">/var/log/jcnr/jcnr-supportinfo-<varname>&lt;date&gt;</varname>-<varname>&lt;timestamp&gt;</varname>.tar.gz</codeblock>
+                        </info>
+                    </step>
+                    <step>
+                        <cmd>Repeat on all <codeph>contrail-tools</codeph> containers where you want
+                            to collect the information.</cmd>
+                    </step>
+                </steps>
+            </taskbody>
+        </task>
+        <task id="task_bhj_f4q_4fc">
+            <title>Collect Interface Throughput and Performance Statistics</title>
+            <taskbody>
+                <context id="context_chj_f4q_4fc">
+                    <p>Run the <codeph>dpdkvifstats</codeph> utility to show interface throughput
+                        and performance statistics for the DPDK interfaces.</p>
+                    <p>Available statistics include:</p>
+                    <ul id="ul_dhj_f4q_4fc">
+                        <li>
+                            <p>transmit and receive packets per second</p>
+                        </li>
+                        <li>
+                            <p>transmit and receive bits per second</p>
+                        </li>
+                        <li>
+                            <p>transmit and receive error counts</p>
+                        </li>
+                    </ul>
+                    <p>By default, this utility refreshes the displayed counts every 3 seconds. As
+                        an option, you can specify the duration between refreshes.</p>
+                    <note id="note_ehj_f4q_4fc">This utility is only supported on DPDK
+                        installations. It is not supported on eBPF installations.</note>
+                </context>
+                <steps id="steps_fhj_f4q_4fc">
+                    <step>
+                        <cmd>Ensure <codeph>contrail-tools</codeph> is installed in your
+                            cluster.</cmd>
+                        <info>
+                            <p>If you do not have <codeph>contrail-tools</codeph> installed, then
+                                you will need to reinstall Cloud-Native Router with
+                                    <codeph>contrail-tools</codeph> before you can run this
+                                utility.</p>
+                        </info>
+                    </step>
+                    <step>
+                        <cmd>Exec into the <codeph>contrail-tools</codeph> container on the node
+                            where you want to show the throughput and performance statistics.</cmd>
+                        <info>
+                            <codeblock id="codeblock_ghj_f4q_4fc">kubectl exec -it contrail-tools-<varname>&lt;xxx&gt;</varname> -- /bin/bash</codeblock>
+                        </info>
+                    </step>
+                    <step>
+                        <cmd>Show the DPDK interface statistics.</cmd>
+                        <info><ul id="ul_hhj_f4q_4fc">
+                                <li>
+                                    <p>To show statistics for all DPDK interfaces:
+                                            <codeph>dpdkvifstats -all </codeph></p>
+                                </li>
+                                <li>
+                                    <p>To show statistics for a specific DPDK interface:
+                                            <codeph>dpdkvifstats -vif
+                                                <varname>&lt;interface&gt;</varname></codeph></p>
+                                    <p>where <varname>&lt;interface&gt;</varname> is the interface
+                                        number of the interface you want to show.</p>
+                                </li>
+                            </ul>Additionally you can qualify the above with either or both of the
+                                <codeph>-time</codeph> and <codeph>-cpu</codeph> options:<ul id="ul_vkn_f5q_4fc">
+                                <li>
+                                    <p>To specify a statistics refresh interval, add the
+                                            <codeph>-time
+                                            <varname>&lt;seconds&gt;</varname></codeph> option,
+                                        where <codeph><varname>&lt;seconds&gt;</varname></codeph> is
+                                        the number of seconds between refreshes.</p>
+                                </li>
+                                <li>
+                                    <p>To specify the number of CPU cores you want to show, add the
+                                            <codeph>-cpu
+                                            <varname>&lt;number-of-cpus&gt;</varname></codeph>
+                                        option, where
+                                                <codeph><varname>&lt;number-of-cpus&gt;</varname></codeph>
+                                        is a number not exceeding the number of CPUs you've assigned
+                                        to the vRouter in the Helm chart. The number of CPUs that
+                                        you assign to the vRouter is either
+                                            <codeph>guaranteedVrouterCpus</codeph> or the number of
+                                        cores specified in <codeph>cpu_core_mask</codeph>. </p>
+                                    <note id="note_ly5_j4b_qfc">
+                                        <p>The CPU number displayed in the output is the DPDK lcore
+                                            value, which does not necessarily correspond numerically
+                                            to the actual CPU assigned to run that thread. For the
+                                            vRouter, lcore numbering for forwarding threads starts
+                                            at 15.</p>
+                                        <p>The output displays statistics for lcores starting at 15
+                                            and continues sequentially for the number of cores
+                                            specified in
+                                                  <codeph><varname>&lt;number-of-cpus&gt;</varname></codeph>.</p>
+                                    </note>
+                                </li>
+                            </ul></info>
+                    </step>
+                    <step>
+                        <cmd>Repeat on all <codeph>contrail-tools</codeph> containers where you want
+                            to show these DPDK throughput and performance statistics.</cmd>
+                    </step>
+                </steps>
+            </taskbody>
+        </task>
+    </topic-map>
+</topic-map>

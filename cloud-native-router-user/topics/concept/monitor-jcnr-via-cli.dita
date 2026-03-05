@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_6125e4cfce7ca699--4d0aca3e-187b15105b2--7cfa" xml:lang="en-US">
+  <title>Using <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Controller CLI (cRPD)</title>
+    <shortdesc>This topic contains instructions to access the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>controller (cRPD) CLI and run
+        operational commands.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <section id="section_tqb_z4k_3xb">
+            <title>Accessing the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>Controller (cRPD) CLI</title>
+            <p>You can access the command-line interface (CLI) of the cloud-native router controller
+                by accessing the shell of the running cRPD container. Refer to <xref href="accessing-crpd-cli.dita"/> to learn how to access
+                the cRPD shell.</p>
+            <p>At this point, you have connected to the shell of the cRPD. Just as with other <xref format="html" href="https://www.juniper.net/documentation/us/en/software/junos/cli/index.html" scope="external">Junos-based</xref> devices, you access the
+                operational mode of the cloud-native router the same way as if you were connected to
+                the console of a physical Junos OS device.</p>
+            <codeblock>root@jcnr-01:/# cli
+root@jcnr-cni&gt;</codeblock>
+            <note id="note_jxb_t4r_rbc">
+                <p>The <codeph>ping</codeph> command is not supported in the cRPD shell (CLI
+                    mode).</p>
+            </note>
+        </section>
+        <section id="section_zhc_vpk_3xb">
+            <title>Example Show Commands</title>
+            <p>Here are some example show commands you can execute:</p>
+            <codeblock>show interfaces terse
+Interface@link   Oper State     Addresses
+__crpd-brd1      UNKNOWN        fe80::acbf:beff:fe8a:e046/64
+cali1b684d67bd4@if3 UP             fe80::ecee:eeff:feee:eeee/64
+cali34cf41e29bb@if3 UP             fe80::ecee:eeff:feee:eeee/64
+docker0          DOWN           172.17.0.1/16
+eno1             UP             10.102.70.146/24 fe80::a94:efff:fe79:dcae/64
+eno2             UP
+eno3             UP             10.1.1.1/24 fe80::a94:efff:fe79:dcac/64
+eno3v1           UP
+eno4             DOWN
+enp0s20f0u1u6    UNKNOWN
+ens2f0           DOWN
+ens2f1           DOWN
+erspan0@NONE     DOWN
+eth0             UNKNOWN        169.254.143.126/32 fe80::b4db:eeff:fe78:9f43/64
+gre0@NONE        UNKNOWN
+gretap0@NONE     DOWN
+ip6tnl0@NONE     UNKNOWN        fe80::74b6:2cff:fea7:d850/64
+irb              DOWN
+kube-ipvs0       DOWN           10.233.0.1/32 10.233.0.3/32 10.233.35.229/32
+lo               UNKNOWN        127.0.0.1/8 ::1/128
+lsi              UNKNOWN        fe80::cc59:6dff:fe9c:4db3/64
+nodelocaldns     DOWN           169.254.25.10/32
+sit0@NONE        UNKNOWN        ::169.254.143.126/96 ::10.233.91.64/96 ::172.17.0.1/96 ::10.102.70.146/96 ::10.1.1.1/96 ::127.0.0.1/96
+tunl0@NONE       UNKNOWN
+vxlan.calico     UNKNOWN        10.233.91.64/32 fe80::64c6:34ff:fecd:3522/64</codeblock>
+            <codeblock>show configuration routing-instances
+vswitch {
+    instance-type virtual-switch;
+    bridge-domains {
+        bd100 {
+            vlan-id 100;
+        }
+        bd200 {
+            vlan-id 200;
+        }
+        bd300 {
+            vlan-id 300;
+        }
+        bd700 {
+            vlan-id 700;
+            interface enp59s0f1v0;
+        }
+        bd701 {
+            vlan-id 701;
+        }
+        bd702 {
+            vlan-id 702;
+        }
+        bd703 {
+            vlan-id 703;
+        }
+        bd704 {
+            vlan-id 704;
+        }
+        bd705 {
+            vlan-id 705;
+        }
+    }
+    interface bond0;
+}</codeblock>
+            <codeblock>show bridge ?
+Possible completions:
+mac-table       Show media access control table
+statistics      Show bridge statistics information</codeblock>
+            <codeblock>show bridge mac-table ?
+Possible completions:
+  &lt;[Enter]&gt;            Execute this command
+  count                Number of MAC address
+  mac-address          MAC address in the format XX:XX:XX:XX:XX:XX
+  vlan-id              Display MAC address learned on a specified VLAN or 'all-vlan'
+  |                    Pipe through a command</codeblock>
+            <codeblock>show bridge mac-table
+Routing Instance : default-domain:default-project:ip-fabric:__default__
+Bridging domain VLAN id : 3002
+MAC                  MAC                Logical
+address              flags              interface
+
+00:00:5E:00:53:01      D                 bond0</codeblock>
+            <codeblock>show bridge statistics ?
+Possible completions:
+  &lt;[Enter]&gt;            Execute this command
+  vlan-id              Display statistics for a particular vlan (1..4094)
+  |                    Pipe through a command</codeblock>
+            <codeblock>show bridge statistics
+Bridge domain vlan-id: 100
+   Local interface:  bond0
+      Broadcast packets Tx  : 0           Rx  : 0
+      Multicast packets Tx  : 0           Rx  : 0
+      Unicast packets Tx    : 0           Rx  : 0
+      Broadcast bytes Tx    : 0           Rx  : 0
+      Multicast bytes Tx    : 0           Rx  : 0
+      Unicast bytes Tx      : 0           Rx  : 0
+      Flooded packets       : 0
+      Flooded bytes         : 0
+   Local interface: ens1f0v1
+      Broadcast packets Tx  : 0           Rx  : 0
+      Multicast packets Tx  : 0           Rx  : 0
+      Unicast packets Tx    : 0           Rx  : 0
+      Broadcast bytes Tx    : 0           Rx  : 0
+      Multicast bytes Tx    : 0           Rx  : 0
+      Unicast bytes Tx      : 0           Rx  : 0
+      Flooded packets       : 0
+      Flooded bytes         : 0
+   Local interface: ens1f3v1
+      Broadcast packets Tx  : 0           Rx  : 0
+      Multicast packets Tx  : 0           Rx  : 0
+      Unicast packets Tx    : 0           Rx  : 0
+      Broadcast bytes Tx    : 0           Rx  : 0
+      Multicast bytes Tx    : 0           Rx  : 0
+      Unicast bytes Tx      : 0           Rx  : 0
+      Flooded packets       : 0</codeblock>
+            <codeblock>show firewall filter filter1
+Filter : filter1    vlan-id : 3001
+ Term                  Packet
+  t1                   0</codeblock>
+            <codeblock>show configuration firewall:firewall
+family {
+    bridge {
+        filter filter1 {
+            term t1 {
+                from {
+                    destination-mac-address 10:30:30:30:30:31;
+                    source-mac-address 10:30:30:30:30:30;
+                    ether-type oam;
+                }
+                then {
+                    discard;
+                }
+            }
+        }
+    }
+}</codeblock>
+            <codeblock>show route 172.68.20.2/32 table nad1.inet​
+nad1.inet.0: 11 destinations, 15 routes (11 active, 0 holddown, 0 hidden)​
+@ = Routing Use Only, # = Forwarding Use Only​
++ = Active Route, - = Last Active, * = Both​
+
+172.68.20.2/32     @[BGP/170] 00:00:23, localpref 100, from 1.1.1.220​
+                      AS path: I, validation-state: unverified​
+                    &gt;  via Tunnel Composite, UDP (src 1.1.1.35 dest 1.1.1.220), Push 48​
+                    [BGP/170] 00:13:18, localpref 100, from 1.1.24.24​
+                      AS path: I, validation-state: unverified​
+                    &gt;  via Tunnel Composite, UDP (src 1.1.1.35 dest 1.1.24.24), Push 16​
+                   #[Multipath/255] 00:00:23, metric2 2​
+                       via Tunnel Composite, UDP (src 1.1.1.35 dest 1.1.1.220), Push 48​
+                    &gt;  via Tunnel Composite, UDP (src 1.1.1.35 dest 1.1.24.24), Push 16​</codeblock>
+            <codeblock>show interfaces routing enp216s0f0
+Interface        State Addresses
+enp216s0f0       Up    MPLS  enabled
+                       ISO   enabled
+                       INET  192.168.123.3
+                       INET6 2001:192:168:123::3
+                       INET6 fe80::42a6:b7ff:fe2c:a448</codeblock>
+            <codeblock>show dynamic-tunnels database
+*- Signal Tunnels #- PFE-down
+Table: inet.3
+Destination-network: 1.1.1.220/32
+Destination-network: 1.1.24.24/32
+Tunnel to: 1.1.24.24/32
+  Reference count: 4
+  Next-hop type: UDP (forwarding-nexthop)
+    Source address: 1.1.1.35
+    Next hop: v6 mapped, tunnel-composite, 0x557917afc91c, nhid 0
+      VPN Label: Push 16, Reference count: 2
+      Ingress Route: [OSPF] 1.1.24.24/32, via metric 2
+      Traffic Statistics: Packets 0, Bytes 0
+      State: Up
+  Aggregate Traffic Statistics:</codeblock>
+        </section>
+        <section id="section_uqb_z4k_3xb">
+            <title>Example Clear Commands</title>
+            <p>Here are some example clear commands:</p>
+            <codeblock>clear bridge mac-table ?
+Possible completions:
+  &lt;[Enter]&gt;            Execute this command
+  mac-address          Clear specific MAC address
+  vlan-id              Clear mac-table for a specified vlan-id (1..4094)
+  |                    Pipe through a command</codeblock>
+            <codeblock>clear bridge statistics ? 
+Possible completions:
+  &lt;[Enter]&gt;            Execute this command
+  vlan-id              Clear L2 interface statistics for a specified vlan-id (1..4094)
+  |                    Pipe through a command</codeblock>
+        </section>
+  </conbody>
+</concept>

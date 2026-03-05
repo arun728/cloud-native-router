@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_7d7af27642a2e69f-6ff587ac-194445b72c0--7f76" xml:lang="en-US">
+  <title>Host Protection using Control Plane Policing</title>
+  <shortdesc>This topic provides details about configuring Juniper Cloud-Native Router with host
+    protection against DDoS attacks.</shortdesc>
+  <prolog>
+    <author>bfong</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>Juniper Cloud-Native Router supports host protection against Distributed Denial of Service
+      (DDoS) Attacks. You can configure rate-limiting for host traffic based on protocol
+      classification on the loopback interface <codeph>lo0.0</codeph> using layer 3 class of
+      service. See <xref keyref="cloud-native-router-user.l3cos-tm"/>. </p>
+    <p>Here is a sample configlet to rate-limit BGP control plane traffic on the loopback
+        <codeph>lo0.0</codeph> interface:</p>
+    <codeblock id="codeblock_yt3_d3n_sdc">apiVersion: configplane.juniper.net/v1
+kind: Configlet
+metadata:
+  name: configlet-sample            
+  namespace: jcnr
+spec:
+  config: |-
+    set interfaces lo0.0 unit 0 family inet filter input f1 
+    set firewall three-color-policer test action loss-priority high then discard 
+    set firewall three-color-policer test two-rate color-blind 
+    set firewall three-color-policer test two-rate committed-information-rate 50m 
+    set firewall three-color-policer test two-rate committed-burst-size 70m 
+    set firewall three-color-policer test two-rate peak-information-rate 2048 
+    set firewall three-color-policer test two-rate peak-burst-size 2048 
+    set firewall family inet filter f1 term t1 from source-port bgp 
+    set firewall family inet filter f1 term t1 then accept 
+    set firewall family inet filter f1 term t1 then count c1 
+    set firewall family inet filter f1 term t1 then three-color-policer two-rate test  
+crpdSelector:
+    matchLabels:
+      node: worker </codeblock>
+    <p>See <xref keyref="cloud-native-router-user.l3cos-tm"/> for more details.</p>
+  </conbody>
+</concept>

@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_d1fb0df41037d5d1--164edd5c-1934dad7dd0--7e1f" xml:lang="en-US">
+  <!--Use the Concept template to introduce a new product or functionality. Also use this template to provide high-level explanations, definitions of key concepts, terminology, or general background information. Limit one topic to one theme or subject.-->
+  <!--For <title>, follow these guidelines:
+- Avoid the gerund form and minimize the use of “Understanding.” 
+- Use "[Feature] Overview" if the topic is indeed an overview. 
+- Use the feature name as the topic title for very long feature names. 
+- Use the Who, What, Where, When, Why, or How (not How to) phrase to describe a specific aspect of a product, feature, or user scenario.-->
+  <title>DHCP Relay </title>
+  <shortdesc>Juniper Cloud-Native Router can relay DHCP messages between cascaded Next-Generation
+    Distributed Units (NGDUs) and an external DHCP server.</shortdesc>
+  <prolog>
+    <author>tkaur</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+  <conbody>
+    <p>Juniper Cloud-Native Router can be configured as a Stateless <xref href="https://www.juniper.net/documentation/us/en/software/junos/dhcp/topics/topic-map/dhcp-relay-agent-security-devices.html" format="html" scope="external">DHCP Relay agent</xref> for an L2-L3 deployment. It can relay
+      DHCP messages between cascaded Next-Generation Distributed Units (NGDUs) and an external DHCP
+      server. It supports simple packet forwarding non-snooping DHCPv4 and DHCPv6 relay feature
+      between the DHCP client and DHCP server. It does not maintain leases or client state. When
+      configured as a DHCPv4 relay agent, Cloud-Native Router is bypassed for subsequent lease
+      renewals, once the client has obtained its address and configuration from the DHCP server. You
+      can configure the same behavior for DHCPv6 implementation as well. In the forward-only
+      implementation, the relay agent does not participate in the state exchange between the client
+      and server. Hence, events such as reboot, Graceful Routing Engine switchover (GRES), or
+      failover can quickly self-correct as the clients retry interrupted transactions.</p>
+    <p>
+      <subsection id="subsection_irk_sqr_mdc">
+        <title>Configuration</title>
+        <p>The following table lists the knobs and overrides that are supported for DHCPv4 and
+          DHCPv6 relay options on Cloud-Native Router:</p>
+      </subsection>
+    </p>
+    <table frame="all" id="table_b2r_21s_rdc">
+      <title>DHCPv4 and DHCPv6 Support </title>
+      <tgroup cols="3">
+        <colspec colname="c1" colnum="1" colwidth="1*"/>
+        <colspec colname="c2" colnum="2" colwidth="1*"/>
+        <colspec colname="newCol3" colnum="3" colwidth="1*"/>
+        <thead>
+          <row>
+            <entry>
+              <p>Protocol</p>
+            </entry>
+            <entry>
+              <p>Supported Knobs</p>
+            </entry>
+            <entry>
+              <p>Supported Overrides</p>
+            </entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <p>DHCPv4</p>
+            </entry>
+            <entry>
+              <codeblock id="codeblock_frb_g1s_rdc">forward-only; 
+relay-option-82 </codeblock>
+            </entry>
+            <entry>
+              <codeblock id="codeblock_sfr_j1s_rdc">always-write-option-82  (circuit-id | remote-id);
+relay-source;
+trust-option-82;
+user-defined-option-82 <varname>string</varname> </codeblock>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <p>DHCPv6</p>
+            </entry>
+            <entry>
+              <codeblock id="codeblock_xcr_k1s_rdc">forward-only; 
+relay-agent-interface-id 
+relay-agent-remote-id </codeblock>
+            </entry>
+            <entry>No DHPCv6 overrides supported</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    <p>The configuration syntax for DHCPv4 relay agent is provided below. You can configure DHCPv4
+      relay agent under the <codeph>[edit]</codeph> and <codeph>[edit routing-instances]</codeph>
+      hierarchy. Please review <xref href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/statement/dhcp-relay-edit-forwarding-options.html" format="html" scope="external">DHCP Relay CLI</xref> for command description and
+      options.</p>
+    <codeblock id="codeblock_clf_3js_rdc">[edit]
+forwarding-options { 
+    dhcp-relay {  
+        active-server-group <varname>name</varname>; 
+        duplicate-clients-in-subnet (incoming-interface | option-82); 
+        forward-only;
+        overrides {
+            always-write-option-82  (circuit-id | remote-id); 
+            relay-source;
+            trust-option-82;
+            user-defined-option-82 <varname>string</varname>
+        }
+        relay-option-82 { 
+            circuit-id { 
+                prefix { 
+                    host-name; 
+                    logical-system-name; 
+                    routing-instance-name; 
+                } 
+                use-interface-description (device | logical); 
+                user-defined; 
+            } 
+            remote-id { 
+                prefix { 
+                    host-name; 
+                    logical-system-name; 
+                    routing-instance-name; 
+                } 
+                use-interface-description (device | logical); 
+            } 
+        } 
+        server-group <varname>name</varname> { 
+            <varname>ip-address</varname>; 
+        } 
+        group <varname>name</varname> { 
+            relay-option-82 {
+                circuit-id { 
+                    prefix { 
+                        host-name; 
+                        logical-system-name; 
+                        routing-instance-name; 
+                    } 
+                    use-interface-description (device | logical); 
+                    user-defined; 
+                } 
+                remote-id { 
+                    prefix { 
+                        host-name; 
+                        logical-system-name; 
+                        routing-instance-name; 
+                    } 
+                    use-interface-description (device | logical); 
+                } 
+            }   
+            active-server-group <varname>name</varname>; 
+            interface <varname>interface_name</varname>; 
+        } 
+    } 
+} </codeblock>
+    <note id="note_dtb_xdm_sdc">
+      <p>If a packet arrives with an <codeph>option-82</codeph> record and
+          <codeph>trust-option-82</codeph> is not configured the packet will be dropped. </p>
+      <p>If a packet arrives with an <codeph>option-82</codeph> record while
+          <codeph>relay-option-82</codeph> is configured, the original incoming
+          <codeph>option-82</codeph> value is preserved with no changes.</p>
+    </note>
+    <p>The configuration syntax for DHCPv6 relay agent is provided below. You can configure DHCPv4
+      relay agent under the <codeph>[edit]</codeph> and <codeph>[edit routing-instances]</codeph>
+      hierarchy. Please review <xref href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/statement/dhcpv6-edit-forwarding-options.html" format="html" scope="external">DHCPv6 Relay CLI</xref> for command description and options. </p>
+    <codeblock id="codeblock_x3h_yrl_sdc">[edit]
+forwarding-options { 
+    dhcp-relay { 
+        dhcpv6 { 
+            active-server-group <varname>name</varname>; 
+            forward-only; 
+            relay-agent-interface-id { 
+                prefix { 
+                    host-name; 
+                    logical-system-name; 
+                    routing-instance-name; 
+                } 
+                use-interface-description (device | logical); 
+            } 
+            relay-agent-remote-id { 
+                prefix { 
+                    host-name; 
+                    logical-system-name; 
+                    routing-instance-name; 
+                } 
+                use-interface-description (device | logical); 
+            } 
+            server-group &lt;name&gt; { 
+                <varname>ip-address</varname>; 
+            } 
+            group <varname>name</varname> { 
+                relay-agent-interface-id { 
+                    prefix { 
+                        host-name; 
+                        logical-system-name; 
+                        routing-instance-name; 
+                    } 
+                    use-interface-description (device | logical); 
+                } 
+                relay-agent-remote-id { 
+                    prefix { 
+                        host-name; 
+                        logical-system-name; 
+                        routing-instance-name; 
+                    } 
+                    use-interface-description (device | logical); 
+                }
+                active-server-group <varname>name</varname>; 
+                interface <varname>interface_name</varname>;              
+            } 
+        } 
+    } 
+} </codeblock>
+    <p>You can configure DHCP tracing using the traceoptions configuration as shown in the snippet
+      below:</p>
+    <codeblock id="codeblock_qbb_2zl_sdc">[edit]
+system {
+    processes {
+        dhcp-service {
+            traceoptions {
+                file jdhcpd size 20m;
+                level all;
+                flag all;
+            }
+        }
+    }
+}</codeblock>
+    <subsection id="subsection_lf5_3zl_sdc">
+      <title>Verification</title>
+      <p>You can verify the DHCP statistics via the <xref href="accessing-crpd-cli.dita">cRPD shell</xref>. </p>
+      <p>Use <codeph>show dhcp statistics</codeph> to view DHCP service statistics.</p>
+      <codeblock id="codeblock_uyc_n1m_sdc">root@controller-0&gt; show dhcp statistics
+Packets dropped:
+    Total                      16
+    No routing instance        16</codeblock>
+      <p>Use <xref href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/command/show-dhcp-relay-statistics.html" format="html" scope="external"><codeph>show dhcp relay statistics</codeph></xref> to
+        display DHCP relay statistics.</p>
+      <codeblock id="codeblock_dh4_p1m_sdc">root@controller-0&gt; show dhcp relay statistics
+Packets dropped:
+    Total                      16
+    dhcp-service total         16
+
+Messages received:
+    BOOTREQUEST                0
+    DHCPDECLINE                0
+    DHCPDISCOVER               0
+    DHCPINFORM                 0
+    DHCPRELEASE                0
+    DHCPREQUEST                0
+    DHCPLEASEACTIVE            0
+    DHCPLEASEUNASSIGNED        0
+    DHCPLEASEUNKNOWN           0
+    DHCPLEASEQUERYDONE         0
+    DHCPACTIVELEASEQUERY       0
+
+Messages sent:
+    BOOTREPLY                  0
+    DHCPOFFER                  0
+    DHCPACK                    10
+    DHCPNAK                    0
+    DHCPFORCERENEW             2
+    DHCPLEASEQUERY             2
+    DHCPBULKLEASEQUERY         0
+    DHCPLEASEACTIVE            0
+    DHCPLEASEUNASSIGNED        0
+    DHCPLEASEUNKNOWN           0
+    DHCPLEASEQUERYDONE         0
+    DHCPACTIVELEASEQUERY       7</codeblock>
+      <p>Use <xref href="https://www.juniper.net/documentation/us/en/software/junos/cli-reference/topics/ref/command/show-dhcpv6-relay-statistics.html" format="html" scope="external"><codeph>show dhcpv6 relay statistics</codeph></xref> to
+        view DHCPv6 relay statistics.</p>
+      <codeblock id="codeblock_mmm_q1m_sdc">root@controller-0&gt; show dhcpv6 relay statistics
+Dhcpv6 Packets dropped:
+    Total               0
+
+Messages received:
+    DHCPV6_DECLINE             0
+    DHCPV6_SOLICIT             2
+    DHCPV6_INFORMATION_REQUEST 0
+    DHCPV6_RELEASE             0
+    DHCPV6_REQUEST             2
+    DHCPV6_CONFIRM             0
+    DHCPV6_RENEW               0
+    DHCPV6_REBIND              0
+    DHCPV6_RELAY_FORW          0
+    DHCPV6_LEASEQUERY_REPLY    0
+    DHCPV6_LEASEQUERY_DATA     0
+    DHCPV6_LEASEQUERY_DONE     0
+    DHCPV6_ACTIVELEASEQUERY    0
+
+Messages sent:
+    DHCPV6_ADVERTISE           0
+    DHCPV6_REPLY               0
+    DHCPV6_RECONFIGURE         0
+    DHCPV6_RELAY_REPLY         0
+    DHCPV6_LEASEQUERY          0
+    DHCPV6_LEASEQUERY_REPLY    2
+    DHCPV6_LEASEQUERY_DATA     0
+    DHCPV6_LEASEQUERY_DONE     0
+    DHCPV6_ACTIVELEASEQUERY    0</codeblock>
+      <p>You can clear the DHCP statistics using the commands provided below:</p>
+      <codeblock id="codeblock_zkn_v1m_sdc">clear dhcp statistics
+clear dhcp relay statistics
+clear dhcpv6 relay statistics</codeblock>
+    </subsection>
+  </conbody>
+</concept>

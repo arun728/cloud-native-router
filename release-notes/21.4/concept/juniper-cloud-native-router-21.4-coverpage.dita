@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_609e26bb69c88a11--68ca4e59-17d503edd14--7b8f" xml:lang="en-US" outputclass="coverpage">
+  <!--Make sure that the concept element for the release notes cover page topic has the outputclass=coverpage attribute.  -->
+  <title>Juniper-Cloud-Native-Router-21.4-Coverpage</title>
+  <prolog>
+    <author>probbins</author>
+  </prolog>
+  <conbody>
+    <!--Use sections (with titles in capital letters) to document the highlights of the release. Only the sections in this topic will be included in the HTML and PDF output. 
+    Use a bulleted list in each section to document the release highlights. The text in each list item must link to the location where it is documented in detail in the release notes as shown in the XML sample below:
+    <li><p> <xref href="routing-protocols.dita#ti-lfa-srlg">TI-LFA SRLG protection for IS-IS (MX Series and PTX Series)</xref> </p></li>-->
+    <section id="section_hbq_n3h_trb">
+      <title>INTRODUCTION</title>
+      <p>Juniper Cloud-Native Router (JCNR) is a containerized implementation of Juniper routing and
+        forwarding planes. JCNR runs on "white-box" Linux servers. It consists of modular components
+        including a routing control plane (cRPD), forwarding plane (JCNR-vRouter), and container
+        network interface (JCNR-CNI). The control plane provides Juniper's time-tested routing
+        stack, including routing protocols such as BGP and ISIS, while the JCNR-vRouter, a
+        DPDK-based forwarding plane, decouples forwarding from the Linux kernel, thus allowing
+        faster forwarding and more scalability. JCNR-CNI provides the network interfaces in
+        software, that allow JCNR to network with other containers, virtual machines, and physical
+        devices. Together, these elements provide flexibility, programability, and scalability for
+        the coming generations of 5G installations.</p>
+    </section>    
+    <section id="section_aff_2ty_dsb">
+      <title>SUPPORTED ON</title>
+      <ul id="ul_th2_zw1_yrb">
+        <li>VMWare Tanzu</li>
+        <li>Photon OS Release 3.0</li>
+      </ul>
+    </section>
+    <section id="section_bff_2ty_dsb">
+      <title>EXPERIMENTAL SUPPORT ONLY</title>
+      <ul id="ul_plt_dty_dsb">
+        <li>Ubuntu 18.04</li>
+        <li>Ubuntu 20.04</li>
+        <li>Centos 7.9</li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

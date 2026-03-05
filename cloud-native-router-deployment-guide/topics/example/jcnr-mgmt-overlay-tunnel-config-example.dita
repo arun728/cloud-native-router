@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE reference PUBLIC "-//Juniper//DTD DITA 1.3 Reference//EN" "/SysSchema/dita13/dtd/subsection/dtd/reference.dtd">
+<reference xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_19e939a6782fa58a--74813304-195a32dabb2--7d49" xml:lang="en-US">
+    <title>Overlay Management Tunnel Configuration Example</title>
+    <shortdesc>This section contains Cloud-Native Router MPLSoUDP tunnel configuration for the
+        overlay management example.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <refbody>
+        <section id="section_cyh_fln_2yb">
+            <title>Managed Node Tunnel Configuration Example</title>
+            <p>This configuration creates an MPLSoUDP tunnel endpoint and VRF to route OAM traffic.
+                Put this configuration into a configlet and apply on the managed node, which we call
+                node1 below.</p>
+            <draft-comment author="bfong">I changed all 11.11.11.11 to 10.11.11.11 and all
+                12.12.12.12 to 10.12.12.12 to align with doc rules (IP addresses must be in private
+                range). Also changed the IPv6 addresses to 2001:db8:x for same
+                reason.</draft-comment>
+            <codeblock id="codeblock_yst_y24_s2c">
+    set groups node1 system processes routing bgp tcp-listen-port 178
+    set groups node1 interfaces ens1f0v2 unit 0 family inet address 192.168.1.1/24
+    set groups node1 interfaces ens1f0v1 unit 0 family inet address 10.10.1.1/24
+    set groups node1 interfaces ens1f0v1 unit 0 family inet6 address 2001:db8:10:10:1::1/65
+    set groups node1 interfaces lo0 unit 0 family inet address 10.11.11.11/32
+    set groups node1 interfaces lo0 unit 0 family iso address 49.0002.0190.0160.0023.00
+    set groups node1 policy-options policy-statement pplb then load-balance per-packet
+    set groups node1 routing-instances green instance-type vrf
+    set groups node1 routing-instances green interface ens1f0v1
+    set groups node1 routing-instances green route-distinguisher 40:40
+    set groups node1 routing-instances green vrf-target target:40:40
+    set groups node1 routing-options route-distinguisher-id 10.11.11.11
+    set groups node1 routing-options router-id 10.11.11.11
+    set groups node1 routing-options dynamic-tunnels tun1 source-address 10.11.11.11
+    set groups node1 routing-options dynamic-tunnels tun1 udp
+    set groups node1 routing-options dynamic-tunnels tun1 destination-networks 10.12.12.12/32
+    set groups node1 routing-options forwarding-table export pplb
+    set groups node1 routing-options forwarding-table channel vrouter export pplb
+    set groups node1 protocols bgp tcp-connect-port 178
+    set groups node1 protocols bgp group node1 type internal
+    set groups node1 protocols bgp group node1 local-address 10.11.11.11
+    set groups node1 protocols bgp group node1 family inet-vpn unicast
+    set groups node1 protocols bgp group node1 local-as 64512
+    set groups node1 protocols bgp group node1 neighbor 10.12.12.12
+    set groups node1 protocols isis interface ens1f0v2
+    set groups node1 protocols isis interface lo0.0
+    set groups node1 protocols isis level 1 disable
+    set groups node1 protocols isis level 2 enable
+    set apply-groups base
+    set apply-groups internal
+    set apply-groups node1
+    set groups node1 routing-instances green vrf-table-label</codeblock>
+        </section>
+        <section id="section_qjc_lf4_s2c">
+            <title>Transit Node Tunnel Configuration Example</title>
+            <p>This configuration creates an MPLSoUDP tunnel endpoint and VRF to route OAM traffic.
+                Put this configuration into a configlet and apply on the transit node, which we call
+                node2 below.</p>
+            <codeblock id="codeblock_sr3_x24_s2c">
+    set groups node2 system processes routing bgp tcp-listen-port 178
+    set groups node2 interfaces ens1f0 unit 0 family inet address 192.168.1.2/24
+    set groups node2 interfaces ens1f1 unit 0 family inet address 10.10.2.1/24
+    set groups node2 interfaces ens1f1 unit 0 family inet6 address 2001:db8:10:10:2::1/65
+    set groups node2 interfaces lo0 unit 0 family inet address 10.12.12.12/32
+    set groups node2 interfaces lo0 unit 0 family iso address 49.0002.0190.0160.0024.00
+    set groups node2 policy-options policy-statement pplb then load-balance per-packet
+    set groups node2 routing-instances green instance-type vrf
+    set groups node2 routing-instances green interface ens1f1
+    set groups node2 routing-instances green route-distinguisher 40:40
+    set groups node2 routing-instances green vrf-target target:40:40
+    set groups node2 routing-options route-distinguisher-id 10.12.12.12
+    set groups node2 routing-options router-id 10.12.12.12
+    set groups node2 routing-options dynamic-tunnels tun1 source-address 10.12.12.12
+    set groups node2 routing-options dynamic-tunnels tun1 udp
+    set groups node2 routing-options dynamic-tunnels tun1 destination-networks 10.11.11.11/32
+    set groups node2 routing-options forwarding-table export pplb
+    set groups node2 routing-options forwarding-table channel vrouter export pplb
+    set groups node2 protocols bgp tcp-connect-port 178
+    set groups node2 protocols bgp group node1 type internal
+    set groups node2 protocols bgp group node1 local-address 10.12.12.12
+    set groups node2 protocols bgp group node1 family inet-vpn unicast
+    set groups node2 protocols bgp group node1 local-as 64512
+    set groups node2 protocols bgp group node1 neighbor 10.11.11.11
+    set groups node2 protocols isis interface ens1f0
+    set groups node2 protocols isis interface lo0.0
+    set groups node2 protocols isis level 1 disable
+    set groups node2 protocols isis level 2 enable
+    set apply-groups node2
+    set groups node2 routing-instances green vrf-table-label
+</codeblock>
+        </section>
+    </refbody>
+</reference>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE concept PUBLIC "-//Juniper//DTD DITA 1.3 Concept//EN" "/SysSchema/dita13/dtd/subsection/dtd/concept.dtd">
+<concept xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_e54c47da3e22fce6-b4e4011-1867cfab8a9--7fdd" xml:lang="en-US">
+  <title>Known Limitations</title>
+  <prolog>
+    <author>dgv</author>
+    <data name="cli-help-filename"/>
+    <data name="cli-help-text"/>
+    <data name="jweb-help-filename"/>
+  </prolog>
+
+  <conbody>
+    <p>This section describes issues and limitations present in Juniper Cloud-Native Router release
+      23.1.</p>
+    <section id="section_zqk_5dh_xvb">
+      <title>Known Issues and Limitations in Juniper Cloud-Native Router Release 23.1</title>
+      <ul id="ul_k4r_hwv_ywb">
+        <li>
+          <p><b>JCNR-3541: core-facing on access interface is not removing the interface from no
+              local switching</b>—When an access interface with the
+              <filepath>no-local-switching</filepath> key enabled is configured to
+              <filepath>core-facing</filepath>, then the no-local-switching functionality continues
+            to be enabled on the access interface.</p>
+        </li>
+        <!--<li><p><b>JCNR-3603: cRPD in CrashLoopBackOff on restarting cRPD/vRouter after configuring access interface under routing-instance rather than in bridge-domain</b>—When the same interface is configured under the routing-instance manually and under the bridge domain via helm, leads to a commit error in cRPD and finally to a crashloop, when the cRPD restarts.</p></li>-->
+        <li>
+          <p><b>JCNR-3595: vf_isolated remains true for access interface even after deleting
+              no-local-switching from BD after vRouter restart</b>—Consider the following steps:</p>
+          <ol id="ol_o4q_2t1_zwb">
+            <li>
+              <p>Deploy Juniper Cloud-Native Router having a workload access interface with
+                  <filepath>no-local-switching</filepath> enabled for the bridge domain.</p>
+            </li>
+            <li>
+              <p>Restart the vRouter and wait for it to be up.</p>
+            </li>
+            <li>
+              <p>Go to cRPD and remove <filepath>no-local-switching</filepath> functionality from
+                the bridge domain.</p>
+            </li>
+          </ol>
+          <p>The access interface continues to have <filepath>no-local-switching</filepath> key
+            enabled while this should not be the case.</p>
+          <p><b>Workaround:</b></p>
+          <p><filepath>no-local switching</filepath> works only for interfaces that have the
+            interface-mode explicitly configured and are placed under the routing-instance and not
+            the bridge domain. Therefore, the following configuration of the interface under the
+            bridge domain which is done by the helm should be deleted,</p>
+          <codeblock>set routing-instances vswitch bridge-domains bd1110 interface enp179s0f1v0</codeblock>
+          <p>and the configuration shown below needs to be applied where the interface-mode is
+            configured explicitly.</p>
+          <codeblock>set routing-instances vswitch interface enp179s0f1v0
+set interfaces enp179s0f1v0 unit 0 family bridge interface-mode access
+set interfaces enp179s0f1v0 unit 0 family bridge vlan-id 1110
+set interfaces enp179s0f1v0 unit 0 family bridge core-facing</codeblock>
+        </li>
+        <li>
+          <p><b>JCNR-3600: Redundant syslog ng container on helm upgrade</b>—After a helm upgrade,
+            the newly created <filepath>syslogng</filepath> pod continues to be in the pending
+            state.</p>
+          <p><b>Workaround:</b></p>
+          <p>After the upgrade, delete the older <filepath>syslogng</filepath> pod manually by
+            issuing the <codeph>kubectl -n jcnr delete
+              <varname>&lt;syslog-pod-name&gt;</varname></codeph> command.</p>
+        </li>
+        <li>
+          <p><b>JCNR-3652:  Agent pod missing "ss" causing the below Error in agent logs</b>—The
+            following error is visible in the <filepath>contrail-vrouter-agent.log</filepath> file.
+            You can ignore this error as it does not affect the normal functioning of Juniper
+            Cloud-Native Router.</p>
+          <codeblock>[ERROR] [Category=Common, Task=http::RequestHandlerTask] No command output for  ss -px | grep pid=166 | grep ESTAB | grep dpdk_netlink</codeblock>
+        </li>
+      </ul>
+    </section>
+  </conbody>
+</concept>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE topic-map PUBLIC "-//juniper//DTD DITA topic-map//EN" "/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd">
+<topic-map xmlns:ditaarch="http://dita.oasis-open.org/architecture/2005/" id="xd_ff7c6f5035110fe6--50c93405-1921cfca0f5--7d7e" xml:lang="en-US">
+    <title>Configure Huge Pages</title>
+    <shortdesc>Learn how to configure huge pages for the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter.</shortdesc>
+    <prolog>
+        <author>bfong</author>
+        <data name="cli-help-filename"/>
+        <data name="cli-help-text"/>
+        <data name="jweb-help-filename"/>
+    </prolog>
+    <tmbody>
+        <p>Huge pages make memory accesses more efficient by reducing the number of TLB (translation
+            look-aside buffer) misses and are instrumental in getting the best performance from your
+            <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter installation.</p>
+        <p>Configuring huge pages is a two-part procedure. First, specify the number and size of
+            huge pages that you want the node to make available (<xref format="dita" href="#task_yml_55h_vcc"/>) and then configure the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter to use these huge pages (<xref format="dita" href="#task_bmv_4xh_vcc"/>).</p>
+        <p>By default, the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter is already configured to use huge pages, so the second part
+            is only necessary if you want to change the number of huge pages that you want the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter to use.</p>
+    </tmbody>
+    <task id="task_yml_55h_vcc">
+        <title>Configure the Number of Huge Pages Available on a Node</title>
+        <taskbody>
+            <context id="context_x2m_cd3_vcc">
+                <p>Use this procedure to specify the number and size of huge pages that you want to
+                    make available on a node.</p>
+                <note id="note_pbp_hgj_vcc">
+                    <p>This procedure does not apply to a Red Hat OpenShift or a Wind River Cloud
+                        Platform deployment. </p>
+                </note>
+            </context>
+            <steps id="steps_rcd_w5h_vcc">
+                <step>
+                    <cmd>Log in as root to the cluster node where you want to configure huge
+                        pages.</cmd>
+                </step>
+                <step>
+                    <cmd>Configure GRUB to boot up the node with the desired number of huge
+                        pages.</cmd>
+                    <info>
+                        <p>Add <codeph>GRUB_CMDLINE_LINUX_DEFAULT</codeph> values in
+                                <filepath>/etc/default/grub</filepath>. </p>
+                        <p>For example, the following configures the node to boot up with 10 x 1 GB
+                            huge pages (and SR-IOV pass-through support):</p>
+                        <codeblock id="codeblock_g5s_3vh_vcc">GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 default_hugepagesz=1G hugepagesz=1G hugepages=10 intel_iommu=on iommu=pt"</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Update GRUB.</cmd>
+                    <info>
+                        <codeblock id="codeblock_onv_dgx_vbc">grub2-mkconfig -o /boot/grub2/grub.cfg</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Reboot.</cmd>
+                    <info>
+                        <codeblock id="codeblock_gbk_2gx_vbc">reboot</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Log back in to the node.</cmd>
+                </step>
+                <step>
+                    <cmd>Verify that the node has acquired the requested number of huge pages.</cmd>
+                    <info>Look at the output to confirm that GRUB has been configured to request the
+                        desired number of huge
+                        pages:<codeblock id="codeblock_hqz_2gx_vbc">cat /proc/cmdline</codeblock>Look
+                        at the output to confirm that the node has successfully acquired and made
+                        available the desired number of huge
+                        pages:<codeblock id="codeblock_l43_ggx_vbc">grep -i hugepages /proc/meminfo</codeblock></info>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+    <task id="task_bmv_4xh_vcc">
+        <title>Configure the Number of Huge Pages to Use</title>
+        <taskbody>
+            <context id="context_t4p_hc3_vcc">
+                <p>By default, the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter is already configured to use huge pages. Use this
+                    procedure to change the number of huge pages that the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter uses. </p>
+            </context>
+            <steps id="steps_wfp_sxh_vcc">
+                <step>
+                    <cmd>On the host where you're running the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>installation procedures, go to
+                        the Helm chart directory for the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter.</cmd>
+                    <info>
+                        <codeblock id="codeblock_s3j_gyh_vcc">cd helmchart/jcnr/charts/jcnr-vrouter</codeblock>
+                    </info>
+                </step>
+                <step>
+                    <cmd>Configure the number of huge pages in the <?oxy_delete author="administrator" timestamp="20241127T030800-0700" content="JCNR "?><?oxy_insert_start author="administrator" timestamp="20241127T030800-0700"?>Cloud-Native Router <?oxy_insert_end?>vRouter
+                            <filepath>values.yaml</filepath> file.</cmd>
+                    <info>Change the below default <codeph>hugepages-1Gi</codeph> value in
+                            <codeph>limits</codeph> and <codeph>requests</codeph> to the number of
+                        your
+                            choice:<codeblock id="codeblock_avw_tyh_vcc">contrail_vrouter_agent_dpdk:
+  image: contrail-vrouter-dpdk
+  tag: *vrouter_tag
+  pullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 4
+      memory: 1Gi
+      hugepages-1Gi: 6Gi          # Hugepages must be enabled with default size as 1G; minimum 6Gi to be used
+    requests:
+      cpu: 4
+      memory: 1Gi
+      hugepages-1Gi: 6Gi
+</codeblock><p>For example, to set huge pages to 10
+                            GB:</p><codeblock id="codeblock_od5_5c3_vcc">hugepages-1Gi: 10Gi</codeblock><note id="note_i1j_md3_vcc">
+                            <p>The number you specify here must not be greater than the number of
+                                huge pages you've made available on the node.</p>
+                        </note></info>
+                </step>
+                <step>
+                    <cmd>Save and exit the file.</cmd>
+                </step>
+            </steps>
+        </taskbody>
+    </task>
+</topic-map>
