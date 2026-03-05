@@ -41,6 +41,10 @@ jobs:
         run: |
           ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out
 
+      # ADDED FIX: Tell GitHub Pages to stop hiding files and serve the raw HTML
+      - name: Bypass Jekyll processing
+        run: touch out/.nojekyll
+
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
 
