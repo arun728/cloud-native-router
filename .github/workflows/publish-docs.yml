@@ -39,7 +39,7 @@ jobs:
       - name: Build JCNR User Guide (HTML5)
         # Note: We are outputting directly to 'out' so index.html is at the root of your website
         run: |
-          ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user/cloud-native-router-user.ditamap --format=html5 --output=out
+          ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v4
