@@ -132,9 +132,9 @@ jobs:
           EOF
           
       - name: Build JCNR User Guide (HTML5)
-        # Note: Added --args.hdf=favicon.html to inject the HPE logo into the <head> of every page!
+        # Note: Added --args.hdf=${{ github.workspace }}/favicon.html to use the absolute path!
         run: |
-          ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out --args.css=juniper-theme.css --args.cssroot=${{ github.workspace }} --args.copycss=yes --args.csspath=css --args.hdf=favicon.html
+          ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out --args.css=juniper-theme.css --args.cssroot=${{ github.workspace }} --args.copycss=yes --args.csspath=css --args.hdf=${{ github.workspace }}/favicon.html
 
       # Tell GitHub Pages to stop hiding files and serve the raw HTML
       - name: Bypass Jekyll processing
