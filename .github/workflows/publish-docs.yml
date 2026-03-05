@@ -36,20 +36,29 @@ jobs:
           curl -LO https://github.com/dita-ot/dita-ot/releases/download/4.1.2/dita-ot-4.1.2.zip
           unzip dita-ot-4.1.2.zip
 
-      # ADDED FIX: The Prototype Hack (Absolute Paths)
-      # By pointing directly to the downloaded DITA-OT DTD files on the GitHub server, 
-      # we bypass all XML catalog and URN resolution issues.
+      # ADDED FIX: The Foolproof Dynamic Path Hack
+      # This asks the server to physically search the downloaded DITA-OT folder 
+      # for the exact location of the schemas, avoiding any path-guessing.
       - name: Fix Custom Juniper Schemas for Prototype
         run: |
-          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i "s|/SysSchema/dita13/dtd/subsection/dtd/concept.dtd|${{ github.workspace }}/dita-ot-4.1.2/plugins/org.oasis-open.dita.v1.3/dtd/technicalContent/dtd/concept.dtd|g" {} +
-          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i "s|/SysSchema/dita13/dtd/subsection/dtd/task.dtd|${{ github.workspace }}/dita-ot-4.1.2/plugins/org.oasis-open.dita.v1.3/dtd/technicalContent/dtd/task.dtd|g" {} +
-          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i "s|/SysSchema/dita13/dtd/subsection/dtd/reference.dtd|${{ github.workspace }}/dita-ot-4.1.2/plugins/org.oasis-open.dita.v1.3/dtd/technicalContent/dtd/reference.dtd|g" {} +
-          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i "s|/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd|${{ github.workspace }}/dita-ot-4.1.2/plugins/org.oasis-open.dita.v1.3/dtd/technicalContent/dtd/map.dtd|g" {} +
+          CONCEPT_DTD=$(find ${{ github.workspace }}/dita-ot-4.1.2 -type f -name concept.dtd | awk '{ print length, $0 }' | sort -n | cut -d" " -f2- | head -n 1)
+          TASK_DTD=$(find ${{ github.workspace }}/dita-ot-4.1.2 -type f -name task.dtd | awk '{ print length, $0 }' | sort -n | cut -d" " -f2- | head -n 1)
+          REF_DTD=$(find ${{ github.workspace }}/dita-ot-4.1.2 -type f -name reference.dtd | awk '{ print length, $0 }' | sort -n | cut -d" " -f2- | head -n 1)
+          MAP_DTD=$(find ${{ github.workspace }}/dita-ot-4.1.2 -type f -name map.dtd | awk '{ print length, $0 }' | sort -n | cut -d" " -f2- | head -n 1)
+          
+          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i "s|/SysSchema/dita13/dtd/subsection/dtd/concept.dtd|$CONCEPT_DTD|g" {} +
+          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i "s|/SysSchema/dita13/dtd/subsection/dtd/task.dtd|$TASK_DTD|g" {} +
+          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i "s|/SysSchema/dita13/dtd/subsection/dtd/reference.dtd|$REF_DTD|g" {} +
+          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i "s|/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd|$MAP_DTD|g" {} +
           
       - name: Build JCNR User Guide (HTML5)
         # Note: We are outputting directly to 'out' so index.html is at the root of your website
         run: |
           ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out
+
+      # ADDED FIX: Create the index.html for GitHub Pages!
+      - name: Setup Homepage
+        run: cp out/cloud-native-router-user.html out/index.html
 
       # Tell GitHub Pages to stop hiding files and serve the raw HTML
       - name: Bypass Jekyll processing
