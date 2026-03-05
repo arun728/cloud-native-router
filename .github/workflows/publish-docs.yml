@@ -51,7 +51,7 @@ jobs:
           find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i "s|/SysSchema/dita13/dtd/subsection/dtd/reference.dtd|$REF_DTD|g" {} +
           find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i "s|/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd|$MAP_DTD|g" {} +
 
-      # ADDED FIX: Generate a custom Juniper-style CSS file on the fly
+      # Generate a custom Juniper-style CSS file on the fly
       - name: Create Juniper Theme CSS
         run: |
           cat << 'EOF' > juniper-theme.css
@@ -122,11 +122,19 @@ jobs:
           ul, ol { padding-left: 1.5rem; margin-bottom: 1.5rem; }
           li { margin-bottom: 0.5rem; }
           EOF
+
+      # ADDED FIX: Create the Favicon Header snippet
+      - name: Create Favicon Injection File
+        run: |
+          cat << 'EOF' > favicon.html
+          <link rel="icon" type="image/x-icon" href="https://www.hpe.com/etc.clientlibs/hpe-aem-common/clientlibs/clientlib-base/resources/images/favicon.ico">
+          <link rel="shortcut icon" type="image/x-icon" href="https://www.hpe.com/etc.clientlibs/hpe-aem-common/clientlibs/clientlib-base/resources/images/favicon.ico">
+          EOF
           
       - name: Build JCNR User Guide (HTML5)
-        # Note: Added --args.cssroot so DITA-OT knows the exact absolute path of the generated CSS file
+        # Note: Added --args.hdf=favicon.html to inject the HPE logo into the <head> of every page!
         run: |
-          ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out --args.css=juniper-theme.css --args.cssroot=${{ github.workspace }} --args.copycss=yes --args.csspath=css
+          ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out --args.css=juniper-theme.css --args.cssroot=${{ github.workspace }} --args.copycss=yes --args.csspath=css --args.hdf=favicon.html
 
       # Tell GitHub Pages to stop hiding files and serve the raw HTML
       - name: Bypass Jekyll processing
