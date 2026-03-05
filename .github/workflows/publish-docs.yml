@@ -68,9 +68,9 @@ jobs:
           EOF
           
       - name: Build JCNR User Guide (HTML5)
-        # Note: We now pass the generated CSS file directly into the DITA-OT build arguments!
+        # Note: Added --args.cssroot so DITA-OT knows the exact absolute path of the generated CSS file
         run: |
-          ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out --args.css=juniper-theme.css --args.copycss=yes --args.csspath=css
+          ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out --args.css=juniper-theme.css --args.cssroot=${{ github.workspace }} --args.copycss=yes --args.csspath=css
 
       # Tell GitHub Pages to stop hiding files and serve the raw HTML
       - name: Bypass Jekyll processing
