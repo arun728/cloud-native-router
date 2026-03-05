@@ -41,8 +41,8 @@ jobs:
       # schema paths with standard open-source DITA paths so the build doesn't crash.
       - name: Fix Custom Juniper Schemas for Prototype
         run: |
-          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i 's|/SysSchema/dita13/dtd/subsection/dtd/concept.dtd|concept.dtd|g' {} +
-          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i 's|/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd|map.dtd|g' {} +
+          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i 's|/SysSchema/dita13/dtd/subsection/dtd/concept.dtd|urn:oasis:names:tc:dita:dtd:concept.dtd|g' {} +
+          find . \( -name "*.dita" -o -name "*.ditamap" \) -type f -exec sed -i 's|/SysSchema/dita13/dtd/topic-map/dtd/topic-map.dtd|urn:oasis:names:tc:dita:dtd:map.dtd|g' {} +
           
       - name: Build JCNR User Guide (HTML5)
         # Note: We are outputting directly to 'out' so index.html is at the root of your website
