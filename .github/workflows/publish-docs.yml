@@ -122,24 +122,10 @@ jobs:
           ul, ol { padding-left: 1.5rem; margin-bottom: 1.5rem; }
           li { margin-bottom: 0.5rem; }
           EOF
-
-      # ADDED FIX: Ensure tags are valid XML by adding closing slashes (/>)
-      - name: Create Favicon Injection File
-        run: |
-          cat << 'EOF' > favicon.html
-          <div>
-            <link rel="icon" type="image/x-icon" href="https://www.hpe.com/etc.clientlibs/hpe-aem-common/clientlibs/clientlib-base/resources/images/favicon.ico" />
-            <link rel="shortcut icon" type="image/x-icon" href="https://www.hpe.com/etc.clientlibs/hpe-aem-common/clientlibs/clientlib-base/resources/images/favicon.ico" />
-          </div>
-          EOF
           
       - name: Build JCNR User Guide (HTML5)
         run: |
-          ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out --args.css=juniper-theme.css --args.cssroot=${{ github.workspace }} --args.copycss=yes --args.csspath=css --args.hdf=${{ github.workspace }}/favicon.html
-
-      # ADDED FIX: Force HTTP/1.1 and follow redirects (-sL) to bypass the HPE CDN security block
-      - name: Download Favicon to Root
-        run: curl --http1.1 -sL -o out/favicon.ico https://www.hpe.com/etc.clientlibs/hpe-aem-common/clientlibs/clientlib-base/resources/images/favicon.ico
+          ./dita-ot-4.1.2/bin/dita --input=cloud-native-router-user.ditamap --format=html5 --output=out --args.css=juniper-theme.css --args.cssroot=${{ github.workspace }} --args.copycss=yes --args.csspath=css
 
       # Tell GitHub Pages to stop hiding files and serve the raw HTML
       - name: Bypass Jekyll processing
